@@ -1,0 +1,11 @@
+topic,report_type,output_path,total_time,has_citation,source_count,citation_coverage,source_grounding,structure_complete,obvious_limitation,notes
+宁德时代投资分析,company_research,C:\Users\jdh07\Desktop\financial_research_agent\outputs\baseline_reports\宁德时代投资分析_baseline.md,68.8631,False,0,0,0,True,True,
+比亚迪投资价值分析,company_research,C:\Users\jdh07\Desktop\financial_research_agent\outputs\baseline_reports\比亚迪投资价值分析_baseline.md,38.6442,False,0,0,0,True,True,
+贵州茅台财务与估值分析,company_research,C:\Users\jdh07\Desktop\financial_research_agent\outputs\baseline_reports\贵州茅台财务与估值分析_baseline.md,37.7937,False,0,0,0,True,True,
+中芯国际投资风险分析,company_research,C:\Users\jdh07\Desktop\financial_research_agent\outputs\baseline_reports\中芯国际投资风险分析_baseline.md,97.3927,False,0,0,0,True,True,
+隆基绿能行业地位分析,company_research,C:\Users\jdh07\Desktop\financial_research_agent\outputs\baseline_reports\隆基绿能行业地位分析_baseline.md,30.9271,False,0,0,0,True,True,
+AI机器人行业研报,industry_research,C:\Users\jdh07\Desktop\financial_research_agent\outputs\baseline_reports\AI机器人行业研报_baseline.md,99.8936,False,0,0,0,True,True,
+半导体国产替代行业研究,industry_research,C:\Users\jdh07\Desktop\financial_research_agent\outputs\baseline_reports\半导体国产替代行业研究_baseline.md,52.923,False,0,0,0,True,True,
+光伏行业投资风险分析,industry_research,C:\Users\jdh07\Desktop\financial_research_agent\outputs\baseline_reports\光伏行业投资风险分析_baseline.md,47.4662,False,0,0,0,True,True,
+低空经济行业研报,industry_research,C:\Users\jdh07\Desktop\financial_research_agent\outputs\baseline_reports\低空经济行业研报_baseline.md,54.242,False,0,0,0,True,True,
+新能源汽车产业链分析,industry_research,C:\Users\jdh07\Desktop\financial_research_agent\outputs\baseline_reports\新能源汽车产业链分析_baseline.md,56.5953,False,0,0,0,True,False,

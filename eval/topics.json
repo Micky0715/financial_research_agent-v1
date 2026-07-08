@@ -1,0 +1,52 @@
+[
+  {
+    "topic": "宁德时代投资分析",
+    "report_type": "company_research",
+    "requirements": "公司概况,财务分析,估值分析,风险提示,投资观点"
+  },
+  {
+    "topic": "比亚迪投资价值分析",
+    "report_type": "company_research",
+    "requirements": "公司概况,财务分析,估值分析,风险提示,投资观点"
+  },
+  {
+    "topic": "贵州茅台财务与估值分析",
+    "report_type": "company_research",
+    "requirements": "公司概况,财务分析,估值分析,风险提示,投资观点"
+  },
+  {
+    "topic": "中芯国际投资风险分析",
+    "report_type": "company_research",
+    "requirements": "公司概况,财务分析,估值分析,风险提示,投资观点"
+  },
+  {
+    "topic": "隆基绿能行业地位分析",
+    "report_type": "company_research",
+    "requirements": "公司概况,财务分析,估值分析,风险提示,投资观点"
+  },
+  {
+    "topic": "AI机器人行业研报",
+    "report_type": "industry_research",
+    "requirements": "市场空间,产业链,核心公司,风险提示,投资观点"
+  },
+  {
+    "topic": "半导体国产替代行业研究",
+    "report_type": "industry_research",
+    "requirements": "市场空间,产业链,核心公司,政策趋势,风险提示"
+  },
+  {
+    "topic": "光伏行业投资风险分析",
+    "report_type": "industry_research",
+    "requirements": "行业趋势,竞争格局,风险提示,投资观点"
+  },
+  {
+    "topic": "低空经济行业研报",
+    "report_type": "industry_research",
+    "requirements": "市场空间,政策趋势,产业链,风险提示"
+  },
+  {
+    "topic": "新能源汽车产业链分析",
+    "report_type": "industry_research",
+    "requirements": "产业链,核心公司,行业趋势,风险提示,投资观点"
+  }
+]

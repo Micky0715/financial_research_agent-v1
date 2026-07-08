@@ -1,0 +1,297 @@
+"""Sequential multi-agent workflow orchestrator for the financial research pipeline.
+
+Executes: planning -> research -> browse -> analyze -> report -> evaluate,
+respecting task dependencies. Kept deliberately sequential in v1; the task
+list + dependency scheduler here is structured so a future version can swap
+in an async/queue-based executor without touching the agents.
+"""
+import time
+import uuid
+from datetime import datetime
+from typing import Any, Callable, Optional
+
+from agents.analyze_agent import AnalyzeAgent
+from agents.browser_agent import BrowserAgent
+from agents.planning_agent import PlanningAgent, normalize_plan
+from agents.report_agent import ReportAgent
+from agents.research_agent import ResearchAgent
+from config import config
+from schemas.report import Report
+from schemas.request import ResearchRequest
+from schemas.source import Source
+from schemas.task import Task, TaskResult
+from schemas.trace import TraceLog
+from tools.report_renderer import render_html_report, save_report
+from utils.file_utils import sanitize_filename, save_json
+from utils.logger import logger
+
+_CONTEXT_KEY_BY_TASK_TYPE = {
+    "research": "search_results",
+    "browse": "sources",
+    "analyze": "analysis",
+    "report": "report",
+    "evaluate": "evaluation",
+}
+
+_STEP_LABEL_BY_TASK_TYPE = {
+    "research": "Searching sources...",
+    "browse": "Reading and scoring sources...",
+    "analyze": "Analyzing content...",
+    "report": "Generating report...",
+    "evaluate": "Evaluating report...",
+}
+
+
+class WorkflowOrchestrator:
+    """Coordinates PlanningAgent -> ResearchAgent -> BrowserAgent -> AnalyzeAgent -> ReportAgent."""
+
+    def __init__(self) -> None:
+        self.planning_agent = PlanningAgent()
+        self.research_agent = ResearchAgent()
+        self.browser_agent = BrowserAgent()
+        self.analyze_agent = AnalyzeAgent()
+        self.report_agent = ReportAgent()
+        self._agent_by_task_type = {
+            "research": self.research_agent,
+            "browse": self.browser_agent,
+            "analyze": self.analyze_agent,
+            "report": self.report_agent,
+            "evaluate": self.report_agent,
+        }
+
+    def _schedule(self, tasks: list[Task]) -> list[Task]:
+        """Order tasks by dependency-satisfaction then priority (simple topological sort)."""
+        remaining = list(tasks)
+        by_id = {t.task_id: t for t in tasks}
+        ordered: list[Task] = []
+        done_ids: set[str] = set()
+
+        while remaining:
+            ready = [t for t in remaining if all(d in done_ids for d in t.dependencies)]
+            if not ready:
+                # Circular or unresolved dependency: append the rest as-is so
+                # the executor can surface a clear dependency error per task.
+                ordered.extend(remaining)
+                break
+            ready.sort(key=lambda t: t.priority)
+            picked = ready[0]
+            ordered.append(picked)
+            done_ids.add(picked.task_id)
+            remaining.remove(picked)
+
+        return ordered
+
+    def run(
+        self,
+        request: ResearchRequest,
+        on_progress: Optional[Callable[[int, int, str], None]] = None,
+    ) -> dict[str, Any]:
+        """Execute the full pipeline for `request` and persist all four output artifacts.
+
+        `on_progress(step_index, total_steps, label)` is called once per stage
+        (planning, research, browse, analyze, report, evaluate) right before
+        that stage runs, so a CLI can print live progress.
+        """
+        total_steps = 6
+
+        def notify(step_index: int, label: str) -> None:
+            if on_progress:
+                on_progress(step_index, total_steps, label)
+
+        run_id = uuid.uuid4().hex[:10]
+        started_at = datetime.now().isoformat(timespec="seconds")
+        run_start = time.perf_counter()
+
+        trace = TraceLog(run_id=run_id, topic=request.topic, started_at=started_at)
+        context: dict[str, Any] = {
+            "request": request,
+            "tasks": [],
+            "search_results": {},
+            "sources": {},
+            "analysis": {},
+            "report": {},
+            "evaluation": {},
+        }
+
+        # 1. Planning
+        notify(1, "Planning task...")
+        plan_start = time.perf_counter()
+        raw_tasks = self.planning_agent.plan(request)
+        # Defensive normalization at the execution boundary: even though
+        # PlanningAgent falls back to a clean 5-task plan on its own failure
+        # paths, the LLM-generated plan (the common success path) has been
+        # observed emitting 9-11 tasks with duplicate research/browse stages,
+        # which made the scheduler below actually re-run those stages
+        # multiple times. This is the one place that must never be skipped.
+        tasks, planner_metrics = normalize_plan(raw_tasks)
+        plan_elapsed = round(time.perf_counter() - plan_start, 4)
+        context["tasks"] = tasks
+        trace.planner_metrics = planner_metrics
+        trace.steps.append(
+            {
+                "agent": "planning_agent",
+                "task_id": "planning",
+                "task_type": "planning",
+                "success": True,
+                "detail": f"generated {len(tasks)} tasks",
+                "duration": plan_elapsed,
+            }
+        )
+        logger.info(f"run={run_id} plan has {len(tasks)} tasks: {[t.task_type for t in tasks]}")
+
+        # 2-6: research / browse / analyze / report / evaluate
+        completed_ids: set[str] = set()
+        for planned_task in self._schedule(tasks):
+            if not all(dep in completed_ids for dep in planned_task.dependencies):
+                error_msg = f"unresolved dependency for task {planned_task.task_id}"
+                logger.warning(error_msg)
+                trace.errors.append({"task_id": planned_task.task_id, "error": error_msg})
+                continue
+
+            step_index = list(_STEP_LABEL_BY_TASK_TYPE.keys()).index(planned_task.task_type) + 2
+            notify(step_index, _STEP_LABEL_BY_TASK_TYPE.get(planned_task.task_type, planned_task.task_type))
+
+            agent = self._agent_by_task_type.get(planned_task.task_type)
+            if agent is None:
+                error_msg = f"no agent registered for task_type={planned_task.task_type}"
+                logger.warning(error_msg)
+                trace.errors.append({"task_id": planned_task.task_id, "error": error_msg})
+                continue
+
+            task_result: TaskResult = agent.run(planned_task, context)
+            trace.steps.append(
+                {
+                    "agent": agent.name,
+                    "task_id": planned_task.task_id,
+                    "task_type": planned_task.task_type,
+                    "success": task_result.success,
+                    "detail": task_result.error or "ok",
+                    "duration": task_result.execution_time,
+                }
+            )
+
+            context_key = _CONTEXT_KEY_BY_TASK_TYPE.get(planned_task.task_type)
+            if context_key:
+                context[context_key] = task_result.result
+
+            if task_result.success:
+                completed_ids.add(planned_task.task_id)
+            else:
+                trace.errors.append({"task_id": planned_task.task_id, "error": task_result.error})
+                logger.warning(f"task {planned_task.task_id} ({planned_task.task_type}) failed: {task_result.error}")
+
+        # Persist sources
+        source_dicts = context.get("sources", {}).get("sources", [])
+        trace.selected_sources = source_dicts
+
+        # Build final Report object
+        report_data = context.get("report", {})
+        evaluation = context.get("evaluation", {}).get("evaluation", {})
+
+        if not source_dicts:
+            # browse failed to find any usable, on-topic source (see
+            # BrowserAgent.execute), so analyze/report/evaluate were all
+            # skipped by the dependency scheduler above. Refuse to emit
+            # something that looks like a real report - an empty analysis
+            # dict rendered through the report template would otherwise
+            # produce boilerplate "资料不足" text dressed up with all the
+            # normal headings, which is misleading and defeats the whole
+            # anti-hallucination point of this pipeline.
+            trace.errors.append({"task_id": "report", "error": "aborted: no usable sources, report generation skipped"})
+            abort_title = f"{request.topic} 研究报告（未生成：资料不足）"
+            abort_markdown = (
+                f"# {request.topic} 研究报告 - 未生成\n\n"
+                "本次运行未能获取到与该主题相关、且通过质量与相关性筛选的有效资料来源，"
+                "因此未进入分析与报告生成阶段，避免在无资料依据的情况下输出内容。\n\n"
+                "可能原因：搜索后端无结果或不稳定、候选来源被域名黑名单/相关性预过滤全部排除、"
+                "或所有来源经内容抓取后主题相关度过低。\n\n"
+                "建议：检查网络与搜索配置后重试，或放宽 `max_sources`/`max_results` 参数。"
+            )
+            abort_content = (
+                render_html_report(abort_markdown, abort_title)
+                if request.output_format == "html"
+                else abort_markdown
+            )
+            report = Report(
+                topic=request.topic,
+                title=abort_title,
+                content=abort_content,
+                output_format=request.output_format,
+                sources=[],
+                quality_score=None,
+                created_at=started_at,
+            )
+        else:
+            report = Report(
+                topic=request.topic,
+                title=report_data.get("title", f"{request.topic} 研究报告"),
+                content=report_data.get("final_content", report_data.get("markdown_content", "")),
+                output_format=report_data.get("output_format", request.output_format),
+                sources=[Source(**s) for s in source_dicts],
+                quality_score=evaluation or None,
+                created_at=started_at,
+            )
+
+        report_path = save_report(
+            content=report.content,
+            output_format=report.output_format,
+            run_id=run_id,
+            topic=request.topic,
+            output_dir=config.REPORTS_DIR,
+        )
+
+        safe_topic = sanitize_filename(request.topic)
+        sources_path = config.SOURCES_DIR / f"{run_id}_{safe_topic}_sources.json"
+        evaluation_path = config.EVALUATIONS_DIR / f"{run_id}_{safe_topic}_evaluation.json"
+        trace_path = config.TRACES_DIR / f"{run_id}_{safe_topic}_trace.json"
+
+        save_json(sources_path, source_dicts)
+        save_json(evaluation_path, evaluation)
+
+        trace.finished_at = datetime.now().isoformat(timespec="seconds")
+        trace.total_duration = round(time.perf_counter() - run_start, 4)
+        trace.final_report_path = str(report_path)
+
+        # Diagnostics gathered from each agent's result dict (see
+        # browser_agent/analyze_agent/report_agent), surfaced into the trace
+        # for perf/quality debugging without changing any existing output.
+        duration_by_task_type: dict[str, float] = {}
+        for step in trace.steps:
+            duration_by_task_type.setdefault(step["task_type"], step["duration"])
+        trace.performance_metrics = {
+            "research_duration": duration_by_task_type.get("research", 0.0),
+            "browser_duration": duration_by_task_type.get("browse", 0.0),
+            "analyze_duration": duration_by_task_type.get("analyze", 0.0),
+            "report_duration": duration_by_task_type.get("report", 0.0),
+            "total_duration": trace.total_duration,
+        }
+
+        trace.research_metrics = context.get("search_results", {}).get("research_metrics", {})
+        trace.browser_metrics = context.get("sources", {}).get("browser_metrics", {})
+
+        analysis_compression = context.get("analysis", {}).get("compression_metrics", {})
+        report_compression = context.get("report", {}).get("report_compression", {})
+        trace.compression_metrics = {
+            **analysis_compression,
+            "report_context_chars": report_compression.get("report_context_chars", 0),
+        }
+
+        eval_criteria = evaluation.get("criteria_scores", {})
+        trace.evaluation_diagnostics = {
+            **evaluation.get("diagnostics", {}),
+            "financial_depth_score": eval_criteria.get("financial_depth_score"),
+            "valuation_depth_score": eval_criteria.get("valuation_depth_score"),
+        }
+
+        save_json(trace_path, trace.model_dump())
+
+        return {
+            "run_id": run_id,
+            "report_path": str(report_path),
+            "trace_path": str(trace_path),
+            "sources_path": str(sources_path),
+            "evaluation_path": str(evaluation_path),
+            "evaluation": evaluation,
+            "num_sources": len(source_dicts),
+            "duration": trace.total_duration,
+        }
