@@ -170,7 +170,25 @@ class BrowserAgent(BaseAgent):
         pre_filtered, pre_filter_counts = self._pre_filter(candidates, profile["relevance_terms"])
         logger.info(f"Browser pre-filter: {len(candidates)} candidates -> {len(pre_filtered)} kept")
 
-        ranked = rank_search_results(pre_filtered, profile["subject"], aliases=profile["aliases"])
+        ranked = rank_search_results(
+            pre_filtered, profile["subject"], aliases=profile["aliases"], query_text=request.topic
+        )
+
+        # 域名分散守卫：语义层会把同一站点的多篇高相关内容一起推进窗口（实测
+        # 贵州茅台一轮 top6 里挤进 4 个雪球帖，恰逢该站批量 403，20 个候选只
+        # 抓成 3 个）。单域名限席让窗口对"单站点当天反爬"保持韧性。
+        max_per_domain = 4
+        domain_counts: dict[str, int] = {}
+        diversified: list[dict] = []
+        overflow: list[dict] = []
+        for c in ranked:
+            domain = get_domain(c.get("url", ""))
+            if domain_counts.get(domain, 0) < max_per_domain:
+                domain_counts[domain] = domain_counts.get(domain, 0) + 1
+                diversified.append(c)
+            else:
+                overflow.append(c)
+        ranked = diversified + overflow  # overflow 不丢弃，只是排到窗口后面
 
         max_browse_candidates = config.MAX_BROWSE_CANDIDATES
         capped_candidates = ranked[:max_browse_candidates]
@@ -273,7 +291,13 @@ class BrowserAgent(BaseAgent):
             "browser_fallback_reason": browser_fallback_reason,
             "top_ranked_domains": [get_domain(c.get("url", "")) for c in top_ranked],
             "top_ranked_sources": [
-                {"url": c.get("url", ""), "title": c.get("title", ""), "rank_score": c.get("rank_score", 0.0)}
+                {
+                    "url": c.get("url", ""),
+                    "title": c.get("title", ""),
+                    "rank_score": c.get("rank_score", 0.0),
+                    "rule_score": c.get("rule_score"),
+                    "semantic_score": c.get("semantic_score"),
+                }
                 for c in top_ranked
             ],
         }

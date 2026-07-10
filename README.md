@@ -16,7 +16,7 @@
 
 ## 2. 系统能力概览
 
-**当前 v1 已实现**：
+**已实现（v1）**：
 
 - 多 Agent 研报生成工作流（Planning -> Research -> Browse -> Analyze -> Report -> Evaluate）
 - `PlanningAgent` 任务规划，并强制规范化为固定 5 阶段执行计划
@@ -31,14 +31,19 @@
 - Direct LLM baseline 对比（验证"有来源引用"和"无来源直接生成"的差异）
 - Bad case 复盘文档，记录真实工程问题与修复过程
 
-**当前 v1 明确没有实现**（不要误认为已具备）：
+**已实现（v2 新增）**：
+
+- MCP 协议封装：`web_search`/`read_webpage`/`read_pdf` 通过标准 MCP Server（官方 `mcp` SDK，stdio 传输）暴露，ResearchAgent/BrowserAgent 作为 MCP Client 经协议调用，MCP 不可用时优雅降级为直接调用（见 [docs/mcp_integration.md](docs/mcp_integration.md)）
+- 向量语义排序：候选排序层叠加本地 embedding 相似度（bge-small-zh-v1.5，ModelScope 下载、CPU 推理，无付费 API），与关键词规则分加权融合而非替换——每个候选保留 `rule_score`/`semantic_score`/`rank_score` 三字段，可解释性不丢；模型不可用时自动退回纯规则（召回对比见 [outputs/eval/semantic_ranking_compare.md](outputs/eval/semantic_ranking_compare.md)）
+
+**当前明确没有实现**（不要误认为已具备）：
 
 - 没有长期记忆（每次运行都是无状态的一次性流水线；搜索缓存只是按 query 字符串的原始 key-value 缓存，不是语义记忆）
-- 没有向量数据库或 RAG
+- 没有向量数据库或完整 RAG（没有向量库持久化；语义能力仅限候选排序层的 embedding 相似度）
 - 没有真实 Wind / AkShare 等结构化金融数据 API 接入（财务数字全部来自公开网页/PDF 文本抽取）
 - 没有严格的 DCF 等财务估值建模工具
 - 没有独立的机器学习预测工具
-- 没有标准 MCP Server/Client 协议封装
+- MCP 封装是本 pipeline 自用的 stdio server，还不是可供外部 IDE/Agent 连接的独立部署服务
 - 没有完整的 Docx/正式 PDF 报告导出（当前只输出 Markdown/HTML）
 - 报告内容**不构成投资建议**
 - Evaluation 是启发式的工程规则评分，**不等价于专业金融分析师的判断**

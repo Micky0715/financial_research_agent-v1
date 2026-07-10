@@ -225,3 +225,64 @@ industry_research 类 topic 的 `quality_score` 目前偏保守，需要结合 `
 ### 指标变化
 - 冷缓存 Research 耗时：10-16s
 - 热缓存 Research 耗时：~0.03s（`outputs/eval/eval_summary.csv` 中 10/10 topic 的实测值）
+
+---
+
+## Bad Case 11：MCP stdio session 首次调用即 "Connection closed"
+
+### 现象
+v2 模块1 把工具调用改走 MCP 后，网关日志显示 session 建立成功，但第一次 `call_tool` 就失败：`MCP call_tool(web_search) failed: Connection closed`，同时 asyncio 抛出 `RuntimeError: Attempted to exit cancel scope in a different task than it was entered in`，网关直接降级为直连调用——协议层形同虚设。
+
+### 原因
+MCP Python SDK 的 `stdio_client` / `ClientSession` 内部使用 anyio task group，其 cancel scope 绑定在**进入上下文管理器的那个 asyncio task** 上。最初的实现在一个短命协程里 `__aenter__` 拿到 session 就返回了——协程一结束，task group 被拆除，stdio 传输随之关闭，后续任何调用都是死连接。
+
+### 修改
+改为标准的 keeper-task 模式（[tools/tool_gateway.py](../tools/tool_gateway.py)）：一个常驻协程用 `async with` 持有 transport + session 两层上下文，把 session 引用交出去之后 `await asyncio.Event().wait()` 永久驻留；所有 `call_tool` 通过 `run_coroutine_threadsafe` 调度到同一个事件循环上。
+
+### 结果
+单次调用、read_webpage/read_pdf、以及 4 路并发共享 session 全部正常；完整 eval（10 topic）全程走 MCP，日志零降级。
+
+### 指标变化
+- MCP 调用成功率：首调即挂（0%）-> 全程无降级
+- eval 期间 "falling back to direct calls" 日志条数：必现 -> 0
+
+---
+
+## Bad Case 12：embedding 模型 HuggingFace 与 hf-mirror 均下载失败
+
+### 现象
+v2 模块2 需要本地 embedding 模型（bge-small-zh-v1.5），`SentenceTransformer('BAAI/bge-small-zh-v1.5')` 直连 huggingface.co 失败；设置 `HF_ENDPOINT=https://hf-mirror.com` 后依然报 `FileMetadataError: Distant resource does not seem to be on huggingface.co`——新版 huggingface_hub 会校验响应来源，镜像站直接被拒。
+
+### 原因
+国内网络环境无法直连 HuggingFace；hf-mirror 又与当前版本 huggingface_hub 的元数据校验逻辑不兼容。
+
+### 修改
+改用 ModelScope（国内直连）下载同一模型：`modelscope.snapshot_download('BAAI/bge-small-zh-v1.5')`，[tools/semantic_scorer.py](../tools/semantic_scorer.py) 加载时先探测 ModelScope 本地缓存路径（含真实路径 `~/.cache/modelscope/models/BAAI--bge-small-zh-v1.5/snapshots/master`，与文档写的 hub 路径不同——也是实测踩出来的），缓存不存在再走 snapshot_download，全部失败则语义层自动禁用、排序退回纯规则。
+
+### 结果
+模型 30 秒内从 ModelScope 下载完成，加载正常（512 维），语义打分对相关/无关文本区分度符合预期（财报解读 0.855 vs 无关内容 0.592）。
+
+### 指标变化
+- 模型可用性：HF 直连/镜像 0% -> ModelScope 100%
+- 失败模式：硬报错中断 -> 语义层可选降级（`semantic_score=None`，排序退回纯规则，主链路不受影响）
+
+---
+
+## Bad Case 13：语义排序把同站点内容批量推进抓取窗口，放大单站反爬风险
+
+### 现象
+模块2 接入语义排序后的 eval 中，贵州茅台财务与估值分析一轮 `browsed=20 -> usable=3`（17 个候选抓取失败），最终只选出 3 个来源（quality 0.8，触发 source_count<5 封顶）。对比模块1 同 topic 的运行：`browsed=10 -> usable=10`、5 来源。
+
+### 原因
+雪球的个股深度帖标题（"贵州茅台深度投研报告""估值及预期收益评估"）与查询语义高度匹配，语义层把 4 个雪球帖同时推进 top6（此前规则排序只有 2 个）；恰逢该站点对连续抓取批量返回 403，窗口里的高排名候选成片失效。语义分本身没错——错在排序层不知道"同一站点集中意味着共享同一个失效风险"。
+
+### 修改
+[agents/browser_agent.py](../agents/browser_agent.py) 在排序后加域名分散守卫：单域名最多占抓取窗口 4 席，超出的候选不丢弃、只后移。同时把 `rule_score`/`semantic_score` 写进 trace 的 `top_ranked_sources`，此类问题以后可以直接从 trace 定位是谁把候选推进来的。
+
+### 结果
+抓取窗口对单站点当天反爬保持韧性；该 case 仍成功生成报告（3 来源、0.8 分，评估封顶机制如实反映了来源不足）。
+
+### 指标变化
+- 单域名在抓取窗口的最大占比：无限制 -> 4/20
+- trace 可观测性：top_ranked_sources 仅 rank_score -> rank/rule/semantic 三分数齐全
+- 遗留方向：把"站点历史可抓取成功率"作为排序信号（v2 后续）

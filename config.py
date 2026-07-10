@@ -75,6 +75,13 @@ class Config:
     USE_MCP_TOOLS: bool = _get_bool("USE_MCP_TOOLS", True)
     MCP_TOOL_TIMEOUT: int = _get_int("MCP_TOOL_TIMEOUT", 90)
 
+    # Semantic ranking layer (tools/semantic_scorer.py + tools/source_filter.py):
+    # local bge-small-zh-v1.5 embedding similarity fused with the keyword rule
+    # score as (1-w)*rule + w*semantic. Rules are kept for explainability;
+    # semantic layer degrades to rules-only when the model is unavailable.
+    ENABLE_SEMANTIC_RANKING: bool = _get_bool("ENABLE_SEMANTIC_RANKING", True)
+    SEMANTIC_WEIGHT: float = _get_float("SEMANTIC_WEIGHT", 0.35)
+
     # Browser performance tuning: cap how many pre-filtered candidates get
     # fetched, and stop early once enough good sources are already in hand -
     # fetching all 60+ candidates when only top_k=5 are ever used is wasted
