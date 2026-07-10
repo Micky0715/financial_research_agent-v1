@@ -13,3 +13,6 @@ tqdm>=4.66.0
 rich>=13.7.0
 tenacity>=8.2.0
 loguru>=0.7.0
+mcp>=1.0.0
+sentence-transformers>=3.0.0
+matplotlib>=3.8.0

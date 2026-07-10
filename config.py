@@ -68,6 +68,13 @@ class Config:
     ENABLE_SEARCH_CACHE: bool = _get_bool("ENABLE_SEARCH_CACHE", True)
     SEARCH_CACHE_TTL_HOURS: int = _get_int("SEARCH_CACHE_TTL_HOURS", 24)
 
+    # MCP tool routing (tools/tool_gateway.py): when true, web_search /
+    # read_webpage / read_pdf calls go through a Model Context Protocol
+    # client session to mcp_server/tools_server.py instead of direct function
+    # calls. Gateway degrades to direct calls if MCP is unavailable.
+    USE_MCP_TOOLS: bool = _get_bool("USE_MCP_TOOLS", True)
+    MCP_TOOL_TIMEOUT: int = _get_int("MCP_TOOL_TIMEOUT", 90)
+
     # Browser performance tuning: cap how many pre-filtered candidates get
     # fetched, and stop early once enough good sources are already in hand -
     # fetching all 60+ candidates when only top_k=5 are ever used is wasted

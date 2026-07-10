@@ -17,7 +17,7 @@ from typing import Any, Optional
 from config import config
 from schemas.request import ResearchRequest
 from schemas.task import Task
-from tools.web_search import web_search
+from tools.tool_gateway import web_search  # same signature; routes via MCP when enabled
 from utils.cache_utils import get_cached_search_result, set_cached_search_result
 from utils.logger import logger
 from utils.text_utils import normalize_topic

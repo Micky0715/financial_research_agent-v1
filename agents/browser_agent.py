@@ -6,10 +6,9 @@ from schemas.request import ResearchRequest
 from schemas.source import Source
 from schemas.task import Task
 from tools.domain_rules import get_domain, is_blacklisted
-from tools.pdf_reader import read_pdf
 from tools.quality_scorer import score_source
 from tools.source_filter import rank_search_results
-from tools.web_reader import read_webpage
+from tools.tool_gateway import read_pdf, read_webpage  # same signatures; route via MCP when enabled
 from utils.logger import logger
 from utils.text_utils import build_relevance_profile, truncate
 
