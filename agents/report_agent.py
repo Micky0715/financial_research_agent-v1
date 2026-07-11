@@ -9,7 +9,7 @@ from schemas.task import Task
 from tools.domain_rules import authority_tier, is_whitelisted
 from tools.report_renderer import render_html_report, render_markdown_report
 from utils.logger import logger
-from utils.text_utils import extract_relevant_excerpt, truncate
+from utils.text_utils import extract_relevant_excerpt, normalize_topic, truncate
 
 from .base_agent import BaseAgent
 
@@ -183,8 +183,15 @@ class ReportAgent(BaseAgent):
             markdown_content = render_markdown_report(request.topic, sections, sources)
 
         output_format = task.parameters.get("output_format", request.output_format)
+        charts_html = ""
         if output_format == "html":
-            final_content = render_html_report(markdown_content, title)
+            # v2 模块4：从来源正文抽取年度财务序列并渲染趋势图（base64 内嵌，
+            # 报告仍是单文件）。数据点不足或渲染失败时 charts_html 为空串，
+            # 报告照常生成——图表是增强，不是硬依赖。
+            from tools.chart_renderer import build_charts_html
+
+            charts_html = build_charts_html(sources, normalize_topic(request.topic))
+            final_content = render_html_report(markdown_content, title, extra_html=charts_html)
         else:
             final_content = markdown_content
 
@@ -195,6 +202,7 @@ class ReportAgent(BaseAgent):
             "output_format": output_format,
             "sources": [s.model_dump() for s in sources],
             "report_compression": {"report_context_chars": report_context_chars},
+            "chart_embedded": bool(charts_html),
         }
 
     # ------------------------------------------------------------------ #

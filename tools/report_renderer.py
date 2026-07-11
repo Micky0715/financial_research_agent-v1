@@ -76,11 +76,18 @@ def render_markdown_report(
     return "\n".join(lines)
 
 
-def render_html_report(markdown_content: str, title: str) -> str:
-    """Convert a Markdown report string into a styled standalone HTML page."""
+def render_html_report(markdown_content: str, title: str, extra_html: str = "") -> str:
+    """Convert a Markdown report string into a styled standalone HTML page.
+
+    `extra_html` (e.g. the embedded financial trend chart from
+    tools/chart_renderer.py) is appended after the report body, before the
+    footer note.
+    """
     body_html = md_lib.markdown(
         markdown_content, extensions=["tables", "fenced_code", "nl2br"]
     )
+    if extra_html:
+        body_html = f"{body_html}\n{extra_html}"
     return _HTML_TEMPLATE.render(title=title, body=body_html)
 
 
