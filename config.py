@@ -82,6 +82,16 @@ class Config:
     ENABLE_SEMANTIC_RANKING: bool = _get_bool("ENABLE_SEMANTIC_RANKING", True)
     SEMANTIC_WEIGHT: float = _get_float("SEMANTIC_WEIGHT", 0.35)
 
+    # DCF valuation defaults (tools/valuation_dcf.py). Discount rate and
+    # terminal growth cannot be reliably extracted from news text, so they
+    # are explicit engineering assumptions - visible here, overridable via
+    # .env, and echoed into every DCF result's provenance as kind="default".
+    DCF_DISCOUNT_RATE: float = _get_float("DCF_DISCOUNT_RATE", 0.09)
+    DCF_TERMINAL_GROWTH: float = _get_float("DCF_TERMINAL_GROWTH", 0.025)
+    DCF_YEARS: int = _get_int("DCF_YEARS", 5)
+    DCF_DEFAULT_GROWTH: float = _get_float("DCF_DEFAULT_GROWTH", 0.10)
+    DCF_DEFAULT_BASE_FCF: float = _get_float("DCF_DEFAULT_BASE_FCF", 100.0)
+
     # Browser performance tuning: cap how many pre-filtered candidates get
     # fetched, and stop early once enough good sources are already in hand -
     # fetching all 60+ candidates when only top_k=5 are ever used is wasted
