@@ -41,3 +41,7 @@ outputs/baseline_reports/
 !outputs/eval/*.md
 !outputs/eval/*.csv
 !outputs/eval/*.json
+
+# transient eval run logs (regenerated every suite run)
+outputs/eval/run_*.log
+outputs/eval/run_*.err.log

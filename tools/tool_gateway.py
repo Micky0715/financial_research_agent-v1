@@ -131,8 +131,12 @@ class _McpGateway:
                 raise RuntimeError("no text content in MCP tool result")
             return json.loads(text)
         except Exception as exc:  # noqa: BLE001 - degrade, don't crash the pipeline
+            # repr() not str(): a bare TimeoutError stringifies to "" and the
+            # log line becomes undiagnosable (learned the hard way - a 4x
+            # same-second degradation with empty reason turned out to be the
+            # 90s future timeout during a slow live-search batch).
             logger.warning(
-                f"MCP call_tool({tool_name}) failed, falling back to direct calls: {exc}"
+                f"MCP call_tool({tool_name}) failed, falling back to direct calls: {exc!r}"
             )
             self._failed = True
             return None

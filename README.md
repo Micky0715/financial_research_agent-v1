@@ -1,6 +1,6 @@
 # Financial Research Multi-Agent System
 
-> v1 收口版本。本文档是项目的权威说明，描述当前 v1 **已经实现**的能力和**尚未实现**的边界，不做夸大。完整的 v1 收口状态说明见 [docs/final_status.md](docs/final_status.md)。
+> v2 开发分支。本文档是项目的权威说明，描述当前**已经实现**的能力和**尚未实现**的边界，不做夸大。v1 收口状态见 [docs/final_status.md](docs/final_status.md)；v2 五个模块的改动前后能力对比见 [docs/v2_capability_matrix.md](docs/v2_capability_matrix.md)。
 
 ## 1. 项目背景
 
@@ -35,15 +35,20 @@
 
 - MCP 协议封装：`web_search`/`read_webpage`/`read_pdf` 通过标准 MCP Server（官方 `mcp` SDK，stdio 传输）暴露，ResearchAgent/BrowserAgent 作为 MCP Client 经协议调用，MCP 不可用时优雅降级为直接调用（见 [docs/mcp_integration.md](docs/mcp_integration.md)）
 - 向量语义排序：候选排序层叠加本地 embedding 相似度（bge-small-zh-v1.5，ModelScope 下载、CPU 推理，无付费 API），与关键词规则分加权融合而非替换——每个候选保留 `rule_score`/`semantic_score`/`rank_score` 三字段，可解释性不丢；模型不可用时自动退回纯规则（召回对比见 [outputs/eval/semantic_ranking_compare.md](outputs/eval/semantic_ranking_compare.md)）
+- DCF 估值工具：`tools/valuation_dcf.py` 提供可显式调用的确定性两阶段 DCF 计算（bear/base/bull 三情景区间），参数从来源文本正则抽取（现金流/净利润/营收增速），抽不到用可配置默认值，每个参数带 extracted/proxy/default 出处标注；AnalyzeAgent 对公司研究自动调用，结果作为独立字段进入报告估值章节
+- 财务趋势图表：`tools/chart_renderer.py` 从来源正文抽取年度营收/净利润序列（含口径守卫/实体守卫/多指标句守卫/数量级离群守卫），matplotlib 渲染折线图以 base64 内嵌 HTML 报告；数据点不足 2 个时诚实跳过不画
+- Planner 有界动态重执行：browse 因候选供给不足失败时，orchestrator 自动回跳 research 一轮（强制权威站点 fallback query）再重试 browse，硬上限 1 轮、只在失败路径触发，trace 记录 `replan_metrics`（设计取舍见 [docs/dynamic_planning.md](docs/dynamic_planning.md)）
 
 **当前明确没有实现**（不要误认为已具备）：
 
 - 没有长期记忆（每次运行都是无状态的一次性流水线；搜索缓存只是按 query 字符串的原始 key-value 缓存，不是语义记忆）
 - 没有向量数据库或完整 RAG（没有向量库持久化；语义能力仅限候选排序层的 embedding 相似度）
 - 没有真实 Wind / AkShare 等结构化金融数据 API 接入（财务数字全部来自公开网页/PDF 文本抽取）
-- 没有严格的 DCF 等财务估值建模工具
+- DCF 是**工程近似估算**（文本抽取参数 + 可配置折现率/永续增长假设，净利润代理现金流时系统性偏乐观），不是严格投行级建模，输出不构成目标价
+- 图表数据点来自新闻文本正则抽取，可能缺年份、口径混杂，不是结构化财报数据库
 - 没有独立的机器学习预测工具
 - MCP 封装是本 pipeline 自用的 stdio server，还不是可供外部 IDE/Agent 连接的独立部署服务
+- 动态重执行只覆盖"browse 候选不足"一种场景，query 不做 LLM 动态改写
 - 没有完整的 Docx/正式 PDF 报告导出（当前只输出 Markdown/HTML）
 - 报告内容**不构成投资建议**
 - Evaluation 是启发式的工程规则评分，**不等价于专业金融分析师的判断**
@@ -194,17 +199,18 @@ v1 迭代过程中发现并修复的真实工程问题，按"现象/原因/修�
 10. `source_grounding` 目前只是工程层面的引用检查（有没有标注 `[source_id]`），不是逐条事实核verification。
 11. 报告内容仅供研究/参考，**不构成投资建议**。
 
-## 11. Future Work（v2 方向）
+## 11. Future Work
 
 1. report_type-specific Evaluation——针对 industry_research 单独设计财务/市场维度指标，而不是复用公司研究的关键词表。
-2. 来源分级（source tier）——更细粒度地区分官方公告、权威财经媒体、一般来源。
-3. 数字级 grounding——把"有没有引用"细化到"每个具体数字有没有对应来源"。
-4. 接入 AkShare 等结构化金融数据工具，减少对网页文本抽取的依赖。
-5. Valuation / DCF 工具——提供真正的估值计算能力，而不是让 LLM 复述资料里的估值结论。
+2. 来源分级（source tier）——更细粒度地区分官方公告、权威财经媒体、一般来源；把"站点历史可抓取成功率"纳入排序信号（见 bad_cases 13）。
+3. 数字级 grounding——把"有没有引用"细化到"每个具体数字有没有对应来源"；同批修复虚构主体的 groundedness 缺口（见 bad_cases 16）。
+4. 接入 AkShare 等结构化金融数据工具，替代 DCF/图表目前的文本正则抽取参数来源。
+5. DCF 深化——资本开支扣除得到真实 FCF、敏感性分析矩阵、可比公司交叉校验（当前是工程近似估算）。
 6. Docx/PDF 正式报告导出。
-7. MCP-compatible tool registry——把 `web_search`/`web_reader`/`pdf_reader` 封装成标准 MCP Tool。
+7. MCP Server 独立部署——SSE/HTTP 传输 + 鉴权，让外部 IDE/Agent 可连接（当前是 pipeline 自用的 stdio 子进程）。
 8. 本地文件上传解析（用户自带财报/研报 PDF）。
-9. 向量数据库与长期知识库，支持历史报告/来源的语义复用。
+9. 向量数据库与长期知识库，支持历史报告/来源的语义复用（当前语义能力仅限候选排序层）。
+10. Planner 动态路由扩展——LLM 动态改写重检索 query、覆盖更多失败场景（当前只有 browse 候选不足一种触发条件）。
 
 ## 12. 如何运行
 
