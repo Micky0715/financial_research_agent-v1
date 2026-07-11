@@ -240,13 +240,20 @@ class ResearchAgent(BaseAgent):
         fallback_queries: list[str] = []
         fallback_result_count = 0
         fallback_reason: Optional[str] = None
-        fallback_triggered = len(candidates) < config.SEARCH_MIN_UNIQUE_RESULTS
+        # force_fallback: set by the orchestrator's replan round (see
+        # docs/dynamic_planning.md) - browse found the first-round candidates
+        # unusable, so run the authoritative site: fallback queries even
+        # though the first round returned plenty of raw results.
+        force_fallback = bool(task.parameters.get("force_fallback", False))
+        fallback_triggered = force_fallback or len(candidates) < config.SEARCH_MIN_UNIQUE_RESULTS
 
         if fallback_triggered:
-            fallback_reason = "unique_result_count_below_threshold"
+            fallback_reason = (
+                "forced_by_replan" if force_fallback else "unique_result_count_below_threshold"
+            )
             fallback_queries = self._build_fallback_queries(subject, request.report_type)
             logger.info(
-                f"Fallback triggered: true ({len(candidates)} < {config.SEARCH_MIN_UNIQUE_RESULTS})"
+                f"Fallback triggered: true ({fallback_reason}, candidates={len(candidates)})"
             )
             fallback_target = max(config.SEARCH_TARGET_UNIQUE_RESULTS - len(candidates), 1)
             fallback_batch = self._run_search_batch(fallback_queries, max_results, target_unique=fallback_target)

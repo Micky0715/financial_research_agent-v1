@@ -41,6 +41,15 @@ _STEP_LABEL_BY_TASK_TYPE = {
     "evaluate": "Evaluating report...",
 }
 
+# Dynamic replan (docs/dynamic_planning.md): when browse fails because the
+# candidate supply was thin (not because of relevance-threshold issues, which
+# have their own relaxed-relevance fallback), re-run research once with
+# forced authoritative-site fallback queries and retry browse on the new
+# candidate pool. Hard bound - deliberately NOT configurable to unlimited:
+# each extra round costs live searches + fetches, and one targeted retry is
+# the point of diminishing returns for this failure mode.
+_MAX_REPLAN_ROUNDS = 1
+
 
 class WorkflowOrchestrator:
     """Coordinates PlanningAgent -> ResearchAgent -> BrowserAgent -> AnalyzeAgent -> ReportAgent."""
@@ -141,6 +150,7 @@ class WorkflowOrchestrator:
 
         # 2-6: research / browse / analyze / report / evaluate
         completed_ids: set[str] = set()
+        replan_metrics: dict[str, Any] = {"triggered": False, "reason": None, "rounds": 0, "recovered": False}
         for planned_task in self._schedule(tasks):
             if not all(dep in completed_ids for dep in planned_task.dependencies):
                 error_msg = f"unresolved dependency for task {planned_task.task_id}"
@@ -169,6 +179,60 @@ class WorkflowOrchestrator:
                     "duration": task_result.execution_time,
                 }
             )
+
+            # Dynamic replan: browse failed on a thin candidate supply -> jump
+            # back to research once with forced fallback queries, then retry
+            # browse on the new pool (docs/dynamic_planning.md). Deterministic
+            # trigger, hard round limit, failure-path only - the fixed 5-stage
+            # plan stays authoritative for every run that succeeds first try.
+            if (
+                planned_task.task_type == "browse"
+                and not task_result.success
+                and replan_metrics["rounds"] < _MAX_REPLAN_ROUNDS
+                and (task_result.result or {}).get("browser_metrics", {}).get("browser_fallback_triggered")
+            ):
+                replan_metrics.update(
+                    {"triggered": True, "reason": "browse_failed_insufficient_candidates"}
+                )
+                replan_metrics["rounds"] += 1
+                logger.info("Replan round 1: re-running research with forced fallback queries")
+                notify(2, "Re-searching sources (replan)...")
+
+                research_retry = Task(
+                    task_id="t1_replan",
+                    task_type="research",
+                    description="重检索：browse 候选不足，追加权威站点 fallback query",
+                    parameters={"force_fallback": True},
+                    dependencies=[],
+                    priority=1,
+                    max_retries=0,
+                )
+                retry_research_result = self.research_agent.run(research_retry, context)
+                trace.steps.append(
+                    {
+                        "agent": self.research_agent.name,
+                        "task_id": research_retry.task_id,
+                        "task_type": "research",
+                        "success": retry_research_result.success,
+                        "detail": retry_research_result.error or "ok (replan)",
+                        "duration": retry_research_result.execution_time,
+                    }
+                )
+                if retry_research_result.success:
+                    context["search_results"] = retry_research_result.result
+                    notify(3, "Reading and scoring sources (replan)...")
+                    task_result = agent.run(planned_task, context)
+                    trace.steps.append(
+                        {
+                            "agent": agent.name,
+                            "task_id": f"{planned_task.task_id}_replan",
+                            "task_type": "browse",
+                            "success": task_result.success,
+                            "detail": task_result.error or "ok (replan)",
+                            "duration": task_result.execution_time,
+                        }
+                    )
+                    replan_metrics["recovered"] = task_result.success
 
             context_key = _CONTEXT_KEY_BY_TASK_TYPE.get(planned_task.task_type)
             if context_key:
@@ -268,6 +332,7 @@ class WorkflowOrchestrator:
 
         trace.research_metrics = context.get("search_results", {}).get("research_metrics", {})
         trace.browser_metrics = context.get("sources", {}).get("browser_metrics", {})
+        trace.replan_metrics = replan_metrics
 
         analysis_compression = context.get("analysis", {}).get("compression_metrics", {})
         report_compression = context.get("report", {}).get("report_compression", {})

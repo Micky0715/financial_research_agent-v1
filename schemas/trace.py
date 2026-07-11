@@ -22,6 +22,7 @@ class TraceLog(BaseModel):
     # for how these get populated.
     planner_metrics: dict[str, Any] = Field(default_factory=dict)
     research_metrics: dict[str, Any] = Field(default_factory=dict)
+    replan_metrics: dict[str, Any] = Field(default_factory=dict)
     browser_metrics: dict[str, Any] = Field(default_factory=dict)
     performance_metrics: dict[str, Any] = Field(default_factory=dict)
     compression_metrics: dict[str, Any] = Field(default_factory=dict)
