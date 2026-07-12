@@ -234,6 +234,29 @@ class WorkflowOrchestrator:
                     )
                     replan_metrics["recovered"] = task_result.success
 
+            # v3 阶段H：browse 成功后做实体真实性校验（bad_cases 16 修复）。
+            # failed -> 清空来源并把 browse 判为逻辑失败，走既有的"资料不足"
+            # 终止路径，拒绝为无法验证的主体硬生成研报；weak -> 继续执行但
+            # 记录状态，evaluation 里可见。
+            if planned_task.task_type == "browse" and task_result.success:
+                from tools.entity_validator import validate_entity
+
+                src_objs = [Source(**s) for s in task_result.result.get("sources", [])]
+                validation = validate_entity(request.topic, request.report_type, src_objs)
+                context["entity_validation"] = validation
+                trace.entity_validation = validation
+                if validation["validation_status"] == "failed":
+                    error_msg = f"insufficient_entity_evidence: {validation['reason']}"
+                    task_result = TaskResult(
+                        task_id=planned_task.task_id,
+                        task_type="browse",
+                        success=False,
+                        result={"sources": [], "browser_metrics": task_result.result.get("browser_metrics", {})},
+                        error=error_msg,
+                        execution_time=task_result.execution_time,
+                    )
+                    logger.warning(error_msg)
+
             context_key = _CONTEXT_KEY_BY_TASK_TYPE.get(planned_task.task_type)
             if context_key:
                 context[context_key] = task_result.result
@@ -261,16 +284,44 @@ class WorkflowOrchestrator:
             # produce boilerplate "资料不足" text dressed up with all the
             # normal headings, which is misleading and defeats the whole
             # anti-hallucination point of this pipeline.
-            trace.errors.append({"task_id": "report", "error": "aborted: no usable sources, report generation skipped"})
-            abort_title = f"{request.topic} 研究报告（未生成：资料不足）"
-            abort_markdown = (
-                f"# {request.topic} 研究报告 - 未生成\n\n"
-                "本次运行未能获取到与该主题相关、且通过质量与相关性筛选的有效资料来源，"
-                "因此未进入分析与报告生成阶段，避免在无资料依据的情况下输出内容。\n\n"
-                "可能原因：搜索后端无结果或不稳定、候选来源被域名黑名单/相关性预过滤全部排除、"
-                "或所有来源经内容抓取后主题相关度过低。\n\n"
-                "建议：检查网络与搜索配置后重试，或放宽 `max_sources`/`max_results` 参数。"
+            entity_validation = context.get("entity_validation", {})
+            entity_failed = entity_validation.get("validation_status") == "failed"
+            trace.errors.append({"task_id": "report", "error": (
+                "aborted: insufficient_entity_evidence" if entity_failed
+                else "aborted: no usable sources, report generation skipped")})
+            abort_title = (
+                f"{request.topic} 研究报告（未生成：" + ("实体无法验证" if entity_failed else "资料不足") + "）"
             )
+            if entity_failed:
+                # v3 阶段H：主体无法验证 -> 明确说明，不产出泛"资料不足"文案，
+                # 并写入带 entity_validation_failed 标记的最小 evaluation。
+                abort_markdown = (
+                    f"# {request.topic} 研究报告 - 未生成\n\n"
+                    "**未找到足够可信来源验证该研究主体的真实性**（insufficient_entity_evidence）。\n\n"
+                    f"验证结论：{entity_validation.get('reason', '')}\n\n"
+                    "已抓取的候选内容虽包含金融关键词，但没有任何来源正文真实提到该主体，"
+                    "也未在 A 股上市公司列表中找到对应实体。为避免基于无关内容生成看似有据的报告，"
+                    "本次运行在分析阶段之前终止。\n\n"
+                    "若该主体确实存在（如未上市公司/新设实体），请通过 --local-files 提供本地资料后重试。"
+                )
+                evaluation = {
+                    "overall_score": 0.0,
+                    "entity_validation_failed": True,
+                    "entity_validation": entity_validation,
+                    "criteria_scores": {},
+                    "diagnostics": {"source_count": 0, "score_cap_reason": "entity_validation_failed"},
+                    "weaknesses": ["研究主体无法通过实体真实性校验"],
+                    "recommendations": ["确认主体名称拼写，或通过 --local-files 提供本地资料文件"],
+                }
+            else:
+                abort_markdown = (
+                    f"# {request.topic} 研究报告 - 未生成\n\n"
+                    "本次运行未能获取到与该主题相关、且通过质量与相关性筛选的有效资料来源，"
+                    "因此未进入分析与报告生成阶段，避免在无资料依据的情况下输出内容。\n\n"
+                    "可能原因：搜索后端无结果或不稳定、候选来源被域名黑名单/相关性预过滤全部排除、"
+                    "或所有来源经内容抓取后主题相关度过低。\n\n"
+                    "建议：检查网络与搜索配置后重试，或放宽 `max_sources`/`max_results` 参数。"
+                )
             abort_content = (
                 render_html_report(abort_markdown, abort_title)
                 if request.output_format == "html"

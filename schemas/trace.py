@@ -24,6 +24,7 @@ class TraceLog(BaseModel):
     research_metrics: dict[str, Any] = Field(default_factory=dict)
     replan_metrics: dict[str, Any] = Field(default_factory=dict)
     structured_data_metrics: dict[str, Any] = Field(default_factory=dict)
+    entity_validation: dict[str, Any] = Field(default_factory=dict)
     browser_metrics: dict[str, Any] = Field(default_factory=dict)
     performance_metrics: dict[str, Any] = Field(default_factory=dict)
     compression_metrics: dict[str, Any] = Field(default_factory=dict)

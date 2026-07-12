@@ -226,11 +226,15 @@ class ReportAgent(BaseAgent):
         sources = [Source(**s) for s in source_dicts]
         request = context.get("request")
         report_type = getattr(request, "report_type", "company_research")
-        return {
-            "evaluation": evaluate_report(
-                markdown_content, sources, report_type, analysis=context.get("analysis")
-            )
-        }
+        evaluation = evaluate_report(
+            markdown_content, sources, report_type, analysis=context.get("analysis")
+        )
+        # v3 阶段H：实体验证状态透传到评估诊断（verified/weak；failed 的 run
+        # 根本到不了 evaluate 阶段，见 orchestrator 的终止路径）
+        entity_validation = context.get("entity_validation")
+        if entity_validation:
+            evaluation["diagnostics"]["entity_validation_status"] = entity_validation.get("validation_status")
+        return {"evaluation": evaluation}
 
 
 def evaluate_report_quality(markdown_content: str, sources: list[Source]) -> dict[str, Any]:
