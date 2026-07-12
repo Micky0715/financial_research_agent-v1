@@ -185,12 +185,17 @@ class ReportAgent(BaseAgent):
         output_format = task.parameters.get("output_format", request.output_format)
         charts_html = ""
         if output_format == "html":
-            # v2 模块4：从来源正文抽取年度财务序列并渲染趋势图（base64 内嵌，
-            # 报告仍是单文件）。数据点不足或渲染失败时 charts_html 为空串，
-            # 报告照常生成——图表是增强，不是硬依赖。
-            from tools.chart_renderer import build_charts_html
+            # v2 模块4 + v3 阶段B：结构化数据（AkShare）年度序列优先出图，退回
+            # 文本抽取；另加估值汇总表。任何一环失败 charts_html 为空串，报告
+            # 照常生成——图表是增强，不是硬依赖。
+            from tools.chart_renderer import build_charts_html, build_valuation_table_html
 
-            charts_html = build_charts_html(sources, normalize_topic(request.topic))
+            snapshot = context.get("analysis", {}).get("financial_snapshot_full")
+            dcf = context.get("analysis", {}).get("dcf_valuation_full")
+            rel = analysis.get("relative_valuation")
+            charts_html = build_charts_html(sources, normalize_topic(request.topic), snapshot)
+            table_html = build_valuation_table_html(dcf, rel)
+            charts_html = "\n".join(p for p in (charts_html, table_html) if p)
             final_content = render_html_report(markdown_content, title, extra_html=charts_html)
         else:
             final_content = markdown_content

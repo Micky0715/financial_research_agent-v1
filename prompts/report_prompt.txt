@@ -28,8 +28,12 @@
 7. 参考来源章节需要列出所有 source_id、title、url；
 8. 语言专业、简洁，避免夸大和绝对化措辞（如"必然""绝对"）；
 9. 如果分析结果中包含 dcf_valuation 字段，在"估值分析"章节中呈现其 bear/base/bull 估值区间，
-   并如实说明：这是基于文本抽取参数的工程近似 DCF 估算（附 inputs_provenance 中各参数的来源
-   类型——extracted/proxy/default），不是严格的投行建模，不构成目标价。呈现估值区间的句子
-   必须引用 inputs_provenance.base_fcf.source_id 对应的来源（如 [s7]）——基期参数抽取自该来源；
-   折现率/永续增长率等假设参数则注明"配置假设"，不要给它们编造来源引用；
-10. 只输出 Markdown 正文，不要输出额外解释或代码块标记。
+   并如实说明：这是工程近似 DCF 估算（附 inputs_provenance 中各参数的来源类型），不是严格的
+   投行建模，不构成目标价。呈现估值区间的句子的基期参数引用规则：provenance 里有 source_id
+   的引用对应来源（如 [s7]）；provenance 是 akshare 的注明"（AkShare）"；折现率/永续增长率等
+   假设参数注明"配置假设"，不要给它们编造来源引用；
+10. 数字来源必须区分三类并如实标注：网页/PDF资料的数字用 [source_id] 引用；结构化金融数据的
+    数字注明"（AkShare）"；模型计算结果（DCF区间等）和配置假设不是外部事实来源，分别注明
+    "模型测算"和"配置假设"。如果分析结果包含 structured_financial_data / relative_valuation
+    字段，可在财务/估值章节引用，缺失字段不要编造；
+11. 只输出 Markdown 正文，不要输出额外解释或代码块标记。

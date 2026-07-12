@@ -184,21 +184,89 @@ def render_trend_chart_base64(
         return None
 
 
-def build_charts_html(sources: list[Source], subject: str) -> str:
-    """Extract series and render the chart section HTML ('' when nothing plottable)."""
-    series_by_metric = {
-        metric: extract_metric_series(sources, metric, subject) for metric in _METRIC_KEYWORDS
-    }
-    chart_b64 = render_trend_chart_base64(series_by_metric, f"{subject} 核心财务指标趋势（公开资料抽取）")
-    if not chart_b64:
-        points = {m: len(s) for m, s in series_by_metric.items()}
-        logger.info(f"no trend chart generated (insufficient data points: {points})")
-        return ""
+def _chart_div(chart_b64: str, caption: str) -> str:
     return (
         '<div class="report-chart">\n'
         f'<img src="data:image/png;base64,{chart_b64}" alt="财务趋势图" '
         'style="max-width:100%;height:auto;" />\n'
-        '<p style="color:#888;font-size:12px;">图：核心财务指标年度趋势。数据由公开网页/PDF 资料自动抽取，'
-        "可能存在口径差异或缺失年份，仅供参考。</p>\n"
+        f'<p style="color:#888;font-size:12px;">{caption}</p>\n'
         "</div>"
+    )
+
+
+def build_charts_html(sources: list[Source], subject: str, snapshot: dict | None = None) -> str:
+    """Render the chart section HTML ('' when nothing plottable).
+
+    v3：结构化数据（AkShare 年度序列）优先——口径统一、无实体误归属风险；
+    没有结构化数据时退回文本抽取（v2 行为）。两条路径的图注明确标注数据来源，
+    数据点不足时诚实返回空串，不生成伪图。
+    """
+    parts: list[str] = []
+    structured = (snapshot or {}).get("yearly_series") or {}
+
+    if structured.get("revenue") or structured.get("net_profit"):
+        money_series = {
+            label: [(int(y), float(v)) for y, v in structured.get(field, [])]
+            for label, field in [("营收", "revenue"), ("净利润", "net_profit")]
+            if structured.get(field)
+        }
+        chart = render_trend_chart_base64(money_series, f"{subject} 营收/净利润年度趋势（AkShare）")
+        if chart:
+            parts.append(_chart_div(chart, "图：营收/净利润年度趋势。数据来源：AkShare（新浪财务摘要），单位亿元，仅供参考。"))
+
+        ratio_series = {
+            label: [(int(y), float(v)) for y, v in structured.get(field, [])]
+            for label, field in [("ROE(%)", "roe"), ("毛利率(%)", "gross_margin")]
+            if structured.get(field)
+        }
+        chart = render_trend_chart_base64(ratio_series, f"{subject} ROE/毛利率年度趋势（AkShare）")
+        if chart:
+            parts.append(_chart_div(chart, "图：ROE/毛利率年度趋势。数据来源：AkShare（新浪财务摘要），单位 %，仅供参考。"))
+
+    if not parts:
+        # 降级：v2 文本抽取路径
+        series_by_metric = {
+            metric: extract_metric_series(sources, metric, subject) for metric in _METRIC_KEYWORDS
+        }
+        chart = render_trend_chart_base64(series_by_metric, f"{subject} 核心财务指标趋势（公开资料抽取）")
+        if chart:
+            parts.append(_chart_div(
+                chart,
+                "图：核心财务指标年度趋势。数据由公开网页/PDF 资料自动抽取，可能存在口径差异或缺失年份，仅供参考。",
+            ))
+        else:
+            points = {m: len(s) for m, s in series_by_metric.items()}
+            logger.info(f"no trend chart generated (insufficient data points: {points})")
+
+    return "\n".join(parts)
+
+
+def build_valuation_table_html(dcf: dict | None, relative: dict | None) -> str:
+    """估值结果汇总表（DCF 三情景 + 相对估值信号）。没有任何估值结果时返回 ''。"""
+    rows: list[str] = []
+    if dcf and dcf.get("valuation_range"):
+        vr = dcf["valuation_range"]
+        rows.append(
+            f"<tr><td>DCF（工程近似）</td><td>悲观 {vr.get('bear')} / 基准 {vr.get('base')} / "
+            f"乐观 {vr.get('bull')} 亿元</td><td>模型测算（参数出处见正文）</td></tr>"
+        )
+    for key, m in ((relative or {}).get("multiples") or {}).items():
+        ref = m.get("peer_or_history_reference")
+        ref_text = (
+            f"自身近一年分位 {m.get('percentile')}%（中位 {ref['median']}）" if ref and m.get("percentile") is not None
+            else "历史序列不足"
+        )
+        rows.append(
+            f"<tr><td>{key.upper()} 相对估值</td><td>当前 {m.get('current_multiple')}，"
+            f"信号：{m.get('valuation_signal')}</td><td>{ref_text}（AkShare）</td></tr>"
+        )
+    if not rows:
+        return ""
+    return (
+        '<div class="report-chart"><table border="1" cellspacing="0" cellpadding="6" '
+        'style="border-collapse:collapse;font-size:13px;">'
+        "<tr><th>估值方法</th><th>结果</th><th>参照/来源</th></tr>"
+        + "".join(rows)
+        + "</table>"
+        + '<p style="color:#888;font-size:12px;">估值结果为工具计算与配置假设的演示，参照系与假设见正文说明，不构成投资建议。</p></div>'
     )

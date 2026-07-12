@@ -176,40 +176,69 @@ def _decayed_growth_path(first_year_growth: float, years: int, terminal_growth: 
     return [round(first_year_growth - step * i, 4) for i in range(years)]
 
 
-def extract_dcf_inputs(sources: list[Source], subject: str = "") -> dict[str, Any]:
-    """从已抓取的来源文本中抽取 DCF 输入参数，抽不到的用配置默认值。
+def extract_dcf_inputs(
+    sources: list[Source], subject: str = "", snapshot: Optional[dict[str, Any]] = None
+) -> dict[str, Any]:
+    """抽取 DCF 输入参数：结构化数据（AkShare）优先，其次来源文本，最后配置默认值。
 
     每个参数都带 provenance 标注：
+    - "akshare":   来自结构化金融数据快照（附 akshare 字段名）
+    - "derived":   由结构化序列派生（如营收 YoY）
     - "extracted": 从来源句子里正则抽到（附原句和 source_id）
     - "proxy":     抽到的是代理指标（净利润代替现金流）
-    - "default":   使用 config 里的行业默认值
+    - "default":   使用 config 里的默认值
     """
     provenance: dict[str, Any] = {}
+    snapshot = snapshot or {}
 
-    # base_fcf: 经营性现金流优先，净利润代理兜底，都没有则默认值
-    cashflow = _find_first(sources, _CASHFLOW_RE)
-    if cashflow:
-        base_fcf, sentence, sid = cashflow
-        provenance["base_fcf"] = {"kind": "extracted", "value": base_fcf, "sentence": sentence, "source_id": sid,
-                                  "basis": "经营性现金流净额"}
-    else:
+    # base_fcf 优先级：AkShare经营现金流 > 文本经营现金流 > AkShare净利润 > 文本净利润 > 默认值
+    base_fcf = None
+    if snapshot.get("operating_cash_flow"):
+        base_fcf = snapshot["operating_cash_flow"]
+        provenance["base_fcf"] = {"kind": "akshare", "value": base_fcf,
+                                  "akshare_field": "akshare:operating_cash_flow",
+                                  "basis": f"经营现金流净额（{snapshot.get('period', '')}，AkShare）"}
+    if base_fcf is None:
+        cashflow = _find_first(sources, _CASHFLOW_RE)
+        if cashflow:
+            base_fcf, sentence, sid = cashflow
+            provenance["base_fcf"] = {"kind": "extracted", "value": base_fcf, "sentence": sentence,
+                                      "source_id": sid, "basis": "经营性现金流净额"}
+    if base_fcf is None and snapshot.get("net_profit"):
+        base_fcf = snapshot["net_profit"]
+        provenance["base_fcf"] = {"kind": "akshare", "value": base_fcf,
+                                  "akshare_field": "akshare:net_profit",
+                                  "basis": f"净利润（现金流代理，偏乐观；{snapshot.get('period', '')}，AkShare）"}
+    if base_fcf is None:
         profit = _find_first(sources, _NET_PROFIT_RE)
         if profit:
             base_fcf, sentence, sid = profit
             provenance["base_fcf"] = {"kind": "proxy", "value": base_fcf, "sentence": sentence, "source_id": sid,
                                       "basis": "净利润（现金流代理，偏乐观）"}
-        else:
-            base_fcf = _cfg('DCF_DEFAULT_BASE_FCF', 100.0)
-            provenance["base_fcf"] = {"kind": "default", "value": base_fcf,
-                                      "basis": "未从资料中抽取到现金流/净利润，使用配置默认值"}
+    if base_fcf is None:
+        base_fcf = _cfg('DCF_DEFAULT_BASE_FCF', 100.0)
+        provenance["base_fcf"] = {"kind": "default", "value": base_fcf,
+                                  "basis": "未从结构化数据/资料中获取到现金流/净利润，使用配置默认值"}
 
-    # first-year growth: 营收同比增速，抽不到用默认
-    growth = _find_first(sources, _REVENUE_GROWTH_RE)
-    if growth:
-        g1_raw, sentence, sid = growth
-        g1 = min(g1_raw / 100.0, 0.60)  # cap: 单条新闻里的极端增速不外推
-        provenance["first_year_growth"] = {"kind": "extracted", "value": g1, "sentence": sentence, "source_id": sid}
-    else:
+    # first-year growth 优先级：AkShare营收序列YoY（derived）> 文本增速 > 默认值
+    g1 = None
+    revenue_series = (snapshot.get("yearly_series") or {}).get("revenue") or []
+    if len(revenue_series) >= 2:
+        prev, last = revenue_series[-2][1], revenue_series[-1][1]
+        if prev and prev > 0:
+            g1 = max(min((last - prev) / prev, 0.60), -0.30)
+            provenance["first_year_growth"] = {
+                "kind": "derived", "value": round(g1, 4),
+                "akshare_field": "akshare:revenue_yoy",
+                "basis": f"营收 YoY（{revenue_series[-2][0]}->{revenue_series[-1][0]}，AkShare 序列派生）",
+            }
+    if g1 is None:
+        growth = _find_first(sources, _REVENUE_GROWTH_RE)
+        if growth:
+            g1_raw, sentence, sid = growth
+            g1 = min(g1_raw / 100.0, 0.60)  # cap: 单条新闻里的极端增速不外推
+            provenance["first_year_growth"] = {"kind": "extracted", "value": g1, "sentence": sentence, "source_id": sid}
+    if g1 is None:
         g1 = _cfg('DCF_DEFAULT_GROWTH', 0.10)
         provenance["first_year_growth"] = {"kind": "default", "value": g1}
 
@@ -229,10 +258,17 @@ def extract_dcf_inputs(sources: list[Source], subject: str = "") -> dict[str, An
     }
 
 
-def run_dcf_for_sources(sources: list[Source], subject: str = "") -> Optional[dict[str, Any]]:
-    """一步到位：抽参数 -> 跑三情景 DCF。抽取/计算任何一步失败返回 None（调用方跳过估值模块，不影响主流程）。"""
+def run_dcf_for_sources(
+    sources: list[Source], subject: str = "", snapshot: Optional[dict[str, Any]] = None
+) -> Optional[dict[str, Any]]:
+    """一步到位：抽参数 -> 跑三情景 DCF。抽取/计算任何一步失败返回 None（调用方跳过估值模块，不影响主流程）。
+
+    v3 输出规范化：bear_value/base_value/bull_value + input_sources（逐参数
+    来源：akshare:field / [sX] / config_assumption / derived）+ assumptions +
+    warning + valuation_method。
+    """
     try:
-        params = extract_dcf_inputs(sources, subject)
+        params = extract_dcf_inputs(sources, subject, snapshot)
         result = dcf_valuation_range(
             base_fcf=params["base_fcf"],
             growth_rates=params["growth_rates"],
@@ -240,6 +276,32 @@ def run_dcf_for_sources(sources: list[Source], subject: str = "") -> Optional[di
             terminal_growth=params["terminal_growth"],
         )
         result["inputs_provenance"] = params["provenance"]
+
+        prov = params["provenance"]
+        input_sources: list[str] = []
+        for name, p in prov.items():
+            if p.get("akshare_field"):
+                input_sources.append(f"{name} <- {p['akshare_field']} ({p['kind']})")
+            elif p.get("source_id"):
+                input_sources.append(f"{name} <- [{p['source_id']}] ({p['kind']})")
+            else:
+                input_sources.append(f"{name} <- config_assumption ({p['kind']})")
+        result.update({
+            "valuation_method": "two_stage_dcf",
+            "bear_value": result["valuation_range"]["bear"],
+            "base_value": result["valuation_range"]["base"],
+            "bull_value": result["valuation_range"]["bull"],
+            "input_sources": input_sources,
+            "assumptions": [
+                f"discount_rate={params['discount_rate']:.2%} (config_assumption)",
+                f"terminal_growth={params['terminal_growth']:.2%} (config_assumption)",
+                f"explicit_years={len(params['growth_rates'])}，增速线性衰减至永续增速",
+            ],
+            "warning": (
+                "工程近似估算：base_fcf 为经营现金流或净利润代理（未扣资本开支，偏乐观）；"
+                "折现率/永续增长率为配置假设。不构成目标价或投资建议。"
+            ),
+        })
         return result
     except Exception:  # noqa: BLE001 - valuation is auxiliary, never break the pipeline
         return None

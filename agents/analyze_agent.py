@@ -1,6 +1,6 @@
 """Analyze agent: rule-based extraction + LLM synthesis over selected sources."""
 import json
-from typing import Any
+from typing import Any, Optional
 
 from config import config
 from schemas.request import ResearchRequest
@@ -10,8 +10,55 @@ from tools.financial_analyzer import summarize_financial_points
 from tools.risk_analyzer import detect_risks
 from tools.valuation_analyzer import detect_valuation_signals
 from tools.valuation_dcf import run_dcf_for_sources
+from tools.valuation_relative import relative_valuation
 from utils.logger import logger
 from utils.text_utils import extract_relevant_excerpt, normalize_topic
+
+
+def _fetch_structured_data(subject: str) -> tuple[Optional[dict], dict]:
+    """AkShare 结构化数据（v3）：经 tool_gateway（含 MCP 路由）获取快照。
+
+    永不抛异常；返回 (snapshot|None, akshare_metrics)。快照仅对成功获取的
+    公司返回；失败/降级细节进 metrics -> trace，主流程不受影响。
+    """
+    metrics: dict = {"attempted": True, "success": False, "degraded": True, "symbol": None,
+                     "error": None, "missing_fields": [], "error_count": 0}
+    try:
+        from tools.tool_gateway import fetch_financial_snapshot
+
+        envelope = fetch_financial_snapshot(subject)
+        metrics.update({
+            "success": bool(envelope.get("success")),
+            "degraded": bool(envelope.get("degraded")),
+            "symbol": envelope.get("symbol"),
+            "error": envelope.get("error"),
+            "error_count": len(envelope.get("errors") or []),
+        })
+        snapshot = envelope.get("snapshot")
+        if snapshot:
+            metrics["missing_fields"] = snapshot.get("missing_fields", [])
+        return snapshot, metrics
+    except Exception as exc:  # noqa: BLE001 - structured data is an enhancement, never a dependency
+        metrics["error"] = f"{type(exc).__name__}: {str(exc)[:120]}"
+        logger.warning(f"structured financial data fetch failed (degraded): {exc}")
+        return None, metrics
+
+
+def _structured_data_block(snapshot: Optional[dict]) -> str:
+    """结构化数据的 prompt 注入块。没有快照时明确说明，不留空白让模型猜。"""
+    if not snapshot:
+        return "（本次未获取到结构化金融数据，分析仅基于上方网页/PDF资料）"
+    import json as _json
+
+    compact = {k: snapshot.get(k) for k in (
+        "symbol", "company_name", "period", "revenue", "net_profit", "gross_margin",
+        "roe", "operating_cash_flow", "debt_ratio", "pe", "pb", "ps", "market_cap", "price",
+    )}
+    compact["缺失字段"] = snapshot.get("missing_fields", [])
+    return (
+        "以下为 AkShare 结构化金融数据（金额单位：亿元；引用这些数字时注明来源为 AkShare，"
+        "缺失字段不要编造）：\n" + _json.dumps(compact, ensure_ascii=False)
+    )
 
 from .base_agent import BaseAgent
 
@@ -101,6 +148,14 @@ class AnalyzeAgent(BaseAgent):
             round(analysis_context_chars / original_sources_chars, 4) if original_sources_chars else 0.0
         )
 
+        # v3 阶段A：结构化金融数据（AkShare）——增强不依赖，失败自动降级为
+        # 纯网页/PDF 分析。只对公司研究获取（行业主题没有单一标的）。
+        subject = normalize_topic(request.topic)
+        snapshot: Optional[dict] = None
+        akshare_metrics: dict = {"attempted": False}
+        if request.report_type == "company_research":
+            snapshot, akshare_metrics = _fetch_structured_data(subject)
+
         try:
             prompt_template = _PROMPT_PATH.read_text(encoding="utf-8")
             prompt = prompt_template.format(
@@ -108,6 +163,7 @@ class AnalyzeAgent(BaseAgent):
                 requirements="、".join(request.requirements) or "未指定",
                 sources_block=sources_block,
                 rule_hints_block=json.dumps(rule_result, ensure_ascii=False)[:4000],
+                structured_data_block=_structured_data_block(snapshot),
             )
             raw = self.call_llm(prompt, system="你是严谨的金融分析助手，只输出JSON，不编造数据。")
             parsed = self.parse_json_response(raw)
@@ -123,14 +179,40 @@ class AnalyzeAgent(BaseAgent):
 
         analysis["_rule_hints"] = rule_result
 
+        # v3：结构化数据摘要 + 相对估值挂到 analysis（报告可引用；缺失如实标注）
+        if snapshot:
+            analysis["structured_financial_data"] = {
+                "provider": "akshare",
+                "symbol": snapshot.get("symbol"),
+                "period": snapshot.get("period"),
+                "revenue": snapshot.get("revenue"),
+                "net_profit": snapshot.get("net_profit"),
+                "gross_margin": snapshot.get("gross_margin"),
+                "roe": snapshot.get("roe"),
+                "operating_cash_flow": snapshot.get("operating_cash_flow"),
+                "debt_ratio": snapshot.get("debt_ratio"),
+                "pe": snapshot.get("pe"),
+                "pb": snapshot.get("pb"),
+                "ps": snapshot.get("ps"),
+                "market_cap": snapshot.get("market_cap"),
+                "price": snapshot.get("price"),
+                "missing_fields": snapshot.get("missing_fields", []),
+            }
+            rel = relative_valuation(snapshot)
+            analysis["relative_valuation"] = rel
+            logger.info(
+                f"relative valuation: "
+                f"{ {k: v.get('valuation_signal') for k, v in rel['multiples'].items()} }"
+            )
+
         # v2 模块3：显式调用 DCF 估值工具（tools/valuation_dcf.py），结果作为
         # 独立字段挂到 analysis 上，而不是混进 LLM 的综合总结——计算过程是
-        # 确定性代码，参数出处（extracted/proxy/default）逐项可查。挂在 LLM
-        # 综合之后：即使 LLM 走了 fallback 路径，估值模块照常工作。
+        # 确定性代码，参数出处逐项可查。挂在 LLM 综合之后：即使 LLM 走了
+        # fallback 路径，估值模块照常工作。
         # 只对公司研究运行——行业主题没有单一的现金流主体，DCF 无意义。
         dcf_full = None
         if request.report_type == "company_research" and sources:
-            dcf_full = run_dcf_for_sources(sources, normalize_topic(request.topic))
+            dcf_full = run_dcf_for_sources(sources, subject, snapshot)
             if dcf_full is not None:
                 # 报告上下文有 6000 字符预算，挂精简版（估值区间 + 参数 + 出处
                 # 标注）；含逐年现值明细的完整版进任务结果 -> trace，可复查。
@@ -157,7 +239,10 @@ class AnalyzeAgent(BaseAgent):
                 "analysis_context_chars": analysis_context_chars,
                 "compression_ratio": compression_ratio,
             },
+            "akshare_metrics": akshare_metrics,
         }
+        if snapshot is not None:
+            result["financial_snapshot_full"] = snapshot
         if dcf_full is not None:
             result["dcf_valuation_full"] = dcf_full
         return result

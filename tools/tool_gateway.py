@@ -177,3 +177,15 @@ def read_pdf(url: str) -> dict:
         return result
     from tools.pdf_reader import read_pdf as direct
     return direct(url)
+
+
+def fetch_financial_snapshot(name_or_code: str) -> dict:
+    """Structured financial data via AkShare (v3). Same degrade-to-direct
+    policy as the other tools; the AkShare layer itself additionally degrades
+    to {success: False} envelopes on provider failures - either way the
+    caller never sees an exception."""
+    result = _via_mcp("fetch_financial_snapshot", {"name_or_code": name_or_code})
+    if result is not _MCP_MISS:
+        return result
+    from tools.akshare_tool import fetch_financial_snapshot as direct
+    return direct(name_or_code)

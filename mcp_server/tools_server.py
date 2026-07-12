@@ -50,5 +50,16 @@ def read_pdf(url: str) -> str:
     return json.dumps(_read_pdf(url), ensure_ascii=False)
 
 
+@mcp.tool()
+def fetch_financial_snapshot(name_or_code: str) -> str:
+    """Fetch structured financial data (AkShare) for an A-share company by
+    name or 6-digit code. Returns a JSON envelope with {provider, symbol,
+    success, degraded, errors, snapshot} - snapshot fields the provider could
+    not return are listed in missing_fields, never fabricated."""
+    from tools.akshare_tool import fetch_financial_snapshot as _fetch
+
+    return json.dumps(_fetch(name_or_code), ensure_ascii=False, default=str)
+
+
 if __name__ == "__main__":
     mcp.run()
