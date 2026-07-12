@@ -133,6 +133,9 @@ class BrowserAgent(BaseAgent):
                 relevance_terms=profile["relevance_terms"],
                 report_type=profile["report_type"],
             )
+            from tools.source_tier import classify_source
+
+            tier = classify_source(url, title=title, source_type=source_type)
             return Source(
                 source_id=source_id,
                 title=title or url,
@@ -143,6 +146,12 @@ class BrowserAgent(BaseAgent):
                 score=scored["score"],
                 quality_details=scored["details"],
                 metadata=metadata,
+                authority_tier=tier["authority_tier"],
+                authority_reason=tier["authority_reason"],
+                domain=tier["domain"],
+                is_official_source=tier["is_official_source"],
+                is_financial_media=tier["is_financial_media"],
+                is_user_generated_content=tier["is_user_generated_content"],
             )
         except Exception as exc:  # noqa: BLE001 - never let one source kill the batch
             logger.warning(f"browser_agent failed on {url}: {exc}")
