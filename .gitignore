@@ -45,3 +45,9 @@ outputs/baseline_reports/
 # transient eval run logs (regenerated every suite run)
 outputs/eval/run_*.log
 outputs/eval/run_*.err.log
+
+# v3: exported final reports + memory index (regenerable artifacts)
+outputs/final_reports/
+memory/index/
+*.docx
+*.pdf
