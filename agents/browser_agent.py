@@ -332,6 +332,15 @@ class BrowserAgent(BaseAgent):
                 non_retryable=bool(sources),
             )
 
+        # v3 阶段G：用户本地文件作为额外来源（不参与相关性竞争、不占 top_k 名额）
+        local_files = getattr(request, "local_files", None) or []
+        if local_files:
+            from tools.local_file_reader import build_local_sources
+
+            local_sources = build_local_sources(local_files, entity if (entity := profile["subject"]) else "")
+            top_sources = local_sources + top_sources
+            browser_metrics["local_file_count"] = len(local_sources)
+
         return {
             "all_scored_count": len(sources),
             "sources": [s.model_dump() for s in top_sources],

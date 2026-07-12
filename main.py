@@ -29,6 +29,11 @@ def parse_args() -> argparse.Namespace:
         help="逗号分隔的需求列表，例如 '公司概况,财务分析,估值分析,风险提示'",
     )
     parser.add_argument("--language", default="zh")
+    parser.add_argument(
+        "--local-files",
+        default="",
+        help="逗号分隔的本地文件路径（PDF/TXT/MD/CSV/Excel），作为额外来源参与分析",
+    )
     return parser.parse_args()
 
 
@@ -44,6 +49,7 @@ def main() -> int:
         output_format=args.output_format,
         language=args.language,
         max_sources=args.max_sources,
+        local_files=[f.strip() for f in args.local_files.split(",") if f.strip()],
     )
 
     console.print(f"[bold cyan]研究主题:[/bold cyan] {request.topic}")

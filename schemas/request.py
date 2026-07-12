@@ -17,3 +17,7 @@ class ResearchRequest(BaseModel):
     output_format: str = Field(default="markdown", description="'markdown' or 'html'")
     language: str = Field(default="zh")
     max_sources: int = Field(default=5, ge=1, le=50)
+    local_files: list[str] = Field(
+        default_factory=list,
+        description="v3: user-provided local files (PDF/TXT/MD/CSV/Excel) added as sources",
+    )
