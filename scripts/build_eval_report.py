@@ -123,6 +123,27 @@ def build_report(rows: list[dict[str, Any]]) -> str:
         "",
     ]
 
+
+    # 2.5 Report-type grouping (v3 stage E)
+    from collections import defaultdict
+
+    groups: dict[str, list[dict[str, Any]]] = defaultdict(list)
+    for r in rows:
+        rt_val = r.get("eval_report_type")
+        if not rt_val or rt_val == "N/A":
+            rt_val = r.get("report_type") or "unknown"
+        groups[rt_val].append(r)
+    lines += ["## 2.5 By report_type", "", "| report_type | cases | avg_quality | avg_sources | avg_number_grounding | avg_authority | top weakness |", "|---|---|---|---|---|---|---|"]
+    for rt, group in sorted(groups.items()):
+        q = _avg([_to_float(g.get("quality_score")) for g in group])
+        s = _avg([_to_float(g.get("source_count")) for g in group])
+        ng = _avg([_to_float(g.get("number_grounding_rate")) for g in group])
+        au = _avg([_to_float(g.get("authority_score")) for g in group])
+        issues = Counter(g.get("main_issue", "N/A") for g in group)
+        top_issue = issues.most_common(1)[0][0] if issues else "N/A"
+        lines.append(f"| {rt} | {len(group)} | {_fmt(q)} | {_fmt(s)} | {_fmt(ng)} | {_fmt(au)} | {top_issue} |")
+    lines.append("")
+
     # 3. Top Successful Cases
     ranked = sorted(
         (r for r in rows if _to_float(r.get("quality_score")) is not None),

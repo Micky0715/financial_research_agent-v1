@@ -54,6 +54,10 @@ FIELDNAMES = [
     "sources_path",
     "evaluation_path",
     "main_issue",
+    # v3 additions
+    "eval_report_type",
+    "number_grounding_rate",
+    "tier1_or_tier2_ratio",
 ]
 
 _NA = "N/A"
@@ -217,6 +221,24 @@ def _row_from_trace(trace_path: Path, trace: dict[str, Any], report_type: Any) -
         "main_issue": _NA,  # filled in below once we have all the numbers
     }
     row["main_issue"] = _classify_main_issue(success, source_count, diagnostics.get("score_cap_reason", _NA))
+
+    # v3: report-type-aware evaluation fields + source tier ratio
+    row["eval_report_type"] = evaluation.get("report_type", _NA)
+    row["number_grounding_rate"] = diagnostics.get("number_grounding_rate", _NA)
+    try:
+        if sources_path:
+            from tools.source_tier import classify_source, tier_counts
+
+            source_list = load_json(sources_path)
+            classified = [
+                classify_source(s.get("url", ""), s.get("title", ""), s.get("source_type", "web"))
+                for s in source_list
+            ]
+            row["tier1_or_tier2_ratio"] = tier_counts(classified)["tier1_or_tier2_ratio"]
+        else:
+            row["tier1_or_tier2_ratio"] = _NA
+    except Exception:  # noqa: BLE001 - tier stats are auxiliary
+        row["tier1_or_tier2_ratio"] = _NA
     return row
 
 

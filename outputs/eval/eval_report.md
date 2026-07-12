@@ -26,6 +26,13 @@ Generated from `outputs/eval/eval_summary.csv` - 10 eval topic(s) (latest run pe
 - analyze_time > 60s: 3 / 10
 - report_time > 60s: 2 / 10
 
+## 2.5 By report_type
+
+| report_type | cases | avg_quality | avg_sources | avg_number_grounding | avg_authority | top weakness |
+|---|---|---|---|---|---|---|
+| company_research | 5 | 0.775 | 5.0 | N/A | 0.604 | ungrounded_number_count>0 |
+| industry_research | 5 | 0.821 | 5.0 | N/A | 0.504 | ungrounded_number_count>0 |
+
 ## 3. Top Successful Cases
 
 | topic | source_count | quality_score | total_time |
