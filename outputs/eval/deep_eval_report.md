@@ -7,25 +7,23 @@
 - total_cases: 10
 - success_rate: 1.0
 - avg_source_count: 5.0
-- avg_quality_score: 0.798
-- avg_number_grounding_rate: insufficient data
-- avg tier1_or_tier2_ratio: 0.28
-- total_time: avg 160.658s | P50 133.912s | P90 212.785s | P95 296.103s | max 296.103s
+- avg_quality_score: 0.8
+- avg_number_grounding_rate: 0.869
+- avg tier1_or_tier2_ratio: 0.42
+- total_time: avg 348.438s | P50 132.45s | P90 358.034s | P95 2143.738s | max 2143.738s
 
 ## 按 report_type 分组
 
 | report_type | cases | avg_quality | avg_sources | avg_grounding | avg_authority |
 |---|---|---|---|---|---|
-| company_research | 5 | 0.775 | 5.0 | insufficient data | 0.604 |
-| industry_research | 5 | 0.821 | 5.0 | insufficient data | 0.504 |
+| company_research | 5 | 0.8 | 5.0 | 0.909 | 0.704 |
+| industry_research | 5 | 0.8 | 5.0 | 0.829 | 0.636 |
 
 ## score_cap_reason 分布
 
-- ungrounded_number_count>0: 9
-- none: 1
+- unsourced_number_count>0: 10
 
 ## main_issue 分布
 
-- ungrounded_number_count>0: 9
-- none: 1
+- unsourced_number_count>0: 10
 

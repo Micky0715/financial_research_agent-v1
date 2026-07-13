@@ -61,3 +61,11 @@
 ## 6. V1 是否收口
 
 **V1 已完成工程闭环，可以作为稳定版本上传 GitHub。** 后续新功能建议在 v2 分支开发，避免破坏当前评测链路（`eval/topics.json` 固定 10 case + `outputs/eval/` 下的评测汇总/baseline 对比）。
+
+---
+
+# V3-full 附注（更新于 v3 收口）
+
+v2 之后按十个阶段实现了 v3-full：AkShare 结构化数据、数据归一化、相对估值、DCF 输入标注增强、source tier、数字级 grounding、分型评估、DOCX/PDF 导出、本地文件输入、实体验证、向量记忆、30 项离线测试与五份评测报告。**没有实现 Wind。**
+
+v3 全量 eval（真实运行）：10/10 成功、avg_source_count 5.0、avg_quality 0.8（company 与 industry 持平——分型评估消除了行业压分）、number_grounding_rate 0.869、tier1_or_tier2_ratio 0.42。能力对比、代码位置与验证证据见 docs/v2_capability_matrix.md 的 v3 表；限制与免责见 README 第 18 节。

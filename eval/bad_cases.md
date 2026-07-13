@@ -373,3 +373,138 @@ QualityScorer 的相关性评分里，金融关键词密度加分（最高 +0.25
 ### 指标变化
 - 全 LLM 断供下的 pipeline 完成率：未知 -> 实测 10/10（fallback 链路全覆盖）
 - 无效 eval 的识别信号：无 -> `avg_duration` 异常（27.5s vs 正常 130-180s）+ 日志 fallback 计数（30 处）
+
+---
+
+## Bad Case 18：AkShare 东方财富系接口在本环境全部 ProxyError
+
+### 现象
+v3 接入 AkShare 时，`stock_individual_info_em`、`stock_zh_a_hist` 等东方财富系接口全部抛 `ProxyError: HTTPSConnectionPool(host='push2.eastmoney.com')`，而新浪系（`stock_financial_abstract`、`stock_zh_a_daily`）、百度估值、全 A 股代码表正常。
+
+### 原因
+本机网络环境对 eastmoney push2 域名的连接被代理拦截；AkShare 的不同接口走完全不同的数据源域名，可用性必须逐一实测，不能按文档假设。
+
+### 修改
+接口选择实测驱动：先探测再封装（探测记录在 docs/akshare_integration.md），[tools/akshare_tool.py](../tools/akshare_tool.py) 只依赖实测可用的四个接口；每个接口独立 try/except，单接口失败只缺对应字段（进 missing_fields + errors），不影响其余字段汇总。
+
+### 结果
+贵州茅台真实快照全链路成功：6 年营收序列、净利 823.2 亿、ROE 32.53%、PE 18.21、市值 15063 亿；东财系接口零依赖。
+
+### 指标变化
+- 可用接口：按文档全信 -> 实测 4/6 可用，封装只用可用的
+- 单接口失败的爆炸半径：整个快照失败 -> 单字段缺失（missing_fields 如实记录）
+
+---
+
+## Bad Case 19：相对估值没有可靠的免费行业可比数据源
+
+### 现象
+实现 PE/PB 相对估值时，找不到本环境可用的免费行业可比公司倍数接口（东财系被拦，其他源无行业聚合）。"行业平均 PE"这类参照系拿不到真实数据。
+
+### 原因
+免费公开数据源的行业倍数聚合要么不存在、要么依赖被拦截的接口。项目红线禁止编造行业均值。
+
+### 修改
+参照系改为**该股票自身近一年倍数分布**（百度估值日度序列，真实数据）：当前值处于自身历史 <=30% 分位报 undervalued、>=70% 报 overvalued，含义明确标注为"相对自身历史"而非"相对同行"（[tools/valuation_relative.py](../tools/valuation_relative.py)，assumptions 字段写明）。PS 无历史序列，诚实输出 unknown + missing_fields。
+
+### 结果
+茅台实测：PE 18.21 处于自身近一年 4.4% 分位 -> undervalued（相对自身历史），PS 标 unknown。没有任何编造的行业均值。
+
+### 指标变化
+- 定性：从"要么编行业均值要么不做" -> "换真实可得的参照系并明示语义边界"
+
+---
+
+## Bad Case 20：python str.replace 打补丁静默失败，实体验证的终止文案没生效
+
+### 现象
+虚构公司 E2E 实测中实体验证正确拦截（来源数量 0），但终止报告用的是通用"资料不足"文案而不是实体验证专用文案，evaluation 文件是空 `{}`——预期的 `entity_validation_failed` 标记没写入。
+
+### 原因
+用 python `str.replace` 给 orchestrator 打补丁时，替换目标字符串里写了 `\n`（两个字符），而文件里是真实换行符——**`str.replace` 找不到目标时静默返回原文，不报错**，补丁等于没打，且脚本还打印了"patched"误导排查。
+
+### 修改
+改用编辑器精确匹配替换重新修改 abort 路径；离线复测（monkeypatch 泛金融来源 + 虚构主体）确认：报告含 insufficient_entity_evidence 说明、evaluation 带 entity_validation_failed=True。
+
+### 结果
+教训固化：str.replace 式补丁必须验证替换确实发生（替换前后内容比对或计数断言），"脚本跑完没报错"不等于"补丁生效"。
+
+### 指标变化
+- entity 终止路径的 evaluation：空 {} -> {entity_validation_failed: true, overall_score: 0.0}
+
+---
+
+## Bad Case 21：数字 grounding 的离线报告做不了数值核对
+
+### 现象
+scripts/build_grounding_report.py 离线扫描历史报告时，AkShare/DCF 数字只能做"标注分类"（句子里有没有 AkShare/模型测算标记），做不了数值核对（数字是否真的等于 snapshot/DCF 输出）——因为 snapshot 和 DCF 完整输出没有存进 trace（体积原因只存了指标）。
+
+### 原因
+运行时评估（report_agent._evaluate）拿得到内存里的 snapshot/dcf 可以核对数值；离线脚本只有落盘产物。
+
+### 修改
+如实分层：运行时评估做数值核对（tools/number_grounding.py 的 value_verified 字段，1% 容差）；离线报告只做标注分类并**在报告里写明这一区别**，不假装做了数值核对。
+
+### 结果
+两个口径都真实：evaluation diagnostics 里有 value_verified 计数，grounding_report.md 里有说明段。
+
+### 指标变化
+- 定性：避免了"离线报告看起来像做了数值审计"的误导
+
+---
+
+## Bad Case 22：PDF 导出依赖 HTML 报告，markdown-only run 无 PDF 可导
+
+### 现象
+export_reports.py --latest 时最新 run 是 markdown 输出（eval 默认格式），PDF 导出没有 HTML 源可用。
+
+### 原因
+PDF 路径设计为"从 HTML 打印"（Edge headless），markdown 报告没有对应 HTML 文件。
+
+### 修改
+如实跳过并说明（"PDF skipped (no HTML report for this run)"），DOCX 照常从 markdown 生成；对有 HTML 的 run（比亚迪）验证了完整 DOCX+PDF 双导出。不做 markdown->HTML 的临时转换硬凑 PDF（会丢图表）。
+
+### 结果
+两条路径都验证：markdown run -> DOCX + PDF 诚实跳过；HTML run -> DOCX + 真实 PDF。
+
+### 指标变化
+- 定性：导出失败模式全部显式化（Edge 缺失/无 HTML/打印失败各有明确状态）
+
+---
+
+## Bad Case 23：虚构公司 E2E——纵深防御实录（相关性层被骗，实体层拦截）
+
+### 现象
+虚构主体"星河量子能源股份有限公司投资价值分析"实测：第一轮 research 0 候选 -> v2 的 replan 触发强制 fallback 重搜 -> browse 拿到 20 候选、16 usable、**15 被判 relevant**（bad_cases 16 的老缺口：泛金融内容骗过相关性层）-> **entity validation 拦截**（A股代码表未命中 + 零来源正文真实提到该主体）-> 来源数量 0，输出"实体无法验证"说明而非正常研报。
+
+### 原因
+相关性层的金融词密度加分不要求主体命中（16 号已记录未修）；v3 的策略是不动相关性层（避免误杀风险），在其后加实体验证层。
+
+### 修改
+[tools/entity_validator.py](../tools/entity_validator.py)：A股代码表（5530 只，AkShare 缓存）+ 内置别名表 + 来源正文真实提及三重证据；company_research 全部不命中 -> failed -> 终止并输出 insufficient_entity_evidence。启发式边界如实文档化：未上市真实公司会被判 weak/failed（提示用 --local-files 提供资料）。
+
+### 结果
+bad_cases 16 状态：未修复 -> **已修复（拦截层方案）**。10 个真实 eval topic 的验证全部 verified（公司走代码表/别名表，行业走行业词一致性），零误杀。
+
+### 指标变化
+- 虚构公司主题：生成看似正常的 5 来源研报 -> 0 来源 + 显式"实体无法验证"报告
+- evaluation：quality 0.8（虚假） -> entity_validation_failed=true, overall 0.0
+
+---
+
+## Bad Case 24：memory 与语义层共享模型，进程冷启动慢
+
+### 现象
+memory 检索脚本每次以独立进程运行都要重新加载 bge 模型（本机 60-80 秒），连续调用三个脚本时第三个超时——不是功能失败，是模型加载成本没有跨进程复用。
+
+### 原因
+sentence-transformers 模型加载（权重读取+torch 初始化）在每个新 Python 进程里都要来一遍；脚本式使用天然放大这个成本。
+
+### 修改
+如实记录为已知限制；检索本身有关键词降级路径（模型不可用/加载失败时 bigram 重叠打分，单测覆盖），功能不受影响。批量场景应在同一进程内复用（LightVectorStore 单例已支持）。
+
+### 结果
+功能正确性与降级路径验证通过；冷启动成本作为使用注意事项写入 docs/memory_design.md 的边界。
+
+### 指标变化
+- 定性：限制从"未知" -> "已知并文档化"（进程内复用 vs 跨进程冷启动）

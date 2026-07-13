@@ -18,3 +18,21 @@
 4. **图表**：数据来自新闻文本正则抽取，守卫策略"宁缺毋滥"——部分主题会因数据点不足而无图。
 5. **动态路由**：只覆盖"browse 候选不足"一种场景，重检索 query 是固定模板不是 LLM 改写；每次成功运行的执行路径仍是固定 5 阶段。
 6. 虚构/极冷门主体存在 groundedness 缺口（bad_cases 16），相关性评分可能放行泛金融无关内容。
+
+---
+
+# v3 能力对比表（v2 -> v3-full）
+
+| # | 能力 | v2 状态 | v3 状态 | 代码位置 | 验证证据 |
+|---|---|---|---|---|---|
+| 6 | 结构化金融数据 | 无（财务数字全靠网页/PDF 文本抽取） | AkShare 四个实测可用接口 -> FinancialDataSnapshot（年度序列+估值指标），逐接口降级、缺失字段如实 missing_fields；经 MCP/gateway 统一调用 | [tools/akshare_tool.py](../tools/akshare_tool.py)、[tools/financial_data_normalizer.py](../tools/financial_data_normalizer.py)、[schemas/financial_data.py](../schemas/financial_data.py) | 茅台真实快照：6年营收序列/净利823.2亿/ROE 32.53%/PE 18.21；东财系 ProxyError 实测规避（bad_cases 18）；降级单测 |
+| 7 | 相对估值 | 无 | PE/PB 相对自身近一年历史分位（拒绝编造行业均值），PS 无历史如实 unknown | [tools/valuation_relative.py](../tools/valuation_relative.py) | 茅台 PE 18.21 @ 4.4% 分位 -> undervalued（相对自身历史）；bad_cases 19；单测 |
+| 8 | DCF 输入来源 | extracted/proxy/default 三级 | +akshare/derived 两级（AkShare 现金流优先、营收 YoY 派生增速），输出 input_sources/assumptions/warning/valuation_method | [tools/valuation_dcf.py](../tools/valuation_dcf.py) | v3 eval 5/5 公司 topic DCF 触发；input_sources 逐参数标注；单测 |
+| 9 | 来源分级 | 排序层内部 tier1/2 | 显式 source tier 体系（tier1/2/3/unknown/local_user_file），每个 Source 带 6 个分级字段，质量报告 | [tools/source_tier.py](../tools/source_tier.py)、[scripts/build_source_quality_report.py](../scripts/build_source_quality_report.py) | v3 eval tier1+2 占比 0.42（真实分布，如实呈现）；单测 |
+| 10 | 数字级 grounding | 句级"有无引用"检查 | 全文数字五类溯源（sourced/akshare/assumption/calculated/unsourced）+ 幻觉引用检测 + 运行时数值核对 | [tools/number_grounding.py](../tools/number_grounding.py)、[tools/citation_checker.py](../tools/citation_checker.py) | grounding 率 0.691（v2 报告基线）-> 0.879（v3）；抓到真实幻觉引用；单测 |
+| 11 | 分型评估 | 单一公司导向指标打所有报告 | company/industry/risk/valuation/macro 五套（后三类未经真实 topic 验证，已注明），行业不再被财务关键词封顶 | [evaluators/report_evaluator.py](../evaluators/report_evaluator.py) | 同一文本 company/industry 评分逻辑分歧单测；v3 eval 行业组 avg 0.8（bad_cases 9 闭环） |
+| 12 | 报告导出 | Markdown/HTML | +DOCX（python-docx）/PDF（Edge headless，可降级） | [tools/report_exporter.py](../tools/report_exporter.py)、[scripts/export_reports.py](../scripts/export_reports.py) | 比亚迪真实 DOCX+PDF 双导出；markdown-only run 的 PDF 诚实跳过（bad_cases 22） |
+| 13 | 本地文件输入 | 无 | PDF/TXT/MD/CSV/Excel -> source（s901+，不占网页名额），财报字段尽力抽取 | [tools/local_file_reader.py](../tools/local_file_reader.py) | fixtures 实测（TXT 抽出真实营收序列/CSV 表格元数据/坏文件跳过）；单测 |
+| 14 | 虚构主体识别 | 无（bad_cases 16 缺口） | A股代码表+别名表+来源正文三重证据，failed -> insufficient_entity_evidence 终止 | [tools/entity_validator.py](../tools/entity_validator.py) | 虚构公司 E2E 实测拦截（相关性层被骗、实体层拦下，bad_cases 23）；10 真实 topic 零误杀 |
+| 15 | 记忆 | 无 | 本地轻量向量索引（numpy+bge，关键词降级），默认不参与主链路 | [memory/](../memory/) | 27 条索引，比亚迪查询 0.823 命中；降级单测；bad_cases 24 |
+| 16 | 离线测试 | 无正式测试套件 | 30 个 pytest（全离线）+ deep_eval/latency/ablation 报告 | [tests/](../tests/)、scripts/build_*_report.py | 30/30 通过 ~6s；ablation 只用真实历史数据，未测项标 insufficient data |
