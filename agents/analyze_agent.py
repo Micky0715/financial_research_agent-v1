@@ -143,6 +143,72 @@ def _company_deep_compact(bundle: dict) -> dict:
     return compact
 
 
+def _run_industry_deep_chain(subject: str, sources: list[Source]) -> tuple[Optional[dict], dict]:
+    """v4 阶段C：行业深度链（生命周期/集中度/产业链/三年情景/进入退出参考）。
+
+    永不抛异常；返回 (bundle|None, metrics)。集中度无板块数据时 degraded，
+    其余模块基于来源文本证据独立工作。
+    """
+    metrics: dict = {"attempted": True, "lifecycle_stage": None, "concentration": False,
+                     "chain_nodes": 0, "scenario_years": 0, "error": None}
+    try:
+        from tools.industry_chain_builder import build_industry_chain
+        from tools.industry_concentration import compute_concentration
+        from tools.industry_entry_exit_analyzer import analyze_entry_exit
+        from tools.industry_lifecycle import assess_lifecycle
+        from tools.industry_scenario_model import build_scenario_model
+
+        concentration = compute_concentration(subject, sources)
+        metrics["concentration"] = concentration.cr5 is not None
+        lifecycle = assess_lifecycle(subject, sources,
+                                     concentration.member_count or None)
+        metrics["lifecycle_stage"] = lifecycle.stage
+        chain = build_industry_chain(subject, sources)
+        metrics["chain_nodes"] = len(chain.nodes)
+        scenario = build_scenario_model(subject, sources)
+        metrics["scenario_years"] = len(scenario.years)
+        entry_exit = analyze_entry_exit(subject, lifecycle, concentration)
+
+        bundle = {
+            "lifecycle": lifecycle.model_dump(),
+            "concentration": concentration.model_dump(),
+            "industry_chain": chain.model_dump(),
+            "scenario_model": scenario.model_dump(),
+            "entry_exit": entry_exit.model_dump(),
+        }
+        return bundle, metrics
+    except Exception as exc:  # noqa: BLE001 - industry chain is an enhancement, never a dependency
+        metrics["error"] = f"{type(exc).__name__}: {str(exc)[:120]}"
+        logger.warning(f"industry deep chain failed (degraded): {exc!r}")
+        return None, metrics
+
+
+def _industry_deep_compact(bundle: dict) -> dict:
+    """行业深度 bundle 的 analysis 精简版。"""
+    lc, cc, sm, ee = bundle["lifecycle"], bundle["concentration"], bundle["scenario_model"], bundle["entry_exit"]
+    compact: dict = {
+        "lifecycle": {"stage": lc["stage"], "reason": lc["stage_reason"],
+                      "signals": lc["signals"], "limitation": lc["limitation"]},
+        "scenario_3y": {
+            "years": [{"year": y["year"], "bear": y["bear"], "base": y["base"],
+                       "bull": y["bull"], "unit": y["unit"]} for y in sm["years"]],
+            "is_indexed": sm["is_indexed"],
+            "inputs_kinds": {i["name"]: i["value_kind"] for i in sm["inputs"]},
+            "limitation": sm["limitation"],
+        },
+        "entry_exit": {"advice": ee["advice"], "total_score": ee["score_breakdown"].get("total"),
+                       "limitation": ee["limitation"]},
+        "industry_chain_layers": [f"{n['layer']}-{n['segment']}" for n in bundle["industry_chain"]["nodes"]],
+    }
+    if cc["cr5"] is not None:
+        compact["concentration"] = {"sector": cc["sector_name"], "cr3": cc["cr3"], "cr5": cc["cr5"],
+                                    "cr10": cc["cr10"], "hhi": cc["hhi"],
+                                    "sample_note": cc["sample_note"]}
+    else:
+        compact["concentration"] = {"degraded": True, "limitation": cc["limitation"]}
+    return compact
+
+
 def _run_macro_chain(sources: list[Source]) -> tuple[Optional[dict], dict]:
     """v4 阶段A：宏观数据链路（指标快照 + 政策解析 + 传导链 + 灰犀牛）。
 
@@ -330,6 +396,13 @@ class AnalyzeAgent(BaseAgent):
             company_deep_bundle, company_deep_metrics = _run_company_deep_chain(
                 subject, snapshot, sources)
 
+        # v4 阶段C：行业深度链（生命周期/集中度/产业链/三年情景/进入退出）
+        industry_deep_bundle: Optional[dict] = None
+        industry_deep_metrics: dict = {"attempted": False}
+        if request.report_type == "industry_research":
+            industry_deep_bundle, industry_deep_metrics = _run_industry_deep_chain(
+                subject, sources)
+
         try:
             prompt_template = _PROMPT_PATH.read_text(encoding="utf-8")
             prompt = prompt_template.format(
@@ -432,6 +505,7 @@ class AnalyzeAgent(BaseAgent):
             "akshare_metrics": akshare_metrics,
             "macro_metrics": macro_metrics,
             "company_deep_metrics": company_deep_metrics,
+            "industry_deep_metrics": industry_deep_metrics,
         }
         if snapshot is not None:
             result["financial_snapshot_full"] = snapshot
@@ -442,4 +516,7 @@ class AnalyzeAgent(BaseAgent):
         if company_deep_bundle is not None:
             analysis["company_deep_analysis"] = _company_deep_compact(company_deep_bundle)
             result["company_deep_full"] = company_deep_bundle
+        if industry_deep_bundle is not None:
+            analysis["industry_deep_analysis"] = _industry_deep_compact(industry_deep_bundle)
+            result["industry_deep_full"] = industry_deep_bundle
         return result
