@@ -60,6 +60,89 @@ def _structured_data_block(snapshot: Optional[dict]) -> str:
         "缺失字段不要编造）：\n" + _json.dumps(compact, ensure_ascii=False)
     )
 
+def _run_company_deep_chain(subject: str, snapshot: Optional[dict],
+                            sources: list[Source]) -> tuple[Optional[dict], dict]:
+    """v4 阶段B：公司深度链（三表/杜邦/现金流质量/股权治理/同业比较）。
+
+    永不抛异常；返回 (bundle|None, metrics)。各子模块独立降级——一个失败
+    不影响其余（结果里 degraded/limitation 如实标注）。
+    """
+    metrics: dict = {"attempted": True, "statements_periods": 0, "dupont": False,
+                     "cashflow_quality": False, "shareholder": False, "peers": 0,
+                     "error": None}
+    try:
+        from tools.cashflow_quality_analyzer import cashflow_quality_analysis
+        from tools.corporate_governance_analyzer import analyze_governance
+        from tools.dupont_analyzer import dupont_analysis
+        from tools.financial_ratio_analyzer import compute_financial_ratios
+        from tools.financial_statement_extractor import extract_three_statements
+        from tools.peer_comparison import compare_with_peers
+        from tools.shareholder_structure import fetch_shareholder_structure
+
+        statements = extract_three_statements(subject, "annual")
+        metrics["statements_periods"] = len(statements.periods)
+
+        reported_roe = snapshot.get("roe") if snapshot else None
+        dupont = dupont_analysis(statements, reported_roe)
+        metrics["dupont"] = dupont.calculated_roe is not None
+        cashflow = cashflow_quality_analysis(statements)
+        metrics["cashflow_quality"] = cashflow.ocf_to_net_profit is not None
+        ratios = compute_financial_ratios(statements)
+
+        structure = fetch_shareholder_structure(subject)
+        metrics["shareholder"] = structure.top1_pct is not None
+        governance = analyze_governance(structure, sources)
+
+        peers = compare_with_peers(subject)
+        metrics["peers"] = len(peers.peer_list)
+
+        bundle = {
+            "three_statements": statements.model_dump(),
+            "dupont": dupont.model_dump(),
+            "cashflow_quality": cashflow.model_dump(),
+            "financial_ratios": ratios,
+            "shareholder_structure": structure.model_dump(),
+            "governance": governance.model_dump(),
+            "peer_comparison": peers.model_dump(),
+        }
+        return bundle, metrics
+    except Exception as exc:  # noqa: BLE001 - deep chain is an enhancement, never a dependency
+        metrics["error"] = f"{type(exc).__name__}: {str(exc)[:120]}"
+        logger.warning(f"company deep chain failed (degraded): {exc!r}")
+        return None, metrics
+
+
+def _company_deep_compact(bundle: dict) -> dict:
+    """公司深度 bundle 的 analysis 精简版（进 LLM 上下文 + 报告可引用）。"""
+    du, cq = bundle["dupont"], bundle["cashflow_quality"]
+    sh, pc = bundle["shareholder_structure"], bundle["peer_comparison"]
+    compact: dict = {
+        "dupont": {"period": du["period"], "net_margin_pct": du["net_margin"],
+                   "asset_turnover": du["asset_turnover"], "equity_multiplier": du["equity_multiplier"],
+                   "calculated_roe_pct": du["calculated_roe"], "reported_roe_pct": du["reported_roe"],
+                   "note": du["formula_note"]},
+        "cashflow_quality": {"period": cq["period"], "ocf_to_net_profit": cq["ocf_to_net_profit"],
+                             "cash_revenue_ratio": cq["cash_revenue_ratio"],
+                             "capex_intensity": cq["capex_intensity"], "flags": cq["quality_flags"]},
+        "shareholder": {"as_of": sh["as_of"], "top1_pct": sh["top1_pct"], "top10_pct": sh["top10_pct"],
+                        "top3": [f"{h['name']}({h['share_pct']}%)" for h in sh["top_holders"][:3]],
+                        "holder_count": sh["holder_count"]},
+        "governance_summary": bundle["governance"]["concentration_comment"],
+    }
+    if pc["peer_list"]:
+        compact["peer_comparison"] = {
+            "sector": pc["sector"],
+            "peers": [p["name"] for p in pc["peer_list"]],
+            "company_percentiles": {m["metric"]: m["company_percentile"]
+                                    for m in pc["metric_comparison"]
+                                    if m["company_percentile"] is not None},
+            "limitation": pc["limitation"],
+        }
+    else:
+        compact["peer_comparison"] = {"degraded": True, "limitation": pc["limitation"]}
+    return compact
+
+
 def _run_macro_chain(sources: list[Source]) -> tuple[Optional[dict], dict]:
     """v4 阶段A：宏观数据链路（指标快照 + 政策解析 + 传导链 + 灰犀牛）。
 
@@ -240,6 +323,13 @@ class AnalyzeAgent(BaseAgent):
         if request.report_type == "macro_research":
             macro_bundle, macro_metrics = _run_macro_chain(sources)
 
+        # v4 阶段B：公司深度链（三表/杜邦/现金流质量/股权治理/同业比较）
+        company_deep_bundle: Optional[dict] = None
+        company_deep_metrics: dict = {"attempted": False}
+        if request.report_type == "company_research" and snapshot is not None:
+            company_deep_bundle, company_deep_metrics = _run_company_deep_chain(
+                subject, snapshot, sources)
+
         try:
             prompt_template = _PROMPT_PATH.read_text(encoding="utf-8")
             prompt = prompt_template.format(
@@ -341,6 +431,7 @@ class AnalyzeAgent(BaseAgent):
             },
             "akshare_metrics": akshare_metrics,
             "macro_metrics": macro_metrics,
+            "company_deep_metrics": company_deep_metrics,
         }
         if snapshot is not None:
             result["financial_snapshot_full"] = snapshot
@@ -348,4 +439,7 @@ class AnalyzeAgent(BaseAgent):
             result["dcf_valuation_full"] = dcf_full
         if macro_bundle is not None:
             result["macro_bundle_full"] = macro_bundle
+        if company_deep_bundle is not None:
+            analysis["company_deep_analysis"] = _company_deep_compact(company_deep_bundle)
+            result["company_deep_full"] = company_deep_bundle
         return result
