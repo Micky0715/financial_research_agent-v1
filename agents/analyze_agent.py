@@ -60,6 +60,84 @@ def _structured_data_block(snapshot: Optional[dict]) -> str:
         "缺失字段不要编造）：\n" + _json.dumps(compact, ensure_ascii=False)
     )
 
+def _run_macro_chain(sources: list[Source]) -> tuple[Optional[dict], dict]:
+    """v4 阶段A：宏观数据链路（指标快照 + 政策解析 + 传导链 + 灰犀牛）。
+
+    永不抛异常；返回 (bundle|None, metrics)。指标获取失败时 bundle 为 None，
+    宏观报告退化为纯网页来源综述（metrics 记录原因）。
+    """
+    metrics: dict = {"attempted": True, "success": False, "degraded": True,
+                     "indicator_count": 0, "missing_indicators": [], "error": None,
+                     "policy_docs_parsed": 0, "transmission_paths": 0}
+    try:
+        from schemas.macro_data import MacroSnapshot
+        from tools.grey_rhino_monitor import monitor_grey_rhinos
+        from tools.macro_data_collector import fetch_macro_snapshot
+        from tools.macro_transmission_model import build_transmission_paths
+        from tools.policy_document_parser import parse_policy_document
+
+        envelope = fetch_macro_snapshot()
+        metrics.update({
+            "success": bool(envelope.get("success")),
+            "degraded": bool(envelope.get("degraded")),
+            "error": envelope.get("error"),
+        })
+        if not envelope.get("snapshot"):
+            return None, metrics
+        snapshot = MacroSnapshot(**envelope["snapshot"])
+        metrics["indicator_count"] = len(snapshot.indicators)
+        metrics["missing_indicators"] = snapshot.missing_indicators
+
+        # 政策文本解析：仅对标题带政策特征的来源（最多2个，控制 LLM 成本）
+        policy_cues = ("政策", "通知", "意见", "规划", "会议", "央行", "人民银行",
+                       "国务院", "部署", "工作报告", "发改委", "财政部")
+        policies = []
+        for src in sources:
+            if len(policies) >= 2:
+                break
+            if any(c in (src.title or "") for c in policy_cues) and len(src.content or "") > 200:
+                policies.append(parse_policy_document(
+                    src.content[:6000], title=src.title, source_id=src.source_id))
+        metrics["policy_docs_parsed"] = len(policies)
+
+        paths = build_transmission_paths(snapshot)
+        metrics["transmission_paths"] = len(paths)
+        risks = monitor_grey_rhinos(snapshot)
+
+        bundle = {
+            "macro_snapshot": snapshot.model_dump(),
+            "policy_analysis": [p.model_dump() for p in policies],
+            "transmission_paths": [p.model_dump() for p in paths],
+            "grey_rhino_risks": [r.model_dump() for r in risks],
+        }
+        return bundle, metrics
+    except Exception as exc:  # noqa: BLE001 - macro chain is an enhancement, never a dependency
+        metrics["error"] = f"{type(exc).__name__}: {str(exc)[:120]}"
+        logger.warning(f"macro chain failed (degraded): {exc!r}")
+        return None, metrics
+
+
+def _macro_data_block(bundle: Optional[dict]) -> str:
+    """宏观结构化数据的 prompt 注入块（精简：指标最新值 + 高风险项）。"""
+    if not bundle:
+        return "（本次未获取到结构化宏观指标，分析仅基于上方网页/PDF资料）"
+    import json as _json
+
+    snap = bundle["macro_snapshot"]
+    compact = {
+        p["indicator_name"]: f"{p['value']}{p['unit']}@{p['period']}(前值{p['previous_value']})"
+        for p in snap["indicators"].values()
+    }
+    rhinos = {r["risk_name"]: r["risk_level"] for r in bundle.get("grey_rhino_risks", [])
+              if r["risk_level"] in ("medium", "high")}
+    return (
+        "以下为 AkShare 结构化宏观指标（引用时注明来源为 AkShare 及原始机构，缺失指标不要编造）：\n"
+        + _json.dumps(compact, ensure_ascii=False)
+        + "\n规则监控中高风险项：" + _json.dumps(rhinos, ensure_ascii=False)
+        + "\n缺失指标：" + "、".join(snap.get("missing_indicators", []))
+    )
+
+
 from .base_agent import BaseAgent
 
 _PROMPT_PATH = config.PROMPTS_DIR / "analysis_prompt.txt"
@@ -156,6 +234,12 @@ class AnalyzeAgent(BaseAgent):
         if request.report_type == "company_research":
             snapshot, akshare_metrics = _fetch_structured_data(subject)
 
+        # v4 阶段A：宏观研究走宏观数据链路（指标/政策/传导/灰犀牛）
+        macro_bundle: Optional[dict] = None
+        macro_metrics: dict = {"attempted": False}
+        if request.report_type == "macro_research":
+            macro_bundle, macro_metrics = _run_macro_chain(sources)
+
         try:
             prompt_template = _PROMPT_PATH.read_text(encoding="utf-8")
             prompt = prompt_template.format(
@@ -163,7 +247,11 @@ class AnalyzeAgent(BaseAgent):
                 requirements="、".join(request.requirements) or "未指定",
                 sources_block=sources_block,
                 rule_hints_block=json.dumps(rule_result, ensure_ascii=False)[:4000],
-                structured_data_block=_structured_data_block(snapshot),
+                structured_data_block=(
+                    _macro_data_block(macro_bundle)
+                    if request.report_type == "macro_research"
+                    else _structured_data_block(snapshot)
+                ),
             )
             raw = self.call_llm(prompt, system="你是严谨的金融分析助手，只输出JSON，不编造数据。")
             parsed = self.parse_json_response(raw)
@@ -231,6 +319,18 @@ class AnalyzeAgent(BaseAgent):
                     f"(base_fcf {dcf_full['inputs_provenance']['base_fcf']['kind']})"
                 )
 
+        # v4：宏观 bundle 精简版挂 analysis（LLM 可引用），完整版进结果 -> trace/报告
+        if macro_bundle is not None:
+            snap = macro_bundle["macro_snapshot"]
+            analysis["macro_indicators"] = {
+                p["indicator_name"]: {"value": p["value"], "unit": p["unit"],
+                                      "period": p["period"], "source": p["source_name"]}
+                for p in snap["indicators"].values()
+            }
+            analysis["grey_rhino_summary"] = {
+                r["risk_name"]: r["risk_level"] for r in macro_bundle["grey_rhino_risks"]
+            }
+
         result: dict[str, Any] = {
             "analysis": analysis,
             "source_excerpts": source_excerpts,
@@ -240,9 +340,12 @@ class AnalyzeAgent(BaseAgent):
                 "compression_ratio": compression_ratio,
             },
             "akshare_metrics": akshare_metrics,
+            "macro_metrics": macro_metrics,
         }
         if snapshot is not None:
             result["financial_snapshot_full"] = snapshot
         if dcf_full is not None:
             result["dcf_valuation_full"] = dcf_full
+        if macro_bundle is not None:
+            result["macro_bundle_full"] = macro_bundle
         return result

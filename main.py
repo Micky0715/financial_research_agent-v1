@@ -19,7 +19,9 @@ def parse_args() -> argparse.Namespace:
     """Parse CLI arguments for a single research-report generation run."""
     parser = argparse.ArgumentParser(description="金融研报多智能体自动生成系统")
     parser.add_argument("--topic", required=True, help="研究主题，例如 '宁德时代投资分析'")
-    parser.add_argument("--report_type", default="company_research", choices=["company_research", "industry_research"])
+    parser.add_argument("--report_type", default="company_research",
+                        choices=["company_research", "industry_research", "macro_research",
+                                 "risk_research", "valuation_research"])
     parser.add_argument("--output_format", default=config.OUTPUT_FORMAT, choices=["markdown", "html"])
     parser.add_argument("--max_sources", type=int, default=config.TOP_K_SOURCES)
     parser.add_argument("--max_results", type=int, default=config.SEARCH_MAX_RESULTS)

@@ -154,6 +154,11 @@ class ReportAgent(BaseAgent):
         title = f"{request.topic} 研究报告"
         markdown_content = None
 
+        # v4 阶段A：宏观研究走专用组装路径（硬数据段落确定性渲染 + LLM 解读段落）
+        macro_bundle = context.get("analysis", {}).get("macro_bundle_full")
+        if request.report_type == "macro_research" and macro_bundle:
+            return self._generate_macro(task, request, macro_bundle, sources)
+
         report_context = build_report_context(
             request, analysis, sources, source_excerpts, config.MAX_REPORT_EXCERPT_CHARS_PER_SOURCE
         )
@@ -207,6 +212,68 @@ class ReportAgent(BaseAgent):
             "sources": [s.model_dump() for s in sources],
             "report_compression": {"report_context_chars": report_context_chars},
             "chart_embedded": bool(charts_html),
+        }
+
+    # ------------------------------------------------------------------ #
+    # Macro report generation (v4 stage A)
+    # ------------------------------------------------------------------ #
+    def _generate_macro(self, task: Task, request: ResearchRequest,
+                        macro_bundle: dict, sources: list[Source]) -> dict[str, Any]:
+        """宏观报告：指标表/政策/传导/灰犀牛由结构化数据确定性渲染（无数字幻觉），
+        核心结论/国内外对比/资产影响由 LLM 撰写，失败自动用规则文本兜底。"""
+        from tools.macro_report_builder import assemble_macro_report
+
+        llm_sections: dict[str, str] = {}
+        try:
+            from agents.analyze_agent import _macro_data_block
+
+            prompt_template = (config.PROMPTS_DIR / "macro_report_prompt.txt").read_text(encoding="utf-8")
+            sources_lines = "\n".join(
+                f"[{s.source_id}] {s.title} - {s.url}\n摘录：{extract_relevant_excerpt(s.content, max_chars=400)}"
+                for s in sources
+            ) or "（无有效来源）"
+            prompt = prompt_template.format(
+                topic=request.topic,
+                requirements="、".join(request.requirements) or "未指定",
+                macro_block=_macro_data_block(macro_bundle),
+                sources_block=sources_lines,
+            )
+            raw = self.call_llm(prompt, system="你是严谨的宏观研究助理，只输出JSON，不编造数据。", temperature=0.3)
+            parsed = self.parse_json_response(raw)
+            if isinstance(parsed, dict):
+                llm_sections = {k: str(v) for k, v in parsed.items() if isinstance(v, str) and v.strip()}
+        except Exception as exc:  # noqa: BLE001 - deterministic fallback sections exist
+            logger.warning(f"macro report LLM sections failed, using rule fallback: {exc!r}")
+
+        sources_md = "## 参考来源\n\n" + ("\n".join(
+            f"- [{s.source_id}] {s.title}（{s.url}，权威等级：{s.authority_tier}）" for s in sources
+        ) if sources else "（无网页来源，本报告基于结构化宏观数据）")
+
+        markdown_content = assemble_macro_report(request.topic, llm_sections, macro_bundle, sources_md)
+
+        output_format = task.parameters.get("output_format", request.output_format)
+        charts_html = ""
+        if output_format == "html":
+            try:
+                from tools.macro_chart_builder import build_macro_charts_html
+
+                charts_html = build_macro_charts_html(macro_bundle["macro_snapshot"])
+            except Exception as exc:  # noqa: BLE001 - charts are an enhancement
+                logger.warning(f"macro charts failed (degraded): {exc!r}")
+            final_content = render_html_report(markdown_content, f"{request.topic} 宏观研究报告",
+                                               extra_html=charts_html)
+        else:
+            final_content = markdown_content
+
+        return {
+            "title": f"{request.topic} 宏观研究报告",
+            "markdown_content": markdown_content,
+            "final_content": final_content,
+            "output_format": output_format,
+            "sources": [s.model_dump() for s in sources],
+            "report_compression": {"report_context_chars": 0},
+            "chart_embedded": bool(charts_html),
+            "llm_sections_used": sorted(llm_sections.keys()),
         }
 
     # ------------------------------------------------------------------ #
