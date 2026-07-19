@@ -402,6 +402,18 @@ class WorkflowOrchestrator:
 
         save_json(trace_path, trace.model_dump())
 
+        # v4 阶段D：成功的公司研报 run 追加跟踪记录（best-effort，失败不影响主流程）
+        if source_dicts and request.report_type == "company_research":
+            try:
+                from tracking.periodic_data_store import append_record, record_from_run
+
+                record = record_from_run(request, run_id, str(report_path),
+                                         context.get("analysis", {}), evaluation)
+                if record is not None and record.symbol:
+                    append_record(record)
+            except Exception as exc:  # noqa: BLE001
+                logger.warning(f"tracking record append skipped: {exc!r}")
+
         return {
             "run_id": run_id,
             "report_path": str(report_path),
