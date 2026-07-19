@@ -1,0 +1,44 @@
+<!-- 正式研报披露模板（v4 stage E）。
+     由 tools/disclosure_builder.py 填充 {{...}} 占位符后经 render_html_report 输出。
+     20 项披露要素与比赛要求逐条对应；6-13 项来自 pipeline 正文，其余为固定披露章节。 -->
+<article class="formal-report">
+  <header>
+    <h1>{{title}}</h1><!-- 1. 报告标题 -->
+    <ul class="meta">
+      <li>研究对象：{{subject}}（证券代码：{{symbol}}）</li><!-- 2. 研究对象与证券代码 -->
+      <li>报告日期：{{report_date}}</li><!-- 3. 报告日期 -->
+      <li>报告类型：{{report_type_zh}}（自动化系统生成）</li><!-- 4. 报告类型 -->
+    </ul>
+    {{draft_banner}}<!-- 合规未通过时注入 DRAFT / INCOMPLETE 横幅 -->
+  </header>
+
+  <section id="core-view"><h2>核心观点</h2>{{core_view}}</section><!-- 5 -->
+  <section id="key-financials"><h2>主要财务指标</h2>{{key_financials}}</section><!-- 6 -->
+  <section id="logic"><h2>研究逻辑与方法说明</h2>{{research_logic}}</section><!-- 7 -->
+  <section id="context"><h2>行业/宏观背景</h2>{{industry_macro_context}}</section><!-- 8 -->
+  <section id="financial-analysis"><h2>财务分析</h2>{{financial_analysis}}</section><!-- 9 -->
+  <section id="valuation"><h2>估值方法与假设</h2>{{valuation_and_assumptions}}</section><!-- 10 -->
+  <section id="scenarios"><h2>情景与敏感性分析</h2>{{scenario_sensitivity}}</section><!-- 11 -->
+  <section id="risks"><h2>风险提示</h2>{{risk_warnings}}</section><!-- 12 -->
+  <section id="charts"><h2>图表与表格</h2>{{charts_and_tables}}</section><!-- 13 -->
+  <section id="sources"><h2>数据来源</h2>{{data_sources}}</section><!-- 14 -->
+  <section id="limits"><h2>方法限制</h2>{{method_limitations}}</section><!-- 15 -->
+
+  <section id="rating"><h2>投资评级</h2>
+    <p>本系统<strong>不提供投资评级</strong>；文中估值结果均为工具计算与假设条件的演示。</p>
+  </section><!-- 16 -->
+  <section id="analyst"><h2>分析师声明（占位说明）</h2>
+    <p>本报告由自动化研究系统生成，<strong>无持牌证券分析师参与</strong>；
+       分析师姓名/执业编号为披露模板占位项，不适用于本系统，不代表持牌机构意见。</p>
+  </section><!-- 17 -->
+  <section id="conflict"><h2>利益冲突声明</h2>
+    <p>系统及运行者不持有所涉证券头寸，无业务往来或付费委托；数据全部来自免费公开渠道。</p>
+  </section><!-- 18 -->
+  <section id="disclaimer"><h2>免责声明</h2>
+    <p>本报告基于免费公开信息自动生成，不构成投资建议；估值依赖假设，仅供技术研究演示；
+       系统不能完全避免信息滞后与模型误差，使用者自行核实并承担决策风险。</p>
+  </section><!-- 19 -->
+  <section id="usage"><h2>报告传播与使用限制</h2>
+    <p>仅供学习与技术研究；不得商业分发、不得冒充持牌机构研究产品、不得删除披露章节后传播。</p>
+  </section><!-- 20 -->
+</article>

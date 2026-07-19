@@ -51,3 +51,8 @@ outputs/final_reports/
 memory/index/
 *.docx
 *.pdf
+
+# v4: 披露模板 docx 例外提交
+!templates/formal_research_report.docx
+outputs/formal_reports/
+outputs/tracking/
