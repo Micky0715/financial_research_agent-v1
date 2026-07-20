@@ -197,9 +197,38 @@ class ReportAgent(BaseAgent):
             snapshot = context.get("analysis", {}).get("financial_snapshot_full")
             dcf = context.get("analysis", {}).get("dcf_valuation_full")
             rel = analysis.get("relative_valuation")
-            charts_html = build_charts_html(sources, normalize_topic(request.topic), snapshot)
+            subject = normalize_topic(request.topic)
+            charts_html = build_charts_html(sources, subject, snapshot)
             table_html = build_valuation_table_html(dcf, rel)
-            charts_html = "\n".join(p for p in (charts_html, table_html) if p)
+            extra_charts = ""
+            chart_metas: list = []
+            try:
+                if request.report_type == "company_research" and snapshot:
+                    from tools.market_chart_builder import build_market_charts_html
+
+                    extra_charts, chart_metas = build_market_charts_html(subject, snapshot)
+                elif request.report_type == "industry_research":
+                    from tools.industry_chart_builder import build_industry_charts_html
+
+                    industry_bundle = context.get("analysis", {}).get("industry_deep_full")
+                    if industry_bundle:
+                        extra_charts = build_industry_charts_html(industry_bundle)
+            except Exception as exc:  # noqa: BLE001 - v4 charts are an enhancement
+                logger.warning(f"v4 charts failed (degraded): {exc!r}")
+            if chart_metas:
+                try:
+                    from tools.chart_consistency_checker import check_chart_consistency
+
+                    consistency = check_chart_consistency(
+                        chart_metas, expected_subject=subject,
+                        reference_values={"latest_pe": snapshot.get("pe"),
+                                          "latest_pb": snapshot.get("pb")} if snapshot else None,
+                        report_text=markdown_content)
+                    if not consistency["all_consistent"]:
+                        logger.warning(f"chart consistency issues: {consistency['results']}")
+                except Exception as exc:  # noqa: BLE001
+                    logger.warning(f"chart consistency check failed (degraded): {exc!r}")
+            charts_html = "\n".join(p for p in (charts_html, extra_charts, table_html) if p)
             final_content = render_html_report(markdown_content, title, extra_html=charts_html)
         else:
             final_content = markdown_content
