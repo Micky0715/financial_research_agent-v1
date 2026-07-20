@@ -29,3 +29,5 @@ class TraceLog(BaseModel):
     performance_metrics: dict[str, Any] = Field(default_factory=dict)
     compression_metrics: dict[str, Any] = Field(default_factory=dict)
     evaluation_diagnostics: dict[str, Any] = Field(default_factory=dict)
+    # v4 阶段G：有界自检改稿（revision_rounds 硬上限 1，见 orchestrator/workflow.py）
+    revision: dict[str, Any] = Field(default_factory=dict)

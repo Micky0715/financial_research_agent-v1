@@ -241,6 +241,7 @@ class ReportAgent(BaseAgent):
             "sources": [s.model_dump() for s in sources],
             "report_compression": {"report_context_chars": report_context_chars},
             "chart_embedded": bool(charts_html),
+            "charts_html": charts_html,
         }
 
     # ------------------------------------------------------------------ #
@@ -302,6 +303,7 @@ class ReportAgent(BaseAgent):
             "sources": [s.model_dump() for s in sources],
             "report_compression": {"report_context_chars": 0},
             "chart_embedded": bool(charts_html),
+            "charts_html": charts_html,
             "llm_sections_used": sorted(llm_sections.keys()),
         }
 

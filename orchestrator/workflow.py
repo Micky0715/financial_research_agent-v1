@@ -275,6 +275,58 @@ class WorkflowOrchestrator:
         report_data = context.get("report", {})
         evaluation = context.get("evaluation", {}).get("evaluation", {})
 
+        # v4 阶段G：有界自检改稿 report -> evaluate -> revise_report -> final_evaluate。
+        # 硬上限 revision_rounds<=1（本 if 块只执行一次，不循环）；只修复
+        # identify_revision_issues 列出的具体问题，不重写无关内容；改稿后重新
+        # 评分，只有分数不降才采用，否则保留原报告——绝不为了刷分放宽 grounding。
+        revision_info: dict[str, Any] = {
+            "revision_triggered": False, "revision_reasons": [], "before_score": None,
+            "after_score": None, "modified_sections": [], "revision_rounds": 0,
+        }
+        if source_dicts and report_data.get("markdown_content") and evaluation:
+            try:
+                from evaluators.report_evaluator import evaluate_report
+                from tools.report_reviser import apply_revision, identify_revision_issues
+
+                issues = identify_revision_issues(
+                    evaluation, report_data["markdown_content"], request.report_type)
+                if issues:
+                    src_objs = [Source(**s) for s in source_dicts]
+                    revision_info["revision_rounds"] = 1
+                    revision_info["before_score"] = evaluation.get("overall_score")
+                    result = apply_revision(
+                        report_data["markdown_content"], issues, src_objs,
+                        context.get("analysis", {}).get("analysis"))
+                    revision_info["revision_reasons"] = [i["reason"] for i in issues] + result["reasons"]
+                    revision_info["modified_sections"] = result["modified_sections"]
+                    if result["changed"]:
+                        revision_info["revision_triggered"] = True
+                        new_evaluation = evaluate_report(
+                            result["markdown"], src_objs, request.report_type,
+                            analysis=context.get("analysis", {}).get("analysis"))
+                        revision_info["after_score"] = new_evaluation.get("overall_score")
+                        if (new_evaluation.get("overall_score") or 0) >= (evaluation.get("overall_score") or 0):
+                            report_data["markdown_content"] = result["markdown"]
+                            if report_data.get("output_format") == "html":
+                                report_data["final_content"] = render_html_report(
+                                    result["markdown"],
+                                    report_data.get("title", f"{request.topic} 研究报告"),
+                                    extra_html=report_data.get("charts_html", ""))
+                            else:
+                                report_data["final_content"] = result["markdown"]
+                            evaluation = new_evaluation
+                            context["evaluation"] = {"evaluation": evaluation}
+                            logger.info(f"revision adopted: score {revision_info['before_score']} "
+                                        f"-> {revision_info['after_score']}")
+                        else:
+                            logger.info(f"revision discarded (score did not improve): "
+                                        f"{revision_info['before_score']} -> {new_evaluation.get('overall_score')}")
+                    else:
+                        revision_info["after_score"] = revision_info["before_score"]
+            except Exception as exc:  # noqa: BLE001 - revision is an enhancement, never a dependency
+                logger.warning(f"bounded revision failed (degraded, original report kept): {exc!r}")
+        trace.revision = revision_info
+
         if not source_dicts:
             # browse failed to find any usable, on-topic source (see
             # BrowserAgent.execute), so analyze/report/evaluate were all
