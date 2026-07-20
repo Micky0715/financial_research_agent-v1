@@ -25,6 +25,14 @@ _RATIO_INDICATORS = {
 }
 
 
+# 归一化字段 -> 原始新浪指标行名（反向映射，供 tools/data_lineage.py 标注
+# raw_field 使用；debt_ratio 在两个方向都可能出现，取原始指标名优先）
+INDICATOR_RAW_FIELD_MAP: dict[str, str] = {
+    field: raw_name for raw_name, field in {**_MONEY_INDICATORS, **_RATIO_INDICATORS}.items()
+}
+MONEY_FIELDS = set(_MONEY_INDICATORS.values())
+
+
 def _to_float(value: Any) -> Optional[float]:
     try:
         if value is None:
@@ -64,6 +72,7 @@ def normalize_financial_abstract(df: Any, max_years: int = 6) -> dict[str, Any]:
     fields: dict[str, Optional[float]] = {}
     yearly: dict[str, list[tuple[int, float]]] = {}
     missing: list[str] = []
+    derived_fields: dict[str, list[str]] = {}
     period = ""
 
     try:
@@ -92,16 +101,19 @@ def normalize_financial_abstract(df: Any, max_years: int = 6) -> dict[str, Any]:
                 fields[field] = None
                 missing.append(field)
 
-        # 派生：资产负债率缺失但资产/负债齐全时计算（标注 derived 由调用方处理）
+        # 派生：资产负债率缺失但资产/负债齐全时计算（标注 derived，供 tools/data_lineage.py 使用）
         if fields.get("debt_ratio") is None and fields.get("total_assets") and fields.get("total_liabilities"):
             fields["debt_ratio"] = round(fields["total_liabilities"] / fields["total_assets"] * 100, 2)
             if "debt_ratio" in missing:
                 missing.remove("debt_ratio")
+            derived_fields["debt_ratio"] = ["total_liabilities", "total_assets"]
     except Exception:  # noqa: BLE001 - malformed provider frame -> all missing, never crash
         missing = sorted(set(list(_MONEY_INDICATORS.values()) + list(_RATIO_INDICATORS.values())))
-        return {"fields": {}, "period": "", "yearly_series": {}, "missing_fields": missing}
+        return {"fields": {}, "period": "", "yearly_series": {}, "missing_fields": missing,
+               "derived_fields": {}}
 
-    return {"fields": fields, "period": period, "yearly_series": yearly, "missing_fields": missing}
+    return {"fields": fields, "period": period, "yearly_series": yearly, "missing_fields": missing,
+           "derived_fields": derived_fields}
 
 
 def latest_value(series_df: Any, value_col: str = "value") -> Optional[float]:

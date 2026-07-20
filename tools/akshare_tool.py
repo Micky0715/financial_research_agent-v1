@@ -24,6 +24,7 @@ from typing import Any, Optional
 
 from config import config
 from schemas.financial_data import FinancialDataSnapshot
+from tools.data_lineage import build_ps_lineage, build_snapshot_lineage
 from tools.financial_data_normalizer import (
     latest_value,
     normalize_financial_abstract,
@@ -269,6 +270,16 @@ def fetch_financial_snapshot(name_or_code: str) -> dict[str, Any]:
         ps = round(market_cap / fields["revenue"], 2)
         missing.remove("ps")
 
+    # v4 阶段I：字段级 lineage（不满足于 provider=akshare，逐字段记录原始字段名/
+    # 原始平台/接口说明/换算说明/是否推导——见 tools/data_lineage.py）
+    fetched_at_iso = _now_iso()
+    field_lineage = build_snapshot_lineage(
+        {**fields, "pe": pe, "pb": pb, "market_cap": market_cap, "price": price},
+        normalized["period"], fetched_at_iso, missing, normalized.get("derived_fields", {}),
+    )
+    field_lineage["ps"] = build_ps_lineage(ps, market_cap, fields.get("revenue"),
+                                           normalized["period"], fetched_at_iso)
+
     snapshot = FinancialDataSnapshot(
         symbol=code,
         company_name=company_name,
@@ -290,8 +301,9 @@ def fetch_financial_snapshot(name_or_code: str) -> dict[str, Any]:
         multiples_history=multiples_history,
         data_sources=data_sources,
         missing_fields=sorted(set(missing)),
-        fetched_at=_now_iso(),
+        fetched_at=fetched_at_iso,
         metadata={"ps_derived": ps is not None, "fetch_seconds": round(time.perf_counter() - t0, 2)},
+        field_lineage=field_lineage,
     )
 
     has_fundamentals = any(
