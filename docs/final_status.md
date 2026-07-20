@@ -68,4 +68,22 @@
 
 v2 之后按十个阶段实现了 v3-full：AkShare 结构化数据、数据归一化、相对估值、DCF 输入标注增强、source tier、数字级 grounding、分型评估、DOCX/PDF 导出、本地文件输入、实体验证、向量记忆、30 项离线测试与五份评测报告。**没有实现 Wind。**
 
-v3 全量 eval（真实运行）：10/10 成功、avg_source_count 5.0、avg_quality 0.8（company 与 industry 持平——分型评估消除了行业压分）、number_grounding_rate 0.869、tier1_or_tier2_ratio 0.42。能力对比、代码位置与验证证据见 docs/v2_capability_matrix.md 的 v3 表；限制与免责见 README 第 18 节。
+v3 全量 eval（真实运行）：10/10 成功、avg_source_count 5.0、avg_quality 0.8（company 与 industry 持平——分型评估消除了行业压分）、number_grounding_rate 0.869、tier1_or_tier2_ratio 0.42。能力对比、代码位置与验证证据见 docs/capability_matrix.md 的 v3 表；限制与免责见 README 第 18 节。
+
+---
+
+# V4-competition 附注（更新于 v4 收口）
+
+v3 之后按 14 个阶段实现了 v4-competition：宏观数据真实链路（22指标+政策解析+传导链+
+灰犀牛）、季度/年度跟踪报告、公司三表/杜邦/现金流质量/股权治理/真实同业比较、行业生命
+周期/CR-HHI/产业链/三年情景/进入退出、正式披露模板+合规检查器、图表扩展(市场/宏观/行业)
++一致性检查、有界自检改稿(≤1轮)、上市公司硬校验(四态)、AkShare字段级lineage、
+FastAPI+Docker、30-case三大类分层评测、大量测试扩展。**没有实现 Wind，不用付费金融数据API。**
+
+写测试过程中发现并修复一个真实 bug：`tools/industry_lifecycle.py` 在"来源只有负增长
+证据、无正增长证据"场景下会被"证据不足"分支提前拦截，永远判不出衰退期——已修复并有
+回归测试防复发。
+
+能力对比、代码位置与验证证据见 docs/capability_matrix.md 的 v4 表；比赛要求逐项对齐见
+docs/competition_alignment.md；限制与免责见 README 第 18 节。真实测试与 30-case 评测数字见
+最终交付总结（对话最后一条消息）与 outputs/eval/competition_report.md。

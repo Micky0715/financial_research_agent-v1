@@ -508,3 +508,117 @@ sentence-transformers 模型加载（权重读取+torch 初始化）在每个新
 
 ### 指标变化
 - 定性：限制从"未知" -> "已知并文档化"（进程内复用 vs 跨进程冷启动）
+
+---
+
+## Bad Case 25：行业生命周期判断被"证据不足"分支误吞掉纯负增长证据
+
+### 现象
+写 `tests/test_industry_deep.py` 时构造一个只包含负增长/产能过剩表述、完全没有正向增速数字的行业来源集合，预期判定为"衰退期"，实际返回 `unknown`。
+
+### 原因
+`tools/industry_lifecycle.py` 的早退检查 `if growth_median is None and penetration is None:` 只统计 `_GROWTH_RE`（正向增速线索词）命中的 `growth_vals`，完全没有把 `_NEG_GROWTH_RE` 命中的 `neg_vals` 算作"已有证据"——导致"来源只提到下降，没提到正增长"这种最典型的衰退证据模式，反而被最先拦截成"证据不足"，永远走不到下面判衰退期的分支。
+
+### 修改
+把早退条件改为 `if growth_median is None and penetration is None and not neg_vals:`（[tools/industry_lifecycle.py](../tools/industry_lifecycle.py)），让纯负增长证据也能作为"有效证据"通过早退检查，继续走到衰退期判定分支。
+
+### 结果
+`tests/test_industry_deep.py::test_lifecycle_decline_stage_from_negative_growth_mentions` 由失败变通过；这是写测试主动发现的真实逻辑 bug，不是先知道 bug 再补测试。
+
+### 指标变化
+- 测试：该场景判定从 `unknown`（错误吞掉证据） -> `衰退期`（正确）。
+
+---
+
+## Bad Case 26：季度跟踪报告的现金流对比用错了基期（上一期 vs 上年同期）
+
+### 现象
+真实跑贵州茅台季度跟踪报告（2026Q1 vs 上一条记录=2025年报）时，经营现金流对比显示"由 615.222 亿元变为 269.099 亿元，-56.3%"——看起来像业绩暴跌，但这是拿 Q1 单季累计值和全年累计值比，口径根本不可比，结论是假的。
+
+### 原因
+`tracking/report_diff_analyzer.py::detect_changes` 最初对所有维度（含水平值型的经营现金流）统一用 `periods[1]`（"上一期"）做对比基期；季度模式下 `periods[1]` 常常是上一份年报（全年口径）而不是上年同期（可比口径），导致水平值对比失真。同比类字段（营收/净利）本身已经用"上年同期"算同比，唯独现金流这类没走同比公式、直接做水平值差值的字段漏了这个口径切换。
+
+### 修改
+`detect_changes` 新增 `same_period_base` 参数，`tracking_report_builder.py` 在季度模式下显式查找上年同期记录传入，经营现金流对比改用该同口径基期（[tracking/report_diff_analyzer.py](../tracking/report_diff_analyzer.py)、[tracking/tracking_report_builder.py](../tracking/tracking_report_builder.py)）。
+
+### 结果
+重新生成后：经营现金流对比自动变为"2026Q1 vs 2025Q1，88.092亿元 -> 269.0989亿元，+205.5%"——真实值，方向也从"虚假下滑"变成"真实大幅改善"。`tests/test_tracking_and_compliance.py` 新增专门回归测试锁定这个行为。
+
+### 指标变化
+- 现金流变化方向：`deteriorating`（虚假，-56.3%） -> `improving`（真实，+205.5%）。
+
+---
+
+## Bad Case 27：新浪三表科目名在不同报告期存在文本变体
+
+### 现象
+探测阶段发现"购建固定资产、无形资产和其他长期资产支付的现金"字段在不同报告期返回的列名不完全一致，有的期是"...所支付的现金"（多一个"所"字），字段映射如果只写死一个候选名会在部分报告期查不到该科目，误判为 missing。
+
+### 原因
+新浪财务报表接口的历史数据存在早期年份/后期年份科目命名口径微调，是数据源本身的不一致，不是本项目的 bug。
+
+### 修改
+`tools/financial_statement_extractor.py::_FIELD_MAP` 里为该字段（以及 EPS 等）配置候选列名列表，按优先级依次尝试，第一个命中即用，都不命中才计入 missing（不是只试一个名字就放弃）。
+
+### 结果
+茅台/比亚迪等真实抽取验证：`capital_expenditure` 字段在近 5 期年报中全部命中，未因命名变体误判缺失。
+
+### 指标变化
+- 定性：单候选名匹配 -> 多候选名容错匹配，减少假性 missing。
+
+---
+
+## Bad Case 28：宏观社融数据源 SSL 证书失败，无替代免费接口
+
+### 现象
+`ak.macro_china_shrzgm()`（社会融资规模）请求 `data.mofcom.gov.cn` 返回 SSL 握手失败，且反复重试无好转；`ak.macro_china_urban_unemployment()`（城镇调查失业率）返回非 JSON 内容。
+
+### 原因
+这两个接口依赖的上游数据源（商务部数据中心等）本身不稳定或已变更，是数据源侧问题；探测环境下没有找到替代的稳定免费接口。
+
+### 修改
+不强行重试或换用不稳定的解析逃生路径，直接把这两项写入 `tools/macro_data_collector.py::KNOWN_UNAVAILABLE`，连同美元指数（无实测通过的稳定免费接口）一起，在每次宏观快照的 `missing_indicators` 里如实列出并附具体原因，宏观报告的"关键指标表"末尾也显式提示缺失了哪些指标。
+
+### 结果
+22 项其余指标正常抓取；宏观报告不会因为这 3 项缺失而报错或空转，报告读者能看到明确的"数据源不可用"说明而不是沉默缺失。
+
+### 指标变化
+- 宏观指标覆盖：22/25 项已注册指标实测可用（3 项明确标注不可用，非隐藏缺陷）。
+
+---
+
+## Bad Case 29：同业板块映射首次构建耗时较长（全市场板块遍历）
+
+### 现象
+`tools/peer_comparison.py::load_sector_map` 首次调用需要遍历新浪全部 49 个行业板块逐一拉取成分股，实测耗时约 28 秒；如果每次同业比较都重新构建，会显著拖慢公司深度分析阶段。
+
+### 原因
+新浪没有"一次性返回全市场股票所属板块"的接口，只能先拿板块列表再逐板块查成分股，是接口设计本身的限制。
+
+### 修改
+构建结果缓存 7 天（`outputs/cache/akshare_sector_map.json`），后续调用直接命中缓存，只有缓存过期或强制刷新才重新遍历。
+
+### 结果
+首次运行 28 秒可接受（一次性成本），后续同业比较调用在毫秒级完成；30-case 评测中多个公司/行业 case 共享同一份缓存，未重复付出该成本。
+
+### 指标变化
+- 同业比较耗时：首次 ~28s（构建） -> 后续 <0.1s（缓存命中）。
+
+---
+
+## Bad Case 30：PowerShell 测试脚本对中文请求体的编码错误（测试脚手架问题，非产品缺陷）
+
+### 现象
+用 PowerShell `Invoke-WebRequest -Body $bodyJson`（中文 topic 经 `ConvertTo-Json` + 手动 UTF8 GetBytes）向本地 FastAPI 服务提交任务，服务端收到并落盘的 topic 变成一串乱码（`éåºç»¿è½...`），触发了一次看起来像"实体校验误杀真实上市公司"的假阳性（隆基绿能被判 `insufficient_entity_evidence`）。
+
+### 原因
+排查后确认乱码发生在 PowerShell 5.1 对命令行参数里中文字符的编码处理链路上（而不是 FastAPI/uvicorn/orchestrator 任何一层），与请求体的 `ConvertTo-Json`/字节编码方式无关——用 Python `urllib.request` + `json.dumps(..., ensure_ascii=False).encode("utf-8")` 复现同一请求，服务端落盘文件名（`outputs/reports/<run_id>_隆基绿能投资价值分析_report.html`）完全正确，证明数据链路本身没有问题。
+
+### 修改
+不修改任何产品代码（没有产品缺陷）；后续涉及中文内容的 API 测试改用 Python 脚本而不是 PowerShell 命令行直接内嵌中文字符串，把这个教训记录下来避免下次误判。
+
+### 结果
+用 Python 脚本重新验证：真实 HTTP 请求端到端跑通，`succeeded` 状态、真实 DOCX 导出、真实评估分数（0.8）全部正确。
+
+### 指标变化
+- 定性：一次疑似"上市公司硬校验误杀"的假阳性 -> 确认是测试脚手架编码问题，产品行为验证为正确。

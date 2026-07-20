@@ -41,7 +41,7 @@
 
 - 30-case 评测集含 10 个行业主题；`outputs/eval/competition_report.md` 的
   `industry_scenario_completion_rate`（三年及以上情景占比）字段给出真实统计。
-- 白酒行业离线测试：CR5=88.12%、HHI=4242.8（33 家真实成分股，`docs/v2_capability_matrix.md`
+- 白酒行业离线测试：CR5=88.12%、HHI=4242.8（33 家真实成分股，`docs/capability_matrix.md`
   v3 表已有历史记录，v4 版本改为真实 CR/HHI 而非仅"评估器打分"）。
 
 ## 限制

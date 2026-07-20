@@ -36,3 +36,31 @@
 | 14 | 虚构主体识别 | 无（bad_cases 16 缺口） | A股代码表+别名表+来源正文三重证据，failed -> insufficient_entity_evidence 终止 | [tools/entity_validator.py](../tools/entity_validator.py) | 虚构公司 E2E 实测拦截（相关性层被骗、实体层拦下，bad_cases 23）；10 真实 topic 零误杀 |
 | 15 | 记忆 | 无 | 本地轻量向量索引（numpy+bge，关键词降级），默认不参与主链路 | [memory/](../memory/) | 27 条索引，比亚迪查询 0.823 命中；降级单测；bad_cases 24 |
 | 16 | 离线测试 | 无正式测试套件 | 30 个 pytest（全离线）+ deep_eval/latency/ablation 报告 | [tests/](../tests/)、scripts/build_*_report.py | 30/30 通过 ~6s；ablation 只用真实历史数据，未测项标 insufficient data |
+
+---
+
+# v4 能力对比表（v3-full -> v4-competition）
+
+| # | 能力 | v3 状态 | v4 状态 | 代码位置 | 验证证据 |
+|---|---|---|---|---|---|
+| 17 | 宏观数据 | 无（宏观研究只有评估器，无真实数据链路） | 22 项指标实取 + 政策解析 + 6 条传导链 + 8 类灰犀牛监控，报告确定性组装 | [tools/macro_data_collector.py](../tools/macro_data_collector.py) 等 5 个模块 | GDP4.7%/CPI1.0%/PMI50.3 等真实值；组装报告 number_grounding_rate=1.0；[docs/macro_research.md](macro_research.md) |
+| 18 | 跟踪型报告 | 无 | 真实多期同比/环比（同口径基期，非上一期错配）+ 历史 run 记录对比 | [tracking/](../tracking/) 三模块 | 比亚迪年报/贵州茅台季报/万华化学季报真实跟踪；单测覆盖同比/环比/同期基期 bug 回归 |
+| 19 | 公司深度 | AkShare 单快照（营收/净利/ROE等平面字段） | 三表逐期抽取+杜邦分解+现金流质量+股权治理+真实同业比较（新浪板块真实成分） | 7 个 tools 模块，[docs/company_research.md](company_research.md) | 贵州茅台杜邦分解 calc_roe=33.66% vs reported=32.53%；酿酒行业4家真实peer比较（非编造均值） |
+| 20 | 行业深度 | 无（行业研究只有评估器关键词打分） | 证据驱动生命周期 + 真实CR/HHI + 产业链模板(来源验证) + 三年情景(输入来源标注) + 进入退出评分 | 5 个 tools 模块，[docs/industry_research.md](industry_research.md) | 白酒CR5=88.12%/HHI=4242.8（33家真实成分股）；单测含负增长证据回归修复 |
+| 21 | 正式披露 | 无 | 20项披露要素模板 + 合规检查器，未达标自动 DRAFT/INCOMPLETE | [templates/](../templates/)、[tools/disclosure_builder.py](../tools/disclosure_builder.py) | 真实 run 触发 DRAFT（unsourced_number_count>0），横幅列出未通过项 |
+| 22 | 图表 | 财务趋势图+估值表（文本抽取/AkShare年度序列） | +股票价格/相对指数/PE-PB序列图、宏观指标组图、行业CR+三年情景图 + 一致性检查(主体/期间/1%数值容差) | 4 个 chart 模块 + [tools/chart_consistency_checker.py](../tools/chart_consistency_checker.py) | 茅台真实3张市场图；宏观3组图；单测覆盖主体不一致/数值超差检测 |
+| 23 | 报告改稿 | 无（一次生成即定稿） | report→evaluate→revise→final_evaluate，硬上限1轮，只修定向问题，分数不降才采用 | [tools/report_reviser.py](../tools/report_reviser.py) | 单测验证硬上限+定向修复(剔除幻觉引用/补免责声明)+不无意义触发；真实run采纳改稿实例 |
+| 24 | 上市公司校验 | 三态（verified/weak/failed），无交易所/代码结构化字段 | 四态(+unsupported_unlisted_company)，输出symbol/exchange，注册表独立模块 | [tools/listed_company_registry.py](../tools/listed_company_registry.py) | 10真实公司零误杀+symbol/exchange；华为→unsupported_unlisted_company；虚构公司→failed |
+| 25 | 数据溯源 | provider=akshare 字符串标注 | 逐字段 lineage(raw_field/platform/endpoint/transformation/derived_from/confidence)，no_direct_source_url如实标注 | [tools/data_lineage.py](../tools/data_lineage.py) | 48字段真实lineage（茅台/比亚迪/22项宏观指标），[outputs/eval/data_lineage_report.md](../outputs/eval/data_lineage_report.md) |
+| 26 | 服务化部署 | 无（仅 CLI） | FastAPI异步任务队列(提交/查询/取回) + 7项健康检查 + Dockerfile/compose | [api/](../api/)、[Dockerfile](../Dockerfile) | 真实HTTP端到端验证(POST /reports→GET /tasks→GET /reports，含DOCX导出)；Docker build/run未在当前环境验证 |
+| 27 | 评测集 | 10 topic（公司5/行业5） | 30-case 三大类分层(公司10/行业10/宏观10)，每类含跟踪/风险/图表题 | [eval/topics_competition_30.json](../eval/topics_competition_30.json) | 见 [outputs/eval/competition_report.md](../outputs/eval/competition_report.md) |
+
+## v4 边界
+
+1. 跟踪引擎专注公司三表；行业/宏观"跟踪题"走常规报告管线验证，非独立跨期引擎；
+2. CR/HHI 是上市公司市值口径（新浪板块分类），非全行业营收口径；
+3. 三年情景模拟是配置假设驱动的工程演示，不是概率分布采样，不构成预测保证；
+4. 上市公司注册表仅覆盖沪深北 A 股；
+5. FastAPI 任务队列是单进程内存实现，不持久化，重启丢状态；
+6. 正式披露模板不代表持牌证券研究报告；
+7. Docker 构建/运行本次未在沙箱环境验证（无 Docker 守护进程），仅完成静态审查 + 真实 uvicorn 本地服务端到端验证。
