@@ -69,8 +69,11 @@ def assess_lifecycle(topic: str, sources: list[Source],
         "listed_member_count": member_count,
     }
 
-    # 规则判定（阈值为工程启发式，写死可审查）
-    if growth_median is None and penetration is None:
+    # 规则判定（阈值为工程启发式，写死可审查）。注意：growth_median 只汇总
+    # _GROWTH_RE（正向）命中，纯负增长证据(neg_vals)不参与其计算——判"证据不足"
+    # 前必须把 neg_vals 也算作有效证据，否则"来源只提到下降"的行业会被误判
+    # unknown（实际应判衰退期，见下方分支）。
+    if growth_median is None and penetration is None and not neg_vals:
         result.stage = "unknown"
         result.stage_reason = "来源中未抽取到可靠的行业增速/渗透率数字，不做无证据判断"
         result.limitation = "证据不足；建议补充行业协会/统计局来源"
