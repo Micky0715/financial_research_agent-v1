@@ -1,0 +1,276 @@
+[
+  {
+    "topic": "宁德时代投资价值分析",
+    "report_type": "company_research",
+    "category": "company",
+    "sector": "新能源",
+    "requirements": "公司概况,财务分析,估值分析,风险提示,投资观点",
+    "output_format": "html",
+    "tags": []
+  },
+  {
+    "topic": "贵州茅台2025年年度跟踪报告",
+    "report_type": "company_research",
+    "category": "company",
+    "sector": "消费",
+    "requirements": "公司概况,财务分析,同比变化,风险提示",
+    "output_format": "html",
+    "tags": ["annual_tracking"],
+    "tracking_symbol": "贵州茅台",
+    "tracking_period": "annual"
+  },
+  {
+    "topic": "中芯国际财务与风险分析",
+    "report_type": "company_research",
+    "category": "company",
+    "sector": "半导体",
+    "requirements": "公司概况,财务分析,风险提示,投资观点",
+    "output_format": "html",
+    "tags": ["risk_analysis"]
+  },
+  {
+    "topic": "招商银行投资价值分析",
+    "report_type": "company_research",
+    "category": "company",
+    "sector": "金融",
+    "requirements": "公司概况,财务分析,估值分析,风险提示",
+    "output_format": "html",
+    "tags": []
+  },
+  {
+    "topic": "恒瑞医药研究报告",
+    "report_type": "company_research",
+    "category": "company",
+    "sector": "医药",
+    "requirements": "公司概况,财务分析,估值分析,风险提示,投资观点",
+    "output_format": "html",
+    "tags": []
+  },
+  {
+    "topic": "三一重工制造业分析",
+    "report_type": "company_research",
+    "category": "company",
+    "sector": "制造",
+    "requirements": "公司概况,财务分析,估值分析,风险提示",
+    "output_format": "html",
+    "tags": []
+  },
+  {
+    "topic": "万华化学2026年一季度跟踪报告",
+    "report_type": "company_research",
+    "category": "company",
+    "sector": "周期",
+    "requirements": "公司概况,财务分析,环比变化,风险提示",
+    "output_format": "html",
+    "tags": ["quarterly_tracking"],
+    "tracking_symbol": "万华化学",
+    "tracking_period": "quarterly"
+  },
+  {
+    "topic": "科大讯飞投资价值分析",
+    "report_type": "company_research",
+    "category": "company",
+    "sector": "互联网或科技",
+    "requirements": "公司概况,财务分析,估值分析,风险提示,投资观点",
+    "output_format": "html",
+    "tags": []
+  },
+  {
+    "topic": "长江电力高股息价值分析",
+    "report_type": "company_research",
+    "category": "company",
+    "sector": "高股息",
+    "requirements": "公司概况,财务分析,估值分析,股息,风险提示",
+    "output_format": "html",
+    "tags": ["requires_chart"]
+  },
+  {
+    "topic": "美的集团出口业务分析",
+    "report_type": "company_research",
+    "category": "company",
+    "sector": "出口型企业",
+    "requirements": "公司概况,财务分析,出口敞口,风险提示",
+    "output_format": "html",
+    "tags": ["requires_chart"]
+  },
+  {
+    "topic": "新能源汽车产业链分析",
+    "report_type": "industry_research",
+    "category": "industry",
+    "sector": "新能源汽车",
+    "requirements": "产业链,核心公司,行业趋势,风险提示,投资观点",
+    "output_format": "html",
+    "tags": ["requires_chart"]
+  },
+  {
+    "topic": "光伏行业2026年二季度跟踪",
+    "report_type": "industry_research",
+    "category": "industry",
+    "sector": "光伏",
+    "requirements": "市场空间,竞争格局,环比变化,风险提示",
+    "output_format": "html",
+    "tags": ["quarterly_tracking"]
+  },
+  {
+    "topic": "半导体国产替代行业研究",
+    "report_type": "industry_research",
+    "category": "industry",
+    "sector": "半导体",
+    "requirements": "市场空间,产业链,核心公司,政策趋势,风险提示",
+    "output_format": "html",
+    "tags": ["risk_analysis"]
+  },
+  {
+    "topic": "AI机器人行业研报",
+    "report_type": "industry_research",
+    "category": "industry",
+    "sector": "AI机器人",
+    "requirements": "市场空间,产业链,核心公司,风险提示,投资观点",
+    "output_format": "html",
+    "tags": []
+  },
+  {
+    "topic": "创新药行业投资机会分析",
+    "report_type": "industry_research",
+    "category": "industry",
+    "sector": "创新药",
+    "requirements": "市场空间,竞争格局,核心公司,风险提示",
+    "output_format": "html",
+    "tags": []
+  },
+  {
+    "topic": "白酒行业2025年度回顾与展望",
+    "report_type": "industry_research",
+    "category": "industry",
+    "sector": "白酒",
+    "requirements": "市场空间,竞争格局,同比变化,风险提示,投资观点",
+    "output_format": "html",
+    "tags": ["annual_tracking"]
+  },
+  {
+    "topic": "低空经济行业研报",
+    "report_type": "industry_research",
+    "category": "industry",
+    "sector": "低空经济",
+    "requirements": "市场空间,政策趋势,产业链,风险提示",
+    "output_format": "html",
+    "tags": []
+  },
+  {
+    "topic": "储能行业竞争格局分析",
+    "report_type": "industry_research",
+    "category": "industry",
+    "sector": "储能",
+    "requirements": "市场空间,竞争格局,产业链,风险提示",
+    "output_format": "html",
+    "tags": ["requires_chart"]
+  },
+  {
+    "topic": "消费电子行业趋势分析",
+    "report_type": "industry_research",
+    "category": "industry",
+    "sector": "消费电子",
+    "requirements": "市场空间,行业趋势,核心公司,风险提示",
+    "output_format": "html",
+    "tags": []
+  },
+  {
+    "topic": "银行行业投资价值分析",
+    "report_type": "industry_research",
+    "category": "industry",
+    "sector": "银行或保险",
+    "requirements": "市场空间,竞争格局,风险提示,投资观点",
+    "output_format": "html",
+    "tags": []
+  },
+  {
+    "topic": "中国GDP与经济增长展望",
+    "report_type": "macro_research",
+    "category": "macro",
+    "sector": "GDP与经济增长",
+    "requirements": "核心结论,关键指标,趋势分析,风险提示",
+    "output_format": "html",
+    "tags": ["requires_chart"]
+  },
+  {
+    "topic": "CPI与PPI走势分析",
+    "report_type": "macro_research",
+    "category": "macro",
+    "sector": "CPI/PPI",
+    "requirements": "核心结论,关键指标,传导路径,风险提示",
+    "output_format": "html",
+    "tags": []
+  },
+  {
+    "topic": "利率环境与货币政策2026年一季度跟踪",
+    "report_type": "macro_research",
+    "category": "macro",
+    "sector": "利率",
+    "requirements": "核心结论,关键指标,环比变化,政策解读",
+    "output_format": "html",
+    "tags": ["quarterly_tracking"]
+  },
+  {
+    "topic": "人民币汇率走势分析",
+    "report_type": "macro_research",
+    "category": "macro",
+    "sector": "汇率",
+    "requirements": "核心结论,关键指标,资产影响,风险提示",
+    "output_format": "html",
+    "tags": []
+  },
+  {
+    "topic": "社融与信贷数据解读",
+    "report_type": "macro_research",
+    "category": "macro",
+    "sector": "社融和信贷",
+    "requirements": "核心结论,关键指标,传导路径,风险提示",
+    "output_format": "html",
+    "tags": []
+  },
+  {
+    "topic": "出口形势与外需分析",
+    "report_type": "macro_research",
+    "category": "macro",
+    "sector": "出口",
+    "requirements": "核心结论,关键指标,行业影响,风险提示",
+    "output_format": "html",
+    "tags": []
+  },
+  {
+    "topic": "房地产市场2025年度回顾",
+    "report_type": "macro_research",
+    "category": "macro",
+    "sector": "房地产",
+    "requirements": "核心结论,关键指标,同比变化,风险提示",
+    "output_format": "html",
+    "tags": ["annual_tracking"]
+  },
+  {
+    "topic": "制造业景气度跟踪",
+    "report_type": "macro_research",
+    "category": "macro",
+    "sector": "制造业景气",
+    "requirements": "核心结论,关键指标,趋势分析,风险提示",
+    "output_format": "html",
+    "tags": []
+  },
+  {
+    "topic": "全球流动性与美联储政策分析",
+    "report_type": "macro_research",
+    "category": "macro",
+    "sector": "全球流动性",
+    "requirements": "核心结论,国内外对比,资产影响,风险提示",
+    "output_format": "html",
+    "tags": []
+  },
+  {
+    "topic": "中国经济灰犀牛风险监测",
+    "report_type": "macro_research",
+    "category": "macro",
+    "sector": "灰犀牛风险",
+    "requirements": "灰犀牛风险,关键指标,传导路径,风险提示",
+    "output_format": "html",
+    "tags": ["risk_analysis", "requires_chart"]
+  }
+]

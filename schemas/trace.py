@@ -31,3 +31,8 @@ class TraceLog(BaseModel):
     evaluation_diagnostics: dict[str, Any] = Field(default_factory=dict)
     # v4 阶段G：有界自检改稿（revision_rounds 硬上限 1，见 orchestrator/workflow.py）
     revision: dict[str, Any] = Field(default_factory=dict)
+    # v4 阶段K：宏观/公司深度/行业深度链路的调用指标（供 30-case 报告统计
+    # macro_indicator_coverage / company_statement_coverage / industry_scenario_completion_rate）
+    macro_chain_metrics: dict[str, Any] = Field(default_factory=dict)
+    company_deep_metrics: dict[str, Any] = Field(default_factory=dict)
+    industry_deep_metrics: dict[str, Any] = Field(default_factory=dict)

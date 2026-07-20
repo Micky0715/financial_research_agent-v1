@@ -465,6 +465,9 @@ class WorkflowOrchestrator:
         trace.browser_metrics = context.get("sources", {}).get("browser_metrics", {})
         trace.replan_metrics = replan_metrics
         trace.structured_data_metrics = context.get("analysis", {}).get("akshare_metrics", {})
+        trace.macro_chain_metrics = context.get("analysis", {}).get("macro_metrics", {})
+        trace.company_deep_metrics = context.get("analysis", {}).get("company_deep_metrics", {})
+        trace.industry_deep_metrics = context.get("analysis", {}).get("industry_deep_metrics", {})
 
         analysis_compression = context.get("analysis", {}).get("compression_metrics", {})
         report_compression = context.get("report", {}).get("report_compression", {})
