@@ -1,0 +1,35 @@
+# 密钥/环境变量：绝不打包进镜像
+.env
+.env.*
+!.env.example
+
+# 虚拟环境/依赖缓存
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# 大文件/运行产物：容器启动后由挂载卷或运行时生成，不预打包
+outputs/cache/
+outputs/reports/
+outputs/traces/
+outputs/sources/
+outputs/evaluations/
+outputs/final_reports/
+outputs/formal_reports/
+outputs/tracking/
+outputs/baseline_reports/
+memory/index/
+*.docx
+*.pdf
+
+# 版本控制/IDE
+.git/
+.gitignore
+.vscode/
+.idea/
+
+# 测试/文档不影响运行，但没必要进镜像放大体积
+tests/
+docs/
+*.md

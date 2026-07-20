@@ -47,32 +47,45 @@ def _markdown_of(files: dict) -> str:
     return ""
 
 
-def export_run(run_id: str) -> None:
+def export_run_result(run_id: str) -> "dict | None":
+    """Programmatic core (reused by api/task_manager.py): export DOCX (+PDF
+    when an HTML report exists) for one run_id, returning result dicts
+    instead of printing. None when there's no report file for the run."""
     files = _report_files_for_run(run_id)
     markdown = _markdown_of(files)
     if not markdown:
-        print(f"[warn] run {run_id}: no report file found, skipped")
-        return
+        return None
     topic_part = (files["md"] or files["html"]).stem.replace("_report", "")
     sources = []
     if files["sources"]:
         try:
             sources = load_json(files["sources"])
-        except Exception as exc:  # noqa: BLE001
-            print(f"[warn] run {run_id}: sources unreadable: {exc}")
+        except Exception:  # noqa: BLE001
+            sources = []
     html_text = files["html"].read_text(encoding="utf-8", errors="ignore") if files["html"] else ""
 
     title = topic_part.split("_", 1)[-1] + " 研究报告"
     docx_result = export_docx(markdown, title, topic_part, sources, html_text)
+    pdf_result = (export_pdf(str(files["html"]), topic_part) if files["html"] else
+                 {"success": False, "degraded": True, "path": None,
+                  "error": "no HTML report for this run; markdown-only run"})
+    return {"docx": docx_result, "pdf": pdf_result}
+
+
+def export_run(run_id: str) -> None:
+    result = export_run_result(run_id)
+    if result is None:
+        print(f"[warn] run {run_id}: no report file found, skipped")
+        return
+    docx_result = result["docx"]
     print(f"{run_id} DOCX: success={docx_result['success']} path={docx_result['path']} "
           f"error={docx_result['error']}")
-
-    if files["html"]:
-        pdf_result = export_pdf(str(files["html"]), topic_part)
+    pdf_result = result["pdf"]
+    if pdf_result.get("error") == "no HTML report for this run; markdown-only run":
+        print(f"{run_id} PDF:  skipped (no HTML report for this run; markdown-only run)")
+    else:
         print(f"{run_id} PDF:  success={pdf_result['success']} degraded={pdf_result['degraded']} "
               f"path={pdf_result['path']} error={pdf_result['error']}")
-    else:
-        print(f"{run_id} PDF:  skipped (no HTML report for this run; markdown-only run)")
 
 
 def main() -> None:

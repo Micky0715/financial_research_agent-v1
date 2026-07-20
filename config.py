@@ -118,6 +118,11 @@ class Config:
     # Logging
     LOG_LEVEL: str = os.getenv("LOG_LEVEL", "INFO")
 
+    # FastAPI service (v4 阶段J)：并发任务数上限 + 单任务超时（秒）。
+    # 内存任务队列，服务重启后任务丢失——这是明确声明的限制，见 docs/deployment.md。
+    API_MAX_CONCURRENT_TASKS: int = _get_int("API_MAX_CONCURRENT_TASKS", 2)
+    API_TASK_TIMEOUT_SECONDS: int = _get_int("API_TASK_TIMEOUT_SECONDS", 900)
+
     # Paths
     BASE_DIR: Path = BASE_DIR
     OUTPUT_DIR: Path = BASE_DIR / "outputs"

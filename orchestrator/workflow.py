@@ -283,7 +283,8 @@ class WorkflowOrchestrator:
             "revision_triggered": False, "revision_reasons": [], "before_score": None,
             "after_score": None, "modified_sections": [], "revision_rounds": 0,
         }
-        if source_dicts and report_data.get("markdown_content") and evaluation:
+        if (source_dicts and report_data.get("markdown_content") and evaluation
+                and getattr(request, "enable_revision", True)):
             try:
                 from evaluators.report_evaluator import evaluate_report
                 from tools.report_reviser import apply_revision, identify_revision_issues

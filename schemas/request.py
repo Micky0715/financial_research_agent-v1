@@ -21,3 +21,7 @@ class ResearchRequest(BaseModel):
         default_factory=list,
         description="v3: user-provided local files (PDF/TXT/MD/CSV/Excel) added as sources",
     )
+    enable_revision: bool = Field(
+        default=True,
+        description="v4: allow the bounded (<=1 round) self-check revision pass in orchestrator/workflow.py",
+    )

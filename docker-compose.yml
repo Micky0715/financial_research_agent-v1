@@ -1,0 +1,22 @@
+services:
+  financial-research-agent:
+    build: .
+    image: financial-research-agent:v4-competition
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    environment:
+      # 内存任务队列的并发上限（可通过 .env 覆盖）；重启容器会丢失进行中的任务
+      API_MAX_CONCURRENT_TASKS: ${API_MAX_CONCURRENT_TASKS:-2}
+      API_TASK_TIMEOUT_SECONDS: ${API_TASK_TIMEOUT_SECONDS:-900}
+    volumes:
+      # 报告/评测产物挂载出容器，方便本机查看；不挂载 .env（已通过 env_file 注入）
+      - ./outputs:/app/outputs
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health', timeout=5)"]
+      interval: 30s
+      timeout: 10s
+      start_period: 20s
+      retries: 3
