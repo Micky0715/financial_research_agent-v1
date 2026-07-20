@@ -65,6 +65,39 @@ def test_entity_validator_fails_fictional(monkeypatch):
     assert r["evidence_sources"] == []
 
 
+def test_entity_validator_unsupported_unlisted_company(monkeypatch):
+    """v4 阶段H：真实但不在 A 股注册表覆盖范围内的实体（如未上市/港美股/私营企业）
+    -> unsupported_unlisted_company，不是 verified 也不是 failed。"""
+    monkeypatch.setattr(ev, "_stock_list_hit", lambda s: (False, "A股代码表未命中"))
+    monkeypatch.setattr(ev, "check_listed_status", lambda s: {
+        "listed": False, "symbol": None, "exchange": None, "name": None,
+        "reason": "未在 AkShare 全市场 A 股代码-名称表中找到对应证券代码",
+        "coverage_note": "本注册表仅覆盖沪/深/北交所 A 股",
+    })
+    sources = [Source(source_id=f"s{i}", title="华为相关报道",
+                      content="华为在多个领域持续投入研发，华为的产品线覆盖通信与终端。") for i in range(4)]
+    r = ev.validate_entity("华为投资价值分析", "company_research", sources)
+    assert r["validation_status"] == "unsupported_unlisted_company"
+    assert r["listed_status"] == "unlisted"
+    assert r["symbol"] is None
+    assert len(r["evidence_sources"]) >= 3
+
+
+def test_entity_validator_verified_carries_symbol_and_exchange(monkeypatch):
+    monkeypatch.setattr(ev, "_stock_list_hit", lambda s: (True, "A股代码表命中: 贵州茅台(600519)"))
+    monkeypatch.setattr(ev, "check_listed_status", lambda s: {
+        "listed": True, "symbol": "600519", "exchange": "上海证券交易所",
+        "name": "贵州茅台", "reason": "A股代码表命中：贵州茅台（600519，上海证券交易所）",
+        "coverage_note": "本注册表仅覆盖沪/深/北交所 A 股",
+    })
+    sources = [Source(source_id="s1", content="贵州茅台2025年营收")]
+    r = ev.validate_entity("贵州茅台投资价值分析", "company_research", sources)
+    assert r["validation_status"] == "verified"
+    assert r["listed_status"] == "listed"
+    assert r["symbol"] == "600519"
+    assert r["exchange"] == "上海证券交易所"
+
+
 def test_entity_validator_industry_verified():
     sources = [Source(source_id=f"s{i}", content="光伏组件与硅片产能扩张，太阳能装机增长。") for i in range(3)]
     r = ev.validate_entity("光伏行业投资风险分析", "industry_research", sources)

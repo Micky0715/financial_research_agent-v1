@@ -389,10 +389,37 @@ class WorkflowOrchestrator:
                 created_at=started_at,
             )
         else:
+            title = report_data.get("title", f"{request.topic} 研究报告")
+            content = report_data.get("final_content", report_data.get("markdown_content", ""))
+            # v4 阶段H：上市公司硬校验 -- unsupported_unlisted_company（有真实来源
+            # 证据、但不在免费公开 A 股注册表覆盖范围内）不得冒充正式上市公司研报。
+            # 不清空来源（不同于 failed 路径）：照常用已抓取的网页资料生成内容，
+            # 只是把标题/正文顶部明确标注为"公开资料摘要"，并在评估里留痕。
+            entity_validation = context.get("entity_validation", {})
+            if (request.report_type == "company_research"
+                    and entity_validation.get("validation_status") == "unsupported_unlisted_company"):
+                title = f"{request.topic} 公开资料摘要（非上市公司研究报告）"
+                banner_md = (
+                    "> ⚠️ **本文档为公开资料摘要，不是正式上市公司研究报告。**\n"
+                    f"> 校验结论：{entity_validation.get('reason', '')}\n"
+                    "> 本系统的公司研究能力（AkShare结构化数据、三表、DCF估值、同业比较、"
+                    "上市公司硬校验）均要求标的在免费公开 A 股注册表中存在有效证券代码，"
+                    "该主体不满足此前提，因此以下内容仅为对已检索网页资料的摘要整理，"
+                    "未经结构化财务数据验证，不构成投资建议。\n\n"
+                )
+                md_content = report_data.get("markdown_content", "")
+                report_data["markdown_content"] = banner_md + md_content
+                if report_data.get("output_format") == "html":
+                    content = render_html_report(banner_md + md_content, title,
+                                                 extra_html=report_data.get("charts_html", ""))
+                else:
+                    content = banner_md + md_content
+                if evaluation:
+                    evaluation.setdefault("diagnostics", {})["unsupported_unlisted_company"] = True
             report = Report(
                 topic=request.topic,
-                title=report_data.get("title", f"{request.topic} 研究报告"),
-                content=report_data.get("final_content", report_data.get("markdown_content", "")),
+                title=title,
+                content=content,
                 output_format=report_data.get("output_format", request.output_format),
                 sources=[Source(**s) for s in source_dicts],
                 quality_score=evaluation or None,
