@@ -622,3 +622,31 @@ sentence-transformers 模型加载（权重读取+torch 初始化）在每个新
 
 ### 指标变化
 - 定性：一次疑似"上市公司硬校验误杀"的假阳性 -> 确认是测试脚手架编码问题，产品行为验证为正确。
+
+---
+
+## Bad Case 31：entity_validator 对宏观主题和非内置行业主题的误杀（30-case 真实评测中 11/30 案例失败）
+
+### 现象
+30-case 分层评测全量真实跑完后，`success_rate` 只有 0.633（19/30），其中**宏观类 10 个 case 里 8 个失败**（仅 GDP、CPI-PPI 两个成功），行业类 10 个里也有 3 个失败（创新药/白酒/消费电子）。逐个查 trace 发现全部失败在同一处：`entity_validation.validation_status == "failed"` -> `insufficient_entity_evidence` -> 来源被清空 -> 报告直接终止，即使 browse 阶段明明已经抓到了真实相关的网页来源。
+
+### 原因
+`tools/entity_validator.py::validate_entity` 对"非 company_research"的所有 report_type（含 macro_research/risk_research/valuation_research）统一走"行业式"校验逻辑：`terms = profile["industry_terms"] or [subject]`。
+1. **宏观类主题根本不该套用这套逻辑**——GDP、CPI、利率环境不存在"是否是虚构实体"这回事，套用"行业词是否在来源正文逐字出现"的检验从设计上就文不对题；而且宏观主题的 `subject`（如"中国GDP与经济增长展望"）是一整段描述性短语，不会有任何真实文章逐字包含它，必然判 failed。
+2. **行业类主题**：只有 5 个行业（AI机器人/半导体国产替代/光伏/低空经济/新能源汽车）写死在 `INDUSTRY_SYNONYMS` 里、有拆分好的同义词候选；V3 的 10-topic 固定评测集里的行业 case 恰好全部落在这 5 个里面，所以这个缺陷在 V3 阶段完全没有暴露。v4 的 30-case 评测集引入了创新药/白酒/消费电子等新行业，它们不在字典里，同样退化成"整段短语逐字匹配"，同样大概率判 failed。
+
+这是一个**只有在跑真实的、更大范围的评测集时才会暴露**的设计缺陷——离线单测用的都是精心构造的、能匹配上的输入，天然绕开了这个坑。
+
+### 修改
+[tools/entity_validator.py](../tools/entity_validator.py)：
+1. 新增 `_NO_ENTITY_CONCEPT_TYPES = {"macro_research", "risk_research", "valuation_research"}`，这三类直接返回 `validation_status="not_applicable"`，不参与来源去留判定，不再套用行业式校验。
+2. 新增 `_core_industry_terms()`：从 subject 里"行业/产业"前的部分提取核心行业词（如"创新药行业投资机会" -> "创新药"）作为候选，未命中内置同义词表时用 `[核心词, 完整subject]` 而不是只用完整 subject。
+
+同时更新 `scripts/build_competition_report.py` 的 `entity_validation_pass_rate` 计算口径，把 `not_applicable` 从分母里剔除（不算通过也不算失败）。新增 4 个回归测试（`tests/test_evaluators_and_entity.py`）锁定：宏观/风险类旁路生效、核心词提取能救回真实创新药案例、完全不相关的来源依然判 failed（没有把校验完全废掉）。
+
+### 结果
+修复后重新执行原本失败的 11 个 case：企业深度/行业深度/宏观数据链路本身没有任何问题（此前的验证——三表/CR-HHI/22项宏观指标——都是真实有效的），问题完全出在实体校验这一道本不该拦住它们的闸门上。修复后这些 case 恢复正常执行并产出真实报告。
+
+### 指标变化
+- entity_validation 相关的 main_issue=failed 数量：11/30 -> 0（详见修复后的 `outputs/eval/competition_report.md`）。
+- 这是 v4 全流程里发现的最大一个真实缺陷：不是某个孤立工具的边界情况，而是校验层的设计假设（"非公司类都当行业处理"）在扩大评测覆盖面后被证伪——印证了"30-case 分层评测"本身的价值：它比 V3 固定 10 题暴露出了更多真实问题。

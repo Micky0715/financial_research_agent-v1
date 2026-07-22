@@ -23,9 +23,9 @@
 
 - `revenue`: raw_field='营业总收入', value=1720.5417, unit=亿元, platform=新浪财经, endpoint=stock_financial_abstract（新浪财经个股财务摘要接口（历年年报核心指标矩阵））, no_direct_source_url=True, derived_from=[], missing=False
 - `debt_ratio`: raw_field='资产负债率', value=16.4154, unit=%, platform=新浪财经, endpoint=stock_financial_abstract（新浪财经个股财务摘要接口（历年年报核心指标矩阵））, no_direct_source_url=True, derived_from=[], missing=False
-- `ps`: raw_field='', value=9.65, unit=倍, platform=百度股市通/新浪财经（派生）, endpoint=市销率 = 总市值 / 营业总收入（本项目内推导，非 provider 直接字段）, no_direct_source_url=True, derived_from=['market_cap', 'revenue'], missing=False
+- `ps`: raw_field='', value=9.5, unit=倍, platform=百度股市通/新浪财经（派生）, endpoint=市销率 = 总市值 / 营业总收入（本项目内推导，非 provider 直接字段）, no_direct_source_url=True, derived_from=['market_cap', 'revenue'], missing=False
 - `revenue`: raw_field='营业总收入', value=8039.6496, unit=亿元, platform=新浪财经, endpoint=stock_financial_abstract（新浪财经个股财务摘要接口（历年年报核心指标矩阵））, no_direct_source_url=True, derived_from=[], missing=False
 - `debt_ratio`: raw_field='资产负债率', value=70.7445, unit=%, platform=新浪财经, endpoint=stock_financial_abstract（新浪财经个股财务摘要接口（历年年报核心指标矩阵））, no_direct_source_url=True, derived_from=[], missing=False
-- `ps`: raw_field='', value=1.07, unit=倍, platform=百度股市通/新浪财经（派生）, endpoint=市销率 = 总市值 / 营业总收入（本项目内推导，非 provider 直接字段）, no_direct_source_url=True, derived_from=['market_cap', 'revenue'], missing=False
+- `ps`: raw_field='', value=1.04, unit=倍, platform=百度股市通/新浪财经（派生）, endpoint=市销率 = 总市值 / 营业总收入（本项目内推导，非 provider 直接字段）, no_direct_source_url=True, derived_from=['market_cap', 'revenue'], missing=False
 - `gdp_yoy`: raw_field='GDP同比增速', value=4.7, unit=%, platform=东方财富数据中心(转载), endpoint=macro_china_gdp（国家统计局 发布，经 AkShare 转载）, no_direct_source_url=True, derived_from=[], missing=False
-- `usd_cny`: raw_field='人民币兑美元中间价', value=6.7948, unit=元/美元, platform=SAFE官网, endpoint=currency_boc_safe（国家外汇管理局 发布，经 AkShare 转载）, no_direct_source_url=True, derived_from=[], missing=False
+- `usd_cny`: raw_field='人民币兑美元中间价', value=6.7933, unit=元/美元, platform=SAFE官网, endpoint=currency_boc_safe（国家外汇管理局 发布，经 AkShare 转载）, no_direct_source_url=True, derived_from=[], missing=False
