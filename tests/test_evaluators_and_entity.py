@@ -102,3 +102,35 @@ def test_entity_validator_industry_verified():
     sources = [Source(source_id=f"s{i}", content="光伏组件与硅片产能扩张，太阳能装机增长。") for i in range(3)]
     r = ev.validate_entity("光伏行业投资风险分析", "industry_research", sources)
     assert r["validation_status"] == "verified"
+
+
+def test_entity_validator_macro_research_bypasses_validation():
+    """bad_cases 31：宏观研究没有可验证实体概念，不应套用行业式逐字匹配
+    （曾导致 9/10 真实 30-case 宏观主题被误判 insufficient_entity_evidence）。"""
+    r = ev.validate_entity("中国GDP与经济增长展望", "macro_research", [])
+    assert r["validation_status"] == "not_applicable"
+    r2 = ev.validate_entity("利率环境与货币政策分析", "risk_research", [])
+    assert r2["validation_status"] == "not_applicable"
+
+
+def test_entity_validator_industry_uses_core_term_not_full_descriptive_phrase():
+    """bad_cases 31：不在内置 INDUSTRY_SYNONYMS 里的行业主题，之前只会用整段
+    描述性短语（如"创新药行业投资机会"）逐字匹配，真实文章几乎不会出现这个
+    完整短语，导致真实合法主题被误判 failed。修复后应从"行业/产业"前提取
+    核心词（"创新药"）作为候选，能匹配到只提及核心词的真实来源。"""
+    sources = [
+        Source(source_id=f"s{i}", title="创新药相关报道",
+              content="创新药领域近年持续放量，多家企业创新药管线加速推进。")
+        for i in range(3)
+    ]
+    r = ev.validate_entity("创新药行业投资机会分析", "industry_research", sources)
+    assert r["validation_status"] == "verified"
+    assert "创新药" in r["matched_aliases"]
+
+
+def test_entity_validator_industry_still_fails_for_truly_unrelated_sources():
+    """核心词提取修复不能让"什么都能过"——完全不相关的来源仍应判 failed。"""
+    sources = [Source(source_id=f"s{i}", content="公司营收增长，净利润提升，估值处于低位。")
+              for i in range(5)]
+    r = ev.validate_entity("创新药行业投资机会分析", "industry_research", sources)
+    assert r["validation_status"] == "failed"

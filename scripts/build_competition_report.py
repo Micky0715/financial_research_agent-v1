@@ -200,8 +200,10 @@ def build_report() -> str:
     compliance_pass_rate = round(sum(compliance_flags) / len(compliance_flags), 3) if compliance_flags else "insufficient data"
     all_chart_flags = [f for flags in chart_flags.values() for f in flags]
     chart_generation_rate = round(sum(all_chart_flags) / len(all_chart_flags), 3) if all_chart_flags else "insufficient data"
+    # not_applicable（宏观/风险/估值研究没有可验证实体概念，见 tools/entity_validator.py）
+    # 既不算通过也不算失败，直接排除在分母外，避免虚高或虚低这个比率
     entity_pass = sum(v for k, v in entity_status_counts.items() if k in ("verified", "weak"))
-    entity_total = sum(entity_status_counts.values())
+    entity_total = sum(v for k, v in entity_status_counts.items() if k != "not_applicable")
     entity_pass_rate = round(entity_pass / entity_total, 3) if entity_total else "insufficient data"
     revision_trigger_rate = round(revision_triggered / n, 3) if n else 0.0
     revision_improvement = round(statistics.mean(revision_deltas), 3) if revision_deltas else "insufficient data (no adopted revisions with numeric before/after)"
