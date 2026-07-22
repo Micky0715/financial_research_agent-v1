@@ -20,7 +20,7 @@ import argparse
 import sys
 import time
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 if sys.stdout.encoding and sys.stdout.encoding.lower() != "utf-8":
@@ -67,13 +67,27 @@ def _run_tracking_if_tagged(entry: dict[str, Any]) -> dict[str, Any]:
         return {"attempted": True, "error": f"{type(exc).__name__}: {str(exc)[:150]}"}
 
 
-def execute_topics(topics: list[dict[str, Any]]) -> list[dict[str, Any]]:
+def execute_topics(topics: list[dict[str, Any]],
+                   already_done: Optional[dict[str, dict]] = None) -> list[dict[str, Any]]:
+    """already_done: {topic: run_entry} from a prior partial run (see --resume).
+    Those topics are skipped entirely (not re-executed) and their existing
+    entry is carried over verbatim into the returned list, in original order.
+    Saves incrementally after every case so a killed process loses at most
+    one in-flight case, not the whole suite."""
+    already_done = already_done or {}
     orchestrator = WorkflowOrchestrator()
     runs: list[dict[str, Any]] = []
     for i, entry in enumerate(topics, 1):
-        print(f"[{i}/{len(topics)}] {entry['topic']} ({entry.get('category')}/{entry.get('report_type')}) ...")
+        topic = entry["topic"]
+        if topic in already_done:
+            print(f"[{i}/{len(topics)}] {topic} - already completed in a prior run, skipping (--resume)")
+            runs.append(already_done[topic])
+            save_json(_RUNS_PATH, runs)
+            continue
+
+        print(f"[{i}/{len(topics)}] {topic} ({entry.get('category')}/{entry.get('report_type')}) ...")
         request = ResearchRequest(
-            topic=entry["topic"], report_type=entry.get("report_type", "company_research"),
+            topic=topic, report_type=entry.get("report_type", "company_research"),
             requirements=[r.strip() for r in entry.get("requirements", "").split(",") if r.strip()],
             output_format=entry.get("output_format", "html"),
             max_sources=entry.get("max_sources", config.TOP_K_SOURCES),
@@ -85,11 +99,11 @@ def execute_topics(topics: list[dict[str, Any]]) -> list[dict[str, Any]]:
             run_id = result.get("run_id")
         except Exception as exc:  # noqa: BLE001 - one bad case must not stop the suite
             error = f"{type(exc).__name__}: {str(exc)[:200]}"
-            logger.warning(f"competition eval case failed: {entry['topic']}: {exc!r}")
+            logger.warning(f"competition eval case failed: {topic}: {exc!r}")
 
         tracking_result = _run_tracking_if_tagged(entry)
         runs.append({
-            "topic": entry["topic"], "category": entry.get("category"),
+            "topic": topic, "category": entry.get("category"),
             "report_type": entry.get("report_type"), "tags": entry.get("tags", []),
             "run_id": run_id, "error": error,
             "wall_time": round(time.perf_counter() - t0, 2),
@@ -97,6 +111,7 @@ def execute_topics(topics: list[dict[str, Any]]) -> list[dict[str, Any]]:
         })
         print(f"    -> run_id={run_id} error={error} wall_time={runs[-1]['wall_time']}s "
               f"tracking={tracking_result.get('attempted')}")
+        save_json(_RUNS_PATH, runs)  # incremental: a killed process keeps all progress so far
     return runs
 
 
@@ -106,6 +121,9 @@ def parse_args() -> argparse.Namespace:
     mode.add_argument("--run", action="store_true", help="真实执行全部 30 个 case")
     mode.add_argument("--collect-only", action="store_true",
                       help="不执行，只重新读取上次 --run 写下的 competition_30_runs.json")
+    parser.add_argument("--resume", action="store_true",
+                        help="与 --run 搭配：跳过 competition_30_runs.json 里已有 run_id 且无 error 的 topic，"
+                             "只继续跑剩余的（进程被中断后用这个续跑，不重新烧一遍已完成的 case）")
     return parser.parse_args()
 
 
@@ -121,7 +139,16 @@ def main() -> int:
          f"macro={sum(1 for t in topics if t.get('category')=='macro')})")
 
     if args.run:
-        runs = execute_topics(topics)
+        already_done = {}
+        if args.resume and _RUNS_PATH.exists():
+            try:
+                prior = load_json(_RUNS_PATH)
+                already_done = {r["topic"]: r for r in prior
+                               if r.get("run_id") and not r.get("error")}
+                print(f"--resume: found {len(already_done)} already-completed case(s) in {_RUNS_PATH}")
+            except Exception as exc:  # noqa: BLE001 - corrupt partial file -> just start fresh
+                print(f"[warn] could not read prior run index for --resume: {exc}")
+        runs = execute_topics(topics, already_done)
         save_json(_RUNS_PATH, runs)
         print(f"saved run index to {_RUNS_PATH}")
     else:
