@@ -1,0 +1,401 @@
+[
+  {
+    "topic": "宁德时代投资价值分析",
+    "category": "company",
+    "report_type": "company_research",
+    "tags": [],
+    "run_id": "d93162a45b",
+    "error": null,
+    "wall_time": 410.82,
+    "tracking_result": {
+      "attempted": false
+    }
+  },
+  {
+    "topic": "贵州茅台2025年年度跟踪报告",
+    "category": "company",
+    "report_type": "company_research",
+    "tags": [
+      "annual_tracking"
+    ],
+    "run_id": "61442558a4",
+    "error": null,
+    "wall_time": 196.62,
+    "tracking_result": {
+      "attempted": true,
+      "period_type": "annual",
+      "insufficient_history": false,
+      "changes": null,
+      "report_path": "C:\\Users\\jdh07\\Desktop\\financial_research_agent\\outputs\\tracking\\tracking_600519_annual_20260720_220915.md",
+      "note": "reconstructed from real tracking report file on disk"
+    }
+  },
+  {
+    "topic": "中芯国际财务与风险分析",
+    "category": "company",
+    "report_type": "company_research",
+    "tags": [
+      "risk_analysis"
+    ],
+    "run_id": "d4369f8324",
+    "error": null,
+    "wall_time": 201.31,
+    "tracking_result": {
+      "attempted": false
+    }
+  },
+  {
+    "topic": "招商银行投资价值分析",
+    "category": "company",
+    "report_type": "company_research",
+    "tags": [],
+    "run_id": "c2c4ebf1b9",
+    "error": null,
+    "wall_time": 164.26,
+    "tracking_result": {
+      "attempted": false
+    }
+  },
+  {
+    "topic": "恒瑞医药研究报告",
+    "category": "company",
+    "report_type": "company_research",
+    "tags": [],
+    "run_id": "29622539e0",
+    "error": null,
+    "wall_time": 257.29,
+    "tracking_result": {
+      "attempted": false
+    }
+  },
+  {
+    "topic": "三一重工制造业分析",
+    "category": "company",
+    "report_type": "company_research",
+    "tags": [],
+    "run_id": "b061c51e68",
+    "error": null,
+    "wall_time": 196.12,
+    "tracking_result": {
+      "attempted": false
+    }
+  },
+  {
+    "topic": "万华化学2026年一季度跟踪报告",
+    "category": "company",
+    "report_type": "company_research",
+    "tags": [
+      "quarterly_tracking"
+    ],
+    "run_id": "7599ef941c",
+    "error": null,
+    "wall_time": 308.18,
+    "tracking_result": {
+      "attempted": true,
+      "period_type": "quarterly",
+      "insufficient_history": false,
+      "changes": null,
+      "report_path": "C:\\Users\\jdh07\\Desktop\\financial_research_agent\\outputs\\tracking\\tracking_600309_quarterly_20260720_222810.md",
+      "note": "reconstructed from real tracking report file on disk"
+    }
+  },
+  {
+    "topic": "科大讯飞投资价值分析",
+    "category": "company",
+    "report_type": "company_research",
+    "tags": [],
+    "run_id": "3d56616b7d",
+    "error": null,
+    "wall_time": 195.03,
+    "tracking_result": {
+      "attempted": false
+    }
+  },
+  {
+    "topic": "长江电力高股息价值分析",
+    "category": "company",
+    "report_type": "company_research",
+    "tags": [
+      "requires_chart"
+    ],
+    "run_id": "45ea66e9c8",
+    "error": null,
+    "wall_time": 517.77,
+    "tracking_result": {
+      "attempted": false
+    }
+  },
+  {
+    "topic": "美的集团出口业务分析",
+    "category": "company",
+    "report_type": "company_research",
+    "tags": [
+      "requires_chart"
+    ],
+    "run_id": "bde7e037ba",
+    "error": null,
+    "wall_time": 175.18,
+    "tracking_result": {
+      "attempted": false
+    }
+  },
+  {
+    "topic": "新能源汽车产业链分析",
+    "category": "industry",
+    "report_type": "industry_research",
+    "tags": [
+      "requires_chart"
+    ],
+    "run_id": "f4b98e83d4",
+    "error": null,
+    "wall_time": 262.45,
+    "tracking_result": {
+      "attempted": false
+    }
+  },
+  {
+    "topic": "光伏行业2026年二季度跟踪",
+    "category": "industry",
+    "report_type": "industry_research",
+    "tags": [
+      "quarterly_tracking"
+    ],
+    "run_id": "84b7f1ea6d",
+    "error": null,
+    "wall_time": 278.33,
+    "tracking_result": {
+      "attempted": false
+    }
+  },
+  {
+    "topic": "半导体国产替代行业研究",
+    "category": "industry",
+    "report_type": "industry_research",
+    "tags": [
+      "risk_analysis"
+    ],
+    "run_id": "5e5eff6941",
+    "error": null,
+    "wall_time": 280.19,
+    "tracking_result": {
+      "attempted": false
+    }
+  },
+  {
+    "topic": "AI机器人行业研报",
+    "category": "industry",
+    "report_type": "industry_research",
+    "tags": [],
+    "run_id": "ed59eaed75",
+    "error": null,
+    "wall_time": 137.08,
+    "tracking_result": {
+      "attempted": false
+    }
+  },
+  {
+    "topic": "创新药行业投资机会分析",
+    "category": "industry",
+    "report_type": "industry_research",
+    "tags": [],
+    "run_id": "c6fa22fbae",
+    "error": null,
+    "wall_time": 288.7,
+    "tracking_result": {
+      "attempted": false
+    }
+  },
+  {
+    "topic": "白酒行业2025年度回顾与展望",
+    "category": "industry",
+    "report_type": "industry_research",
+    "tags": [
+      "annual_tracking"
+    ],
+    "run_id": "f3e127a834",
+    "error": null,
+    "wall_time": 346.71,
+    "tracking_result": {
+      "attempted": false
+    }
+  },
+  {
+    "topic": "低空经济行业研报",
+    "category": "industry",
+    "report_type": "industry_research",
+    "tags": [],
+    "run_id": "80c88f3b3f",
+    "error": null,
+    "wall_time": 146.24,
+    "tracking_result": {
+      "attempted": false
+    }
+  },
+  {
+    "topic": "储能行业竞争格局分析",
+    "category": "industry",
+    "report_type": "industry_research",
+    "tags": [
+      "requires_chart"
+    ],
+    "run_id": "d49304314f",
+    "error": null,
+    "wall_time": 144.72,
+    "tracking_result": {
+      "attempted": false
+    }
+  },
+  {
+    "topic": "消费电子行业趋势分析",
+    "category": "industry",
+    "report_type": "industry_research",
+    "tags": [],
+    "run_id": "d0897ab018",
+    "error": null,
+    "wall_time": 165.62,
+    "tracking_result": {
+      "attempted": false
+    }
+  },
+  {
+    "topic": "银行行业投资价值分析",
+    "category": "industry",
+    "report_type": "industry_research",
+    "tags": [],
+    "run_id": "a76d08a8e0",
+    "error": null,
+    "wall_time": 117.15,
+    "tracking_result": {
+      "attempted": false
+    }
+  },
+  {
+    "topic": "中国GDP与经济增长展望",
+    "category": "macro",
+    "report_type": "macro_research",
+    "tags": [
+      "requires_chart"
+    ],
+    "run_id": "ce90a89780",
+    "error": null,
+    "wall_time": 269.3,
+    "tracking_result": {
+      "attempted": false
+    }
+  },
+  {
+    "topic": "CPI与PPI走势分析",
+    "category": "macro",
+    "report_type": "macro_research",
+    "tags": [],
+    "run_id": "610b20ed01",
+    "error": null,
+    "wall_time": 432.28,
+    "tracking_result": {
+      "attempted": false
+    }
+  },
+  {
+    "topic": "利率环境与货币政策2026年一季度跟踪",
+    "category": "macro",
+    "report_type": "macro_research",
+    "tags": [
+      "quarterly_tracking"
+    ],
+    "run_id": "6df5b0c481",
+    "error": null,
+    "wall_time": 704.79,
+    "tracking_result": {
+      "attempted": false
+    }
+  },
+  {
+    "topic": "人民币汇率走势分析",
+    "category": "macro",
+    "report_type": "macro_research",
+    "tags": [],
+    "run_id": "dcfe8b219e",
+    "error": null,
+    "wall_time": 129.55,
+    "tracking_result": {
+      "attempted": false
+    }
+  },
+  {
+    "topic": "社融与信贷数据解读",
+    "category": "macro",
+    "report_type": "macro_research",
+    "tags": [],
+    "run_id": "75556c9b1b",
+    "error": null,
+    "wall_time": 193.85,
+    "tracking_result": {
+      "attempted": false
+    }
+  },
+  {
+    "topic": "出口形势与外需分析",
+    "category": "macro",
+    "report_type": "macro_research",
+    "tags": [],
+    "run_id": "2d01b291ed",
+    "error": null,
+    "wall_time": 129.0,
+    "tracking_result": {
+      "attempted": false
+    }
+  },
+  {
+    "topic": "房地产市场2025年度回顾",
+    "category": "macro",
+    "report_type": "macro_research",
+    "tags": [
+      "annual_tracking"
+    ],
+    "run_id": "0ab54bf751",
+    "error": null,
+    "wall_time": 150.0,
+    "tracking_result": {
+      "attempted": false
+    }
+  },
+  {
+    "topic": "制造业景气度跟踪",
+    "category": "macro",
+    "report_type": "macro_research",
+    "tags": [],
+    "run_id": "06b0ada27f",
+    "error": null,
+    "wall_time": 151.31,
+    "tracking_result": {
+      "attempted": false
+    }
+  },
+  {
+    "topic": "全球流动性与美联储政策分析",
+    "category": "macro",
+    "report_type": "macro_research",
+    "tags": [],
+    "run_id": "5f59416d6a",
+    "error": null,
+    "wall_time": 167.28,
+    "tracking_result": {
+      "attempted": false
+    }
+  },
+  {
+    "topic": "中国经济灰犀牛风险监测",
+    "category": "macro",
+    "report_type": "macro_research",
+    "tags": [
+      "risk_analysis",
+      "requires_chart"
+    ],
+    "run_id": "1c4c6d0c15",
+    "error": null,
+    "wall_time": 151.03,
+    "tracking_result": {
+      "attempted": false
+    }
+  }
+]

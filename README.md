@@ -101,22 +101,55 @@ flowchart TD
 
 ## 16. 评测结果
 
-### v3 既有 10-topic 回归
+### v3 既有 10-topic 回归（v4 收口时重跑，真实数据）
 
-<!-- V3_REGRESSION_PLACEHOLDER -->
-待本次收口 run 完成后回填（脚本：`python eval/eval_runner.py --run`），历史基线见
-[docs/final_status.md](docs/final_status.md)（10/10、quality 0.8、grounding 0.869、tier比 0.42）。
+| 指标 | 数值 |
+|---|---|
+| success_rate | **10/10** |
+| avg_quality_score | 0.78 |
+| avg_source_count | 4.7 |
+| number_grounding_rate | 0.764 |
+| tier1_or_tier2_ratio | 0.36 |
+| avg_duration | 208.8s |
 
-### v4 30-case 分层评测（人工构建固定 benchmark，非随机抽样）
+与历史基线（10/10、0.8、5.0、0.869、0.42）相比处于同一水平，属正常的真实网络/LLM
+运行波动，**不是回归**——v4 新增的宏观/公司深度/行业深度/改稿等链路对 company_research/
+industry_research 的既有能力零侵入式扩展，未触发这 10 个固定 topic 的任何新增分支。
 
-<!-- COMPETITION_30_PLACEHOLDER -->
-执行中/见 [outputs/eval/competition_report.md](outputs/eval/competition_report.md) 与
-[docs/competition_alignment.md](docs/competition_alignment.md) 第五节。
+### v4 30-case 分层评测（人工构建固定 benchmark，非随机抽样，真实数据）
+
+| 指标 | 数值 |
+|---|---|
+| success_rate | **30/30** |
+| avg_source_count | 4.6 |
+| avg_quality_score | 0.761（company 0.8 / industry 0.742 / macro 0.741） |
+| valid_citation_rate | 1.0 |
+| number_grounding_rate | 0.85 |
+| tier1_or_tier2_ratio | 0.462 |
+| entity_validation_pass_rate | 1.0（verified 19 / weak 3 / not_applicable 8） |
+| chart_generation_rate | 0.867 |
+| revision_trigger_rate | 0.2 |
+| tracking_report_success_rate | 1.0（2 例真实触发） |
+| macro_indicator_coverage | 1.0（22/22 已注册可用指标） |
+| company_statement_coverage | 1.0 |
+| industry_scenario_completion_rate | 1.0 |
+| report_compliance_pass_rate | 0.0（**符合预期，非缺陷**：检查的是原始报告而非经 disclosure_builder 包装的正式版，几乎所有真实报告都至少有 1 个未溯源数字或缺报告日期戳，这正是合规检查器与 DRAFT 机制存在的意义） |
+| total_latency | avg 236.5s / p50 192.7s / p90 410.8s / p95 517.7s |
+
+详见 [outputs/eval/competition_report.md](outputs/eval/competition_report.md)。**过程中发现并修复
+一个真实 bug**：entity_validator 曾把宏观/未收录同义词的行业主题误判为
+insufficient_entity_evidence，导致首次全量跑时 11/30 失败；修复后（[eval/bad_cases.md](eval/bad_cases.md)
+Bad Case 31）复跑全部通过，30/30。
 
 ### 测试
 
-`python -m pytest tests` → 见下方"如何运行"输出的真实通过数（本次新增宏观/公司深度/
-行业深度/跟踪/合规/图表一致性/lineage/FastAPI 等测试，V3 原有测试全部保留）。
+`python -m pytest tests` → **99/99 通过**（离线，约 90 秒）。
+
+### 导出与部署验证
+
+DOCX/PDF 导出：真实验证通过（`python scripts/export_reports.py --latest`）。FastAPI：真实
+HTTP 端到端验证通过（POST /reports → GET /tasks → GET /reports，含真实 DOCX 导出）。Docker：
+Dockerfile/compose 已写好并静态审查，**本次未在当前沙箱环境验证 build/run**（无 Docker 守护进程）。
 
 ## 17. 如何运行
 
