@@ -153,9 +153,12 @@ def _via_mcp(tool_name: str, arguments: dict[str, Any]) -> Any:
 
 
 # -------------------------------------------------------------------- #
-# Public API - same signatures as the underlying tool functions
+# Raw transport - MCP first, direct call on degradation.
+# The `_raw_*` functions are the actual transport and are what the v5 harness
+# registers as its tool handlers (see src/tools/registry.py), so routing
+# through the harness keeps MCP behaviour identical.
 # -------------------------------------------------------------------- #
-def web_search(query: str, max_results: int = 8) -> list[dict]:
+def _raw_web_search(query: str, max_results: int = 8) -> list[dict]:
     result = _via_mcp("web_search", {"query": query, "max_results": max_results})
     if result is not _MCP_MISS:
         return result
@@ -163,7 +166,7 @@ def web_search(query: str, max_results: int = 8) -> list[dict]:
     return direct(query, max_results=max_results)
 
 
-def read_webpage(url: str, max_chars: int = 8000) -> dict:
+def _raw_read_webpage(url: str, max_chars: int = 8000) -> dict:
     result = _via_mcp("read_webpage", {"url": url, "max_chars": max_chars})
     if result is not _MCP_MISS:
         return result
@@ -171,7 +174,7 @@ def read_webpage(url: str, max_chars: int = 8000) -> dict:
     return direct(url, max_chars=max_chars)
 
 
-def read_pdf(url: str) -> dict:
+def _raw_read_pdf(url: str) -> dict:
     result = _via_mcp("read_pdf", {"url": url})
     if result is not _MCP_MISS:
         return result
@@ -179,13 +182,75 @@ def read_pdf(url: str) -> dict:
     return direct(url)
 
 
-def fetch_financial_snapshot(name_or_code: str) -> dict:
-    """Structured financial data via AkShare (v3). Same degrade-to-direct
-    policy as the other tools; the AkShare layer itself additionally degrades
-    to {success: False} envelopes on provider failures - either way the
-    caller never sees an exception."""
+def _raw_fetch_financial_snapshot(name_or_code: str) -> dict:
     result = _via_mcp("fetch_financial_snapshot", {"name_or_code": name_or_code})
     if result is not _MCP_MISS:
         return result
     from tools.akshare_tool import fetch_financial_snapshot as direct
     return direct(name_or_code)
+
+
+# -------------------------------------------------------------------- #
+# Harness hook (v5)
+#
+# This is the single place the legacy pipeline knows the harness exists. When
+# a run is bound (src/runtime/run_context.py), tool calls are routed through
+# ToolExecutor so they get argument validation, typed errors, retry/backoff,
+# circuit breaking, budget accounting, dedup and a trace event - without any
+# agent changing a line. When nothing is bound (plain `python main.py`, the
+# legacy tests), `_dispatch` falls straight through to `_raw_*` and behaviour
+# is bit-for-bit what it was before.
+#
+# The harness never changes the *return shape*: agents still receive the same
+# list/dict they always did. On a harness-level failure the original error
+# envelope is reconstructed so existing failure handling still applies.
+# -------------------------------------------------------------------- #
+def _dispatch(tool_name: str, arguments: dict[str, Any], raw_call, *, on_error: Any):
+    try:
+        from src.runtime.run_context import current_executor
+    except Exception:  # noqa: BLE001 - harness package absent: legacy behaviour
+        return raw_call(**arguments)
+
+    executor = current_executor()
+    if executor is None or not executor.registry.has(tool_name):
+        return raw_call(**arguments)
+
+    result = executor.call(tool_name, arguments, rationale=f"pipeline call: {tool_name}")
+    if result.ok:
+        # The executor hands back a compact projection; agents need the full
+        # payload, which is kept in the artifact store.
+        if result.artifact_id and executor.artifacts is not None:
+            full = executor.artifacts.get(result.artifact_id)
+            if full is not None:
+                return full
+        return result.content
+    if callable(on_error):
+        return on_error(result)
+    return on_error
+
+
+def web_search(query: str, max_results: int = 8) -> list[dict]:
+    return _dispatch("web_search", {"query": query, "max_results": max_results},
+                     _raw_web_search, on_error=[])
+
+
+def read_webpage(url: str, max_chars: int = 8000) -> dict:
+    return _dispatch("read_webpage", {"url": url, "max_chars": max_chars}, _raw_read_webpage,
+                     on_error=lambda r: {"success": False, "url": url,
+                                         "error": r.error_message, "content": "", "title": ""})
+
+
+def read_pdf(url: str) -> dict:
+    return _dispatch("read_pdf", {"url": url}, _raw_read_pdf,
+                     on_error=lambda r: {"success": False, "url": url,
+                                         "error": r.error_message, "full_text": "", "page_count": 0})
+
+
+def fetch_financial_snapshot(name_or_code: str) -> dict:
+    """Structured financial data via AkShare (v3). Same degrade-to-direct
+    policy as the other tools; the AkShare layer itself additionally degrades
+    to {success: False} envelopes on provider failures - either way the
+    caller never sees an exception."""
+    return _dispatch("fetch_financial_snapshot", {"name_or_code": name_or_code},
+                     _raw_fetch_financial_snapshot,
+                     on_error=lambda r: {"success": False, "error": r.error_message})

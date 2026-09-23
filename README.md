@@ -1,207 +1,187 @@
-# Financial Research Multi-Agent System
+# Financial Research Agent
 
-> **v4-competition**。在 v3-full 基础上补齐比赛要求的金融业务深度：宏观研究真实链路、
-> 跟踪型报告、公司三表/治理/同业比较、行业生命周期/集中度/产业链/三年情景、正式披露模板、
-> 有界自检改稿、上市公司硬校验、AkShare 字段级 lineage、FastAPI+Docker、30-case 分层评测。
-> 本文档如实区分**已实现**（有代码+验证）、**可降级**（外部依赖失败时自动退化）、
-> **仍有限制**（明确边界）。不接入 Wind、不用付费金融数据 API；报告不构成投资建议。
+一个面向公司、行业和宏观研究的多阶段研报系统。它把规划、检索、网页/PDF读取、结构化金融数据、分析、成稿和质量检查放进统一 Agent Harness，并为每次运行提供预算、结构化错误、Trace、Checkpoint、恢复和离线评测。
 
-## 1. 项目背景
+第一次接触 Agent 工程，或准备技术面试，可先阅读：[V1 到 Harness 的小白友好技术文档](docs/v1_to_harness_interview_guide.md)。
 
-传统金融研报撰写依赖人工搜索、阅读和整理：资料分散、耗时长、结论难以溯源。本项目是一个
-受控多智能体工作流：输入一句自然语言主题，自动完成检索、抓取、来源筛选、结构化数据获取、
-估值计算、报告生成、有界自检改稿和质量评估，产出带引用标注和图表的中文金融研究报告
-（公司/行业/宏观三大类），并可通过 FastAPI 对外提供服务。
+> 当前评测使用稳定的离线 fixture，开发集没有人工复核样本。本文中的开发集结果是 `synthetic_draft` / `machine_verified` 工程信号，不是人工 Gold，也不代表线上真实投研质量。
 
-设计目标不是"最快生成"，而是**可追溯、可评估、可复盘**：每个数字有来源分类，每次运行有
-完整 trace，每个踩过的坑记录在 [eval/bad_cases.md](eval/bad_cases.md)。
+## 为什么使用 Agent
 
-## 2. 系统架构
+金融研报不是一次模型调用：系统要选择不同数据工具、并发读取多来源、处理失败与冲突、维护数字—引用关系，并在证据或预算不足时明确停止。现有 Planner 最终被规范化为五阶段流水线；真正的动态决策集中在工具选择、检索扩展、Fallback、预算和终止策略，而不是增加表面上的 Agent 数量。
+
+## 架构
 
 ```mermaid
-flowchart TD
-    U[用户输入/API请求] --> PA[PlanningAgent + normalize_plan]
-    PA --> RA[ResearchAgent 并发搜索+缓存]
-    RA --> BA[BrowserAgent 抓取+tier分级]
-    BA --> EV{entity 硬校验}
-    EV -- failed --> ABORT[终止: insufficient_entity_evidence]
-    EV -- unsupported_unlisted --> SUMMARY[公开资料摘要,非正式研报]
-    EV -- verified/weak --> AA[AnalyzeAgent]
-    AK[AkShare + 宏观/三表/同业] -.可降级.-> AA
-    AA --> RPA[ReportAgent 报告+多类图表]
-    RPA --> QE[分型 Evaluation]
-    QE --> REV{有界自检改稿 ≤1轮}
-    REV --> OUT[reports/sources/traces/evaluations]
-    OUT -.离线.-> EXP[DOCX/PDF/正式披露报告]
-    OUT -.离线.-> TRK[跟踪报告/记忆索引]
+flowchart LR
+    A[CLI / FastAPI] --> H[Agent Harness]
+    H --> P[Planner]
+    P --> R[Research]
+    R --> B[Browser / PDF / AkShare]
+    B --> C[Context + Evidence Ledger]
+    C --> N[Analyze]
+    N --> G[Report + Evaluate]
+    H <--> S[(Run / Checkpoint / Artifact Store)]
+    H --> T[JSONL Trace + Metrics]
+    T --> E[Offline Eval]
+    E --> O[Failure Mining + Candidate]
+    O --> Q[Regression Gate / Human Review]
 ```
 
-工具调用经标准 MCP（stdio Server + 持久 ClientSession），不可用时降级为直接调用
-（[docs/mcp_integration.md](docs/mcp_integration.md)）。整套流水线既可通过 CLI（`main.py`）
-运行，也可通过 FastAPI 服务（`api/`）异步提交与查询。
+生产 CLI 和 FastAPI 默认经过 `HarnessRunner`；`--legacy` 或 `USE_AGENT_HARNESS=false` 是显式回滚路径。Harness 复用原有 `WorkflowOrchestrator`，不重写业务 Agent。详细设计见 [架构文档](docs/architecture.md) 和 [审计报告](docs/architecture_audit.md)。
 
-## 3. 已实现能力
+## Agent Harness、工具与错误
 
-### 3.1 主链路与基础设施（v1→v3，全部保留）
+- Pydantic 状态对象记录 run/task/step/attempt/evidence/budget/final outcome，带 schema 与 checkpoint 版本。
+- Tool Registry 声明用途、禁用场景、输入输出 schema、只读/副作用属性；长内容保存为 artifact，只注入摘要。
+- Tool Executor 统一处理参数/结果校验、超时、临时错误重试、退避抖动、熔断、有界并发、幂等与重复调用。
+- 错误分为 `TIMEOUT`、`RATE_LIMIT`、`AUTH_ERROR`、`INVALID_ARGUMENT`、`SCHEMA_ERROR`、`NOT_FOUND`、`TRANSIENT_NETWORK`、`PERMANENT_FAILURE`、`POLICY_BLOCKED`、`BUDGET_EXCEEDED`。只有临时错误自动重试。
+- 副作用协议预留审批、dry-run、幂等键和补偿动作；当前注册的研究工具均为只读，不制造真实写操作。
 
-多 Agent 五阶段工作流、Planner 规范化+有界重执行、并发搜索+缓存、域名黑白名单、语义排序
-融合、确定性 DCF、财务趋势图表、AkShare 结构化数据、source tier 分级、数字级 grounding、
-分型 Evaluation、DOCX/PDF 导出、本地文件输入、实体验证、向量记忆、30 个 pytest。
-详见 [docs/final_status.md](docs/final_status.md) 与 [docs/capability_matrix.md](docs/capability_matrix.md)。
+预算同时限制 Token、费用、总时长、模型/工具调用次数、单工具和单阶段用量、补充检索轮数。预算或证据不足时返回 `insufficient`，不会伪装成功。
 
-### 3.2 v4 新增能力
+## Checkpoint、恢复与上下文
 
-| 能力 | 说明 | 代码 / 文档 |
-|---|---|---|
-| 宏观研究真实链路 | 22 项指标实取（GDP/CPI/PPI/PMI/利率/汇率/社融/出口/地产等）+ 政策解析 + 6 条传导链 + 8 类灰犀牛监控 | [docs/macro_research.md](docs/macro_research.md) |
-| 季度/年度跟踪报告 | 真实多期同比/环比（三表），历史 run 记录对比，insufficient_history 如实标注 | [docs/tracking_report.md](docs/tracking_report.md) |
-| 公司深度 | 三表抽取/杜邦/现金流质量/股权治理/真实同业比较（新浪板块真实成分，非编造均值） | [docs/company_research.md](docs/company_research.md) |
-| 行业深度 | 证据驱动生命周期判断/真实CR-HHI/产业链模板+来源验证/三年情景（输入逐项标注来源类型）/进入退出评分 | [docs/industry_research.md](docs/industry_research.md) |
-| 正式披露模板 | 20 项披露要素 + 合规检查器，未达标自动 DRAFT/INCOMPLETE 标记 | [docs/report_disclosure.md](docs/report_disclosure.md) |
-| 图表扩展 | 股票价格/相对指数/PE-PB、宏观指标组图、行业CR+三年情景图 + 一致性检查（主体/期间/数值1%容差） | `tools/market_chart_builder.py`、`tools/macro_chart_builder.py`、`tools/industry_chart_builder.py`、`tools/chart_consistency_checker.py` |
-| 有界自检改稿 | report→evaluate→revise→final_evaluate，硬上限 1 轮，只修复具体问题，改稿后分数不降才采用 | `tools/report_reviser.py`、`orchestrator/workflow.py` |
-| 上市公司硬校验 | 证券代码+交易所映射注册表，四态判定（verified/unsupported_unlisted_company/weak/failed） | `tools/listed_company_registry.py`、`tools/entity_validator.py` |
-| AkShare 字段级 lineage | 逐字段 raw_field/platform/endpoint/transformation/derived_from/confidence，no_direct_source_url 如实标注 | `tools/data_lineage.py`、`outputs/eval/data_lineage_report.md` |
-| FastAPI + Docker | 异步任务队列（提交/查询/取回）+ 7 项健康检查 + Dockerfile/compose | [docs/deployment.md](docs/deployment.md) |
-| 30-case 分层评测 | 公司10/行业10/宏观10，每类含季度跟踪/年度跟踪/风险分析/图表题 | `eval/topics_competition_30.json` |
+规划、Research 子任务、证据整理、分析、草稿、评测/修订之后写入 SQLite checkpoint。恢复时校验版本和配置指纹，跳过已成功的幂等阶段，并安全重试状态未知的步骤。运行状态、checkpoint 和大产物使用可替换的本地 Store 接口。
 
-完整比赛要求逐项对齐见 [docs/competition_alignment.md](docs/competition_alignment.md)。
+上下文按任务目标、计划、近期关键交互、Evidence Ledger、工具摘要、阶段状态和必要记忆分区；超长原文外置，来源与证据去重，压缩时保留未解决问题及数字—引用映射，并输出一致性诊断。完整 Trace 不会重新塞回提示词。
 
-## 4. 明确未实现
+## Trace 示例
 
-- **没有 Wind**（全项目零 Wind 代码/依赖）
-- 没有生产级向量数据库/长期用户记忆（memory 是 numpy 余弦本地索引，默认不接主链路）
-- 没有全行业营收口径的集中度数据（CR/HHI 是上市公司市值口径）
-- 没有严格投行级 DCF、没有概率分布采样的情景模拟（是配置假设驱动的工程演示）
-- 没有分布式/持久化任务队列（FastAPI 任务队列是单进程内存实现，重启丢状态）
-- 没有独立跟踪引擎覆盖行业/宏观（跟踪工具专注公司三表）
-- 容器内 PDF 导出不可用（依赖宿主机 Edge，标准 Python 镜像没有）
+每次运行写结构化 JSONL，记录摘要和状态，不记录隐藏推理：
 
-## 5. 可降级能力
+```json
+{"event_type":"tool_call_completed","run_id":"...","step_id":"browse-1","tool_name":"web_search","status":"succeeded","payload":{"result_summary":"4 results","artifact_ref":"sha256:..."}}
+{"event_type":"checkpoint_saved","run_id":"...","phase":"evidence","payload":{"version":1}}
+{"event_type":"run_completed","run_id":"...","status":"degraded","payload":{"stop_reason":"enough_evidence"}}
+```
 
-| 依赖 | 失败时 |
-|---|---|
-| AkShare（财务/宏观/三表/股东/板块） | 逐接口降级，缺失字段进 missing_fields；整体失败退回纯网页分析 |
-| MCP | 网关降级为直接函数调用 |
-| embedding 模型 | 语义排序/记忆检索退回关键词匹配 |
-| Edge（PDF） | 只产出 DOCX/HTML，degraded=True |
-| 同业板块数据 | peer_comparison 返回 degraded，不编造行业均值 |
-| 政策文本 LLM 解析 | 降级为规则抽取（机构名/日期正则+线索词句级分类） |
-| 有界改稿 | 改稿后分数未提升则丢弃，保留原报告 |
-| LLM 整体断供 | 全链路走确定性 fallback |
+敏感 Header、Cookie、Key 和常见 secret 字段在写 Trace 前脱敏。聚合器可按模型、工具、错误统计成功率、恢复率、冗余调用、Token、费用及 P50/P95 时延。
 
-## 6-15. 各模块详细说明
+## 评测数据与指标
 
-见 [docs/macro_research.md](docs/macro_research.md)、[docs/company_research.md](docs/company_research.md)、
-[docs/industry_research.md](docs/industry_research.md)、[docs/tracking_report.md](docs/tracking_report.md)、
-[docs/report_disclosure.md](docs/report_disclosure.md)、[docs/deployment.md](docs/deployment.md)、
-[docs/akshare_integration.md](docs/akshare_integration.md)、[docs/mcp_integration.md](docs/mcp_integration.md)、
-[docs/memory_design.md](docs/memory_design.md)、[docs/report_export.md](docs/report_export.md)、
-[docs/local_file_input.md](docs/local_file_input.md)。
+数据按主题组切分，避免同主题跨集合；当前生成产物为开发集 88、独立测试集 70、Bad Case 回归集 41（其中 31 条已重构为 13 条可执行任务，见 docs/regression_rebuild.md）。自动生成项默认 `synthetic_draft`，从历史确定性案例转换的项标为 `machine_verified`，只有人工复核后才允许 `human_verified`。开发集本次 264 行（88 任务 × 3 trials）中 human-verified 为 **0**。
 
-## 16. 评测结果
+评测组合 schema、工具选择/参数、环境状态、引用、数字溯源、安全规则和可选 LLM Judge；记录 Task Success、工具 P/R/F1、参数准确率、恢复率、引用有效性/覆盖率、数字溯源、无源数字、冗余调用、预算、Token/费用、时延和多-trial 稳定性。完整定义见 [评测文档](docs/evaluation.md)。
 
-### v3 既有 10-topic 回归（v4 收口时重跑，真实数据）
+## 单变量消融：每项能力各自的收益与代价
 
-| 指标 | 数值 |
-|---|---|
-| success_rate | **10/10** |
-| avg_quality_score | 0.78 |
-| avg_source_count | 4.7 |
-| number_grounding_rate | 0.764 |
-| tier1_or_tier2_ratio | 0.36 |
-| avg_duration | 208.8s |
+**这一节替换了之前的一张无效对照表。** 旧表把 Task Success 0.6818 → 0.8068（+12.5pp）
+记为「Harness 的收益」，三个问题使它不成立：
 
-与历史基线（10/10、0.8、5.0、0.869、0.42）相比处于同一水平，属正常的真实网络/LLM
-运行波动，**不是回归**——v4 新增的宏观/公司深度/行业深度/改稿等链路对 company_research/
-industry_research 的既有能力零侵入式扩展，未触发这 10 个固定 topic 的任何新增分支。
+1. 基线文件生成于修复前，**Grader 集合与 harness 臂不同**，分数本就不可比；
+2. 0.6818 实际是一次已修复的回归（去重命中返回精简投影、丢掉正文）留下的数字；
+3. 差异被定位为**恰好 11 个任务，全部是 `interrupt_after_browse`** ——
+   对照臂关闭了 checkpoint 却被要求恢复，直接抛异常。这是能力差异，不是成功率提升。
 
-### v4 30-case 分层评测（人工构建固定 benchmark，非随机抽样，真实数据）
+重做为**单变量消融**：每个臂与参照臂 `harness_full` 只差一个变量，
+共用同一任务集、同一 stub、同一 Grader 集合、同一 trial 数，
+并由脚本做有效性校验（三项一致才输出 Δ）。
 
-| 指标 | 数值 |
-|---|---|
-| success_rate | **30/30** |
-| avg_source_count | 4.6 |
-| avg_quality_score | 0.761（company 0.8 / industry 0.742 / macro 0.741） |
-| valid_citation_rate | 1.0 |
-| number_grounding_rate | 0.85 |
-| tier1_or_tier2_ratio | 0.462 |
-| entity_validation_pass_rate | 1.0（verified 19 / weak 3 / not_applicable 8） |
-| chart_generation_rate | 0.867 |
-| revision_trigger_rate | 0.2 |
-| tracking_report_success_rate | 1.0（2 例真实触发） |
-| macro_indicator_coverage | 1.0（22/22 已注册可用指标） |
-| company_statement_coverage | 1.0 |
-| industry_scenario_completion_rate | 1.0 |
-| report_compliance_pass_rate | 0.0（**符合预期，非缺陷**：检查的是原始报告而非经 disclosure_builder 包装的正式版，几乎所有真实报告都至少有 1 个未溯源数字或缺报告日期戳，这正是合规检查器与 DRAFT 机制存在的意义） |
-| total_latency | avg 236.5s / p50 192.7s / p90 410.8s / p95 517.7s |
+同一 88-task 开发集 × 1 trial（离线 fixture 下同任务多 trial 评分标准差实测约 0.0007，
+近确定性，故消融用单 trial 换运行时长；dev/test 主结果仍为 3 trials）：
 
-详见 [outputs/eval/competition_report.md](outputs/eval/competition_report.md)。**过程中发现并修复
-一个真实 bug**：entity_validator 曾把宏观/未收录同义词的行业主题误判为
-insufficient_entity_evidence，导致首次全量跑时 11/30 失败；修复后（[eval/bad_cases.md](eval/bad_cases.md)
-Bad Case 31）复跑全部通过，30/30。
+| 指标 | `legacy`（无 Harness） | `harness_full` | 只关重试 | 只关 checkpoint | 只关预算 | 只关上下文压缩 | 只关 fallback 轮 |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| Task Success | 0.7500 | 0.8068 | 0.8068 | **0.6818** | 0.8068 | 0.8068 | 0.8068 |
+| Unresolved Failure | n/a | 0 | 0 | **0.1250** | 0 | 0 | 0 |
+| False Success | n/a | 0.0114 | 0.0114 | 0.0114 | 0.0114 | 0.0114 | 0.0114 |
+| 平均工具调用数 | n/a | 13.59 | 13.28 | 11.78 | 13.59 | 13.59 | **9.99** |
+| 冗余调用率 | n/a | 0.0306 | 0.0306 | 0.0350 | 0.0306 | 0.0306 | **0** |
+| P95 时延（秒） | 0.0986 | 1.1732 | 1.4005 | 0.8532 | 1.2241 | 1.2986 | 1.0429 |
 
-### 测试
+`n/a` 表示该臂**没有这项能力**（legacy 无 trace，事件派生指标不存在），不是 0 分。
 
-`python -m pytest tests` → **99/99 通过**（离线，约 90 秒）。
+**可以据此说的结论，逐条对应上表：**
 
-### 导出与部署验证
+- **只有 checkpoint 对成功率有可测收益**（关掉 −12.5pp，且 Unresolved Failure 从 0 升到 0.125）。
+  但要注意这部分收益来自 11 条**按构造必须恢复**的任务，属于能力有无，
+  不是「同一任务做得更好」。真实收益更应表述为断点恢复省下的重复工作：
+  实测首次运行 3 次工具调用 → 恢复运行 **0 次**。
+- **重试、预算门禁、上下文压缩、fallback 轮在本评测集上对成功率均为 0 影响。**
+- **fallback 轮的代价已量化**：多 3.6 次工具调用（13.59 vs 9.99）、
+  多 3% 冗余调用，来源数与成功率**完全不变**。它在本集上未证明收益。
+- legacy 的 Citation Coverage 更高（0.8568 vs 0.7318）。**这一条是未解决项，不是已解释项。**
+  已确认的中间事实是来源数不同（legacy 平均 3.47 个、harness 2.97 个），
+  来源多则 stub 的固定引用能解析出更多锚点；但**为什么 harness 拿到的来源更少
+  尚未定位**（最可能是执行器去重与早停的交互）。
+  在查清之前，不能把它说成「Harness 的取舍」——那是把未知包装成设计意图。
 
-DOCX/PDF 导出：真实验证通过（`python scripts/export_reports.py --latest`）。FastAPI：真实
-HTTP 端到端验证通过（POST /reports → GET /tasks → GET /reports，含真实 DOCX 导出）。Docker：
-Dockerfile/compose 已写好并静态审查，**本次未在当前沙箱环境验证 build/run**（无 Docker 守护进程）。
+Harness 在本集上的真正收益不在成功率，而在**可归因性**。重构回归集上
+legacy 与 harness 的 Task Success **完全相同（0.8462）**，但：
 
-## 17. 如何运行
+| 指标 | legacy | harness |
+|---|---:|---:|
+| Task Success | 0.8462 | 0.8462 |
+| **Unresolved Failure** | **0.5385** | **0** |
+| 有结构化 Trace | 否 | 是 |
+
+即：Harness 没有让这个系统更常成功，而是让**失败变得可解释**。
+
+原始结果与脚本：
+`evals/results/abl_dev_*.jsonl`、`evals/reports/ablation_matrix_dev.md`、
+`scripts/build_ablation_matrix.py`；
+回归对照 `evals/reports/regression_verified_report.md`。
+以上全部为离线 fixture 结果，**token 与费用恒为 0**，不能外推为线上收益。
+
+代码冻结后独立运行的 test 集为 70 tasks × 3 trials：Task Success 0.7714、综合分 0.9365、Citation Validity/Coverage 1.0/0.7429、Number Grounding/Unsupported 1.0/0、P95 2.7934 秒。原始结果 SHA-256 为 `dfdd1f98bd2694132cc82b5bc34b11260421c4afcbecf68e8a2da6d170ac3fc5`（该文件的 `trace_path`/`report_path` 已由 `scripts/normalize_result_paths.py` 归一化为仓库相对路径，**分数、指标、grades、错误分类等测量内容逐字节未变**，脚本自带守卫会在测量内容变动时拒绝写入；归一化前的哈希为 `167318d75bbf5181…`）；其 human-verified 同样为 0。
+
+## 长期记忆及 A/B
+
+记忆分 semantic、episodic、procedural，带 namespace、来源、置信度、TTL、去重、冲突处理、敏感信息和注入内容过滤；procedural 规则需版本化、审批后激活并可回滚。默认关闭，API 通过 `enable_memory=true`、CLI 通过 `--enable-memory` 显式开启。
+
+3 个主题 × 2 sessions 的离线构造 A/B 中，`none` 与 `full` 下游成功率都为 1.0；完整策略平均注入 78.7 tokens，Memory Precision 0.6667、Recall 1、过期误用率 0、跨用户泄漏率 0。它**没有证明任务效果提升**，只能说明隔离、冲突处理和偏好/别名复用链路可运行。详见 [记忆文档](docs/memory.md)。
+
+## 受控离线优化
+
+Trace 失败经分类后只生成 Prompt、工具描述/schema、路由、检索、停止、预算或记忆策略候选。候选先跑开发集，再过独立测试集、回归集、安全、数字溯源、泄漏、成本和 P95 门禁；即使通过也只形成建议版本，不自动改生产 Prompt 或部署。目前失败挖掘从 264 行开发结果识别 87 个失败记录，并生成 v004/v005 候选；它们尚未完成门禁，因此未启用。
+
+## 快速启动
 
 ```bash
+python -m venv .venv
+# Windows: .venv\Scripts\activate
 pip install -r requirements.txt
-cp .env.example .env   # 填 API Key
-
-# 单报告（company_research/industry_research/macro_research/risk_research/valuation_research）
-python main.py --topic "贵州茅台投资价值分析" --report_type company_research \
-  --requirements "公司概况,财务分析,估值分析,风险提示,投资观点" --output_format html
-
-# 季度/年度跟踪报告
-python scripts/build_tracking_report.py --symbol 600519 --period annual
-python scripts/build_tracking_report.py --symbol 002594 --period quarterly
-
-# 正式披露报告（合规检查 + DRAFT 标记）
-python scripts/build_formal_report.py --latest
-
-# 30-case 分层评测
-python scripts/run_competition_eval.py --run
-python scripts/build_competition_report.py
-
-# V3 既有 10-topic 回归 + 全部评测报告
-python eval/eval_runner.py --run
-python scripts/collect_eval_summary.py && python scripts/build_eval_report.py
-python scripts/build_source_quality_report.py && python scripts/build_grounding_report.py
-python scripts/build_data_lineage_report.py
-python scripts/build_deep_eval_report.py && python scripts/build_latency_report.py
-python scripts/build_ablation_report.py
-
-# 测试 / 导出
-python -m pytest tests
-python scripts/export_reports.py --latest
-
-# FastAPI 服务
-uvicorn api.main:app --host 0.0.0.0 --port 8000
-# http://localhost:8000/docs  http://localhost:8000/health
-
-# Docker（本次未在当前沙箱环境验证 build/run，见 docs/deployment.md）
-docker build -t financial-research-agent .
-docker run --env-file .env -p 8000:8000 financial-research-agent
+copy .env.example .env
+python main.py "贵州茅台投资价值分析"
+python -m uvicorn api.main:app --host 0.0.0.0 --port 8000
 ```
 
-## 18. 限制、风险与免责声明
+真实运行需要在 `.env` 配置兼容 LiteLLM 的模型凭据和所需搜索 Provider。稳定离线 demo 不需要 Key：
 
-1. AkShare 数据依赖网络与第三方接口稳定性，可能延迟/口径差异/字段变更；
-2. 估值、情景模拟结果是工具计算与配置假设的演示，**不构成投资建议或目标价**；
-3. source grounding 是工程引用检查，**不等于专业金融审计**；Evaluation/合规检查器是启发式规则，不等于分析师/合规官判断；
-4. 上市公司硬校验/虚构实体识别是启发式，仅覆盖沪深北 A 股，港股/美股/新三板/未上市公司可能被判 `unsupported_unlisted_company`；
-5. 正式披露模板**不代表持牌证券研究报告**，无持牌分析师参与；
-6. PDF 导出依赖本机 Edge（容器内默认不可用）；memory 不是生产级长期记忆；FastAPI 任务队列是单进程内存实现，重启丢状态；
-7. 宏观传导链与行业生命周期/情景模型是规则推演与工程假设，**不是专业预测保证**；
-8. 30-case 评测集是人工分层构建的固定 benchmark，**不是随机抽样，不能代表所有金融任务的泛化能力**；
-9. 系统**不能完全避免幻觉**，不保证投资观点正确；
-10. 本项目所有产出仅供技术研究参考，使用者需自行核实并承担决策风险。
+```bash
+python scripts/dev.py demo
+```
+
+## 测试与实验命令
+
+```bash
+python scripts/dev.py test
+python scripts/dev.py eval-smoke
+python scripts/dev.py eval
+python scripts/dev.py eval-test       # 冻结方案后谨慎运行
+python scripts/dev.py eval-regression
+python scripts/dev.py memory-ab
+python scripts/dev.py mine
+python scripts/dev.py propose         # 只生成候选
+python scripts/dev.py trajectories
+python scripts/dev.py train-check     # 不启动 GPU 训练
+```
+
+装有 `make` 时可用同名目标，例如 `make test`、`make eval-smoke`、`make demo`。
+
+## Bad Cases 与边界
+
+实际发现并修复的例子包括：Fallback 重放相同核心查询导致冗余调用、API 并发运行共享全局 Harness 上下文导致 Trace 串线、离线 macro fixture 意外触网、productive query 记忆从错误事件读取参数而无法写入。复现与回归证据见 [失败案例](docs/failure_cases.md)。原 41 条回归数据中大量样本源于历史问题描述；31 条 bad case 已逐条重构并显式分类（13 条可执行、9 条判定非 Agent 行为、5 条需真实网络、4 条转人工队列，见 [regression_rebuild.md](docs/regression_rebuild.md)）。重构后任务的期望值仍为 `needs_human_review`，可以说“能防回归”，不能说“期望已被人工确认”。
+
+已知限制：开发评测没有人工 Gold；LLM Judge 尚未完成人工校准；API 任务队列是单进程内存实现，重启会丢任务状态；本地 API namespace 当前适用于单租户部署；Docker 与 GPU LoRA 训练未验证，Qwen3-1.7B LoRA 仅提供配置、数据导出和前置检查，不自动训练。
+
+关于 fixture 的代表性，现在有实测依据而不是猜测：16 条真实 provider canary （`evals/reports/live_canary_report.md`）显示离线 Number Grounding 0.9956 对应真实环境 0.8126，离线「成功但含无源数字」0.0154 对应真实 0.8571——**fixture 系统性高估数字溯源质量**，因为 fixture 网页里的数字是按报告需要生成的。真实单次费用约 $0.0158、P95 时延约 341s（n=16，每条 1 trial，不构成成功率的统计结论，也不是 SLO）。
+
+## 成本与安全边界
+
+离线 fixture 结果的 Token/费用**结构性为 0**（stub 替换了 `call_llm`），不能用于声称真实成本下降；唯一的真实成本数据来自 16 条 canary（总计 $0.2520）。真实运行由 Harness 预算硬限制；网页/PDF 一律作为不可信数据，Prompt Injection 不可改变工具政策；日志不写 Key/Cookie/隐藏推理；只读工具默认允许，未来写工具必须审批、幂等并支持 dry-run。任何投资结论都需要人工复核，本项目不构成投资建议。
+
+技术报告：[从 V1 到 Harness](docs/v1_to_harness_interview_guide.md)（改造了什么）、[评测口径重建](docs/measurement_credibility_report.md)（凭什么说它变好了）。
+
+可复现证据和不可声称事项汇总在 [resume_evidence.md](docs/resume_evidence.md)，关键设计决策记录在 [docs/decisions](docs/decisions/)。

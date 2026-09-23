@@ -1,0 +1,52 @@
+[
+  {
+    "version": "v001",
+    "state": "proposed",
+    "candidate_id": "cand_d96ba2a0006e38df",
+    "target_failure_mode": "budget_exhausted",
+    "change_type": "budget_policy",
+    "target": "BudgetTracker.recommend thresholds",
+    "gate_passed": false,
+    "updated_at": "2026-09-09T04:46:35+00:00"
+  },
+  {
+    "version": "v002",
+    "state": "proposed",
+    "candidate_id": "cand_5aa463a7f4249fae",
+    "target_failure_mode": "tool_selection",
+    "change_type": "tool_description",
+    "target": "tools.export_report_file.when_not_to_use",
+    "gate_passed": false,
+    "updated_at": "2026-09-09T04:46:35+00:00"
+  },
+  {
+    "version": "v003",
+    "state": "proposed",
+    "candidate_id": "cand_028e21dcfa395881",
+    "target_failure_mode": "entity_unverified",
+    "change_type": "routing_rule",
+    "target": "entity_validator routing",
+    "gate_passed": false,
+    "updated_at": "2026-09-09T04:46:35+00:00"
+  },
+  {
+    "version": "v004",
+    "state": "proposed",
+    "candidate_id": "cand_c4c4b76c624b0706",
+    "target_failure_mode": "insufficient_retrieval",
+    "change_type": "retrieval_param",
+    "target": "config.SEARCH_MIN_UNIQUE_RESULTS",
+    "gate_passed": false,
+    "updated_at": "2026-09-09T07:49:13+00:00"
+  },
+  {
+    "version": "v005",
+    "state": "proposed",
+    "candidate_id": "cand_85fb4a12a0f38f1a",
+    "target_failure_mode": "ungrounded_numbers",
+    "change_type": "prompt",
+    "target": "prompts/report_prompt.txt",
+    "gate_passed": false,
+    "updated_at": "2026-09-09T07:49:13+00:00"
+  }
+]

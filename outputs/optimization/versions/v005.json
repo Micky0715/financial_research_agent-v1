@@ -1,0 +1,32 @@
+{
+  "version": "v005",
+  "candidate": {
+    "candidate_id": "cand_85fb4a12a0f38f1a",
+    "version": "v005",
+    "created_at": "2026-09-09T07:49:13+00:00",
+    "target_failure_mode": "ungrounded_numbers",
+    "target_slice_size": 3,
+    "change_type": "prompt",
+    "target": "prompts/report_prompt.txt",
+    "rationale": "3 次运行报告中存在无来源数字；把数字溯源的四类归属直接写进生成指令，并给出“写不出来源就降级为定性描述”的明确出路。",
+    "before": "请输出完整的 Markdown 研报正文。",
+    "after": "请输出完整的 Markdown 研报正文。\n\n【硬性要求】正文中出现的每一个金额/百分比/倍数，必须满足以下之一：(1) 所在句给出 [sN] 引用；(2) 明确标注来自 AkShare 结构化数据；(3) 明确标注为配置假设；(4) 明确标注为模型测算。无法满足时，改写为定性描述，不要写出该数字。",
+    "expected_metric_gains": {
+      "number_grounding_rate": 0.05,
+      "unsupported_number_rate": -0.05
+    },
+    "possible_regressions": [
+      "报告中数字总量下降，可能影响财务深度评分"
+    ],
+    "config_overrides": {}
+  },
+  "gate_result": null,
+  "state": "proposed",
+  "created_at": "2026-09-09T07:49:13+00:00",
+  "updated_at": "2026-09-09T07:49:13+00:00",
+  "approved_by": "",
+  "approved_at": "",
+  "applied_at": "",
+  "notes": "auto-generated from evals\\results\\dev_harness.jsonl",
+  "previous_values": {}
+}

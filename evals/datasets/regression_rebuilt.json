@@ -1,0 +1,543 @@
+{
+  "schema_version": "1.0",
+  "name": "regression_rebuilt",
+  "description": "由 eval/bad_cases.md 重构而来的可执行回归集。每条都是真实研究请求 + 复现原缺陷条件的故障注入，而不是把缺陷标题当研究主题。无法复现为 agent 行为的 bad case 如实归类并排除，见 regression_manifest.json。全部 needs_human_review：缺陷是真的，但这里写下的期望值未经人工复核。",
+  "created_at": "",
+  "tasks": [
+    {
+      "schema_version": "1.0",
+      "task_id": "reg002_贵州茅台",
+      "category": "company_research",
+      "query": "贵州茅台投资价值分析",
+      "report_type": "company_research",
+      "task_constraints": {
+        "note": "Planner 曾输出 9-11 个任务含重复 research/browse 阶段，导致同一阶段被执行多次。回归断言：计划归一化后仍能完整走到 report 阶段，且工具调用数不因阶段重复而翻倍。",
+        "degraded_acceptable": false,
+        "original_defect": "Planner 输出重复任务导致执行链路不稳定"
+      },
+      "required_facts": [],
+      "expected_outcome": "report_generated",
+      "optional_expected_tools": [],
+      "forbidden_tools": [],
+      "required_tools": [
+        "web_search",
+        "read_webpage"
+      ],
+      "acceptable_tool_paths": [],
+      "max_expected_tool_calls": 20,
+      "expects_no_tools": false,
+      "forbidden_claims": [],
+      "budget_limit": {},
+      "tags": [
+        "regression",
+        "bad_case",
+        "bad_case_2",
+        "rebuilt"
+      ],
+      "data_source": "eval/bad_cases.md (rebuilt into an executable request)",
+      "source_reference": "Bad Case 2",
+      "gold_status": "needs_human_review",
+      "annotator": "",
+      "reviewed_at": "",
+      "group_key": "bad_case_2",
+      "split": "regression",
+      "fixture_scenario": "default"
+    },
+    {
+      "schema_version": "1.0",
+      "task_id": "reg003_贵州茅台",
+      "category": "company_research",
+      "query": "贵州茅台财务与估值分析",
+      "report_type": "company_research",
+      "task_constraints": {
+        "note": "QualityScorer 曾用完整 topic 字符串做相关性匹配，只写 '600519' 的页面被判为零相关而丢弃。回归断言：来源仅用代码/简称指代主体时，仍能选出可用来源并产出报告。",
+        "degraded_acceptable": true,
+        "original_defect": "QualityScorer 完整 topic 匹配导致相关性误杀"
+      },
+      "required_facts": [
+        {
+          "key": "revenue_2024",
+          "description": "来源仅以证券代码指代主体时，营收仍应被抽取",
+          "any_of": [
+            "1200.5亿元",
+            "1,200.5亿元"
+          ],
+          "value": null,
+          "unit": "",
+          "tolerance": 0.01,
+          "must_be_cited": true
+        }
+      ],
+      "expected_outcome": "report_with_caveats",
+      "optional_expected_tools": [],
+      "forbidden_tools": [],
+      "required_tools": [
+        "web_search",
+        "read_webpage"
+      ],
+      "acceptable_tool_paths": [],
+      "max_expected_tool_calls": null,
+      "expects_no_tools": false,
+      "forbidden_claims": [],
+      "budget_limit": {},
+      "tags": [
+        "regression",
+        "bad_case",
+        "bad_case_3",
+        "rebuilt"
+      ],
+      "data_source": "eval/bad_cases.md (rebuilt into an executable request)",
+      "source_reference": "Bad Case 3",
+      "gold_status": "needs_human_review",
+      "annotator": "",
+      "reviewed_at": "",
+      "group_key": "bad_case_3",
+      "split": "regression",
+      "fixture_scenario": "alias_only_sources"
+    },
+    {
+      "schema_version": "1.0",
+      "task_id": "reg004_宁德时代",
+      "category": "company_research",
+      "query": "宁德时代投资分析",
+      "report_type": "company_research",
+      "task_constraints": {
+        "note": "BrowserAgent 曾对同一批必然失败的 URL 反复重试。回归断言：确定性失败不应耗尽重试预算，且必须如实报资料不足而不是硬出报告。",
+        "degraded_acceptable": false,
+        "original_defect": "BrowserAgent 对同一批 URL 无意义重试"
+      },
+      "required_facts": [],
+      "expected_outcome": "insufficient_evidence",
+      "optional_expected_tools": [],
+      "forbidden_tools": [],
+      "required_tools": [
+        "web_search"
+      ],
+      "acceptable_tool_paths": [],
+      "max_expected_tool_calls": 30,
+      "expects_no_tools": false,
+      "forbidden_claims": [],
+      "budget_limit": {},
+      "tags": [
+        "regression",
+        "bad_case",
+        "bad_case_4",
+        "rebuilt"
+      ],
+      "data_source": "eval/bad_cases.md (rebuilt into an executable request)",
+      "source_reference": "Bad Case 4",
+      "gold_status": "needs_human_review",
+      "annotator": "",
+      "reviewed_at": "",
+      "group_key": "bad_case_4",
+      "split": "regression",
+      "fixture_scenario": "all_403"
+    },
+    {
+      "schema_version": "1.0",
+      "task_id": "reg005_隆基绿能",
+      "category": "company_research",
+      "query": "隆基绿能投资价值分析",
+      "report_type": "company_research",
+      "task_constraints": {
+        "note": "source_count 极低时 Evaluation 分数仍然虚高。回归断言：只有 1 个可用来源时报告必须带局限说明，且不得出现确定性投资结论。",
+        "degraded_acceptable": true,
+        "original_defect": "source_count 太低但 Evaluation 虚高"
+      },
+      "required_facts": [],
+      "expected_outcome": "report_with_caveats",
+      "optional_expected_tools": [],
+      "forbidden_tools": [],
+      "required_tools": [
+        "web_search",
+        "read_webpage"
+      ],
+      "acceptable_tool_paths": [],
+      "max_expected_tool_calls": null,
+      "expects_no_tools": false,
+      "forbidden_claims": [
+        "保证收益",
+        "目标价"
+      ],
+      "budget_limit": {},
+      "tags": [
+        "regression",
+        "bad_case",
+        "bad_case_5",
+        "rebuilt"
+      ],
+      "data_source": "eval/bad_cases.md (rebuilt into an executable request)",
+      "source_reference": "Bad Case 5",
+      "gold_status": "needs_human_review",
+      "annotator": "",
+      "reviewed_at": "",
+      "group_key": "bad_case_5",
+      "split": "regression",
+      "fixture_scenario": "single_usable_source"
+    },
+    {
+      "schema_version": "1.0",
+      "task_id": "reg008_比亚迪",
+      "category": "company_research",
+      "query": "比亚迪投资价值分析",
+      "report_type": "company_research",
+      "task_constraints": {
+        "note": "抓取返回 success=True 但正文为空，属于软失败。回归断言：空正文不得被当作可用来源，必须如实判定资料不足。",
+        "degraded_acceptable": false,
+        "original_defect": "网页/PDF 抓取中的 403/404/empty_content 问题"
+      },
+      "required_facts": [],
+      "expected_outcome": "insufficient_evidence",
+      "optional_expected_tools": [],
+      "forbidden_tools": [],
+      "required_tools": [
+        "web_search"
+      ],
+      "acceptable_tool_paths": [],
+      "max_expected_tool_calls": null,
+      "expects_no_tools": false,
+      "forbidden_claims": [],
+      "budget_limit": {},
+      "tags": [
+        "regression",
+        "bad_case",
+        "bad_case_8",
+        "rebuilt"
+      ],
+      "data_source": "eval/bad_cases.md (rebuilt into an executable request)",
+      "source_reference": "Bad Case 8",
+      "gold_status": "needs_human_review",
+      "annotator": "",
+      "reviewed_at": "",
+      "group_key": "bad_case_8",
+      "split": "regression",
+      "fixture_scenario": "empty_pages"
+    },
+    {
+      "schema_version": "1.0",
+      "task_id": "reg009_光伏行业",
+      "category": "industry_research",
+      "query": "光伏行业投资风险分析",
+      "report_type": "industry_research",
+      "task_constraints": {
+        "note": "行业研报曾复用公司财务指标，导致 financial_depth_score 不公平。回归断言：行业主题没有证券代码，不应调用公司财务快照工具。",
+        "degraded_acceptable": true,
+        "original_defect": "行业研报复用公司财务指标，导致 financial_depth_score 不公平"
+      },
+      "required_facts": [],
+      "expected_outcome": "report_with_caveats",
+      "optional_expected_tools": [],
+      "forbidden_tools": [
+        "fetch_financial_snapshot"
+      ],
+      "required_tools": [
+        "web_search",
+        "read_webpage"
+      ],
+      "acceptable_tool_paths": [],
+      "max_expected_tool_calls": 20,
+      "expects_no_tools": false,
+      "forbidden_claims": [],
+      "budget_limit": {},
+      "tags": [
+        "regression",
+        "bad_case",
+        "bad_case_9",
+        "rebuilt"
+      ],
+      "data_source": "eval/bad_cases.md (rebuilt into an executable request)",
+      "source_reference": "Bad Case 9",
+      "gold_status": "needs_human_review",
+      "annotator": "",
+      "reviewed_at": "",
+      "group_key": "bad_case_9",
+      "split": "regression",
+      "fixture_scenario": "default"
+    },
+    {
+      "schema_version": "1.0",
+      "task_id": "reg013_贵州茅台",
+      "category": "company_research",
+      "query": "贵州茅台2025年年度跟踪报告",
+      "report_type": "company_research",
+      "task_constraints": {
+        "note": "语义排序把同一站点的多篇内容批量推进抓取窗口，恰逢该站批量 403，整轮抓取被单站反爬拖垮。回归断言：单域名全量失败时不得无限重试，且必须如实报资料不足。",
+        "degraded_acceptable": false,
+        "original_defect": "语义排序把同站点内容批量推进抓取窗口，放大单站反爬风险"
+      },
+      "required_facts": [],
+      "expected_outcome": "insufficient_evidence",
+      "optional_expected_tools": [],
+      "forbidden_tools": [],
+      "required_tools": [
+        "web_search"
+      ],
+      "acceptable_tool_paths": [],
+      "max_expected_tool_calls": 30,
+      "expects_no_tools": false,
+      "forbidden_claims": [],
+      "budget_limit": {},
+      "tags": [
+        "regression",
+        "bad_case",
+        "bad_case_13",
+        "rebuilt"
+      ],
+      "data_source": "eval/bad_cases.md (rebuilt into an executable request)",
+      "source_reference": "Bad Case 13",
+      "gold_status": "needs_human_review",
+      "annotator": "",
+      "reviewed_at": "",
+      "group_key": "bad_case_13",
+      "split": "regression",
+      "fixture_scenario": "single_domain_flood"
+    },
+    {
+      "schema_version": "1.0",
+      "task_id": "reg014_示例公司",
+      "category": "company_research",
+      "query": "示例公司财务与估值分析",
+      "report_type": "company_research",
+      "task_constraints": {
+        "note": "通用句子切分器在英文句点处断句，带小数的金额（1,200.5）全部抽不到，数字溯源统计因此失真。回归断言：正文含英文句点与小数时，数字仍应被识别并参与溯源分类。",
+        "degraded_acceptable": true,
+        "original_defect": "通用句子切分器在英文句点处断句，带小数的金额全部抽不到"
+      },
+      "required_facts": [],
+      "expected_outcome": "report_with_caveats",
+      "optional_expected_tools": [],
+      "forbidden_tools": [],
+      "required_tools": [
+        "web_search",
+        "read_webpage"
+      ],
+      "acceptable_tool_paths": [],
+      "max_expected_tool_calls": null,
+      "expects_no_tools": false,
+      "forbidden_claims": [],
+      "budget_limit": {},
+      "tags": [
+        "regression",
+        "bad_case",
+        "bad_case_14",
+        "rebuilt"
+      ],
+      "data_source": "eval/bad_cases.md (rebuilt into an executable request)",
+      "source_reference": "Bad Case 14",
+      "gold_status": "needs_human_review",
+      "annotator": "",
+      "reviewed_at": "",
+      "group_key": "bad_case_14",
+      "split": "regression",
+      "fixture_scenario": "decimal_heavy_numbers"
+    },
+    {
+      "schema_version": "1.0",
+      "task_id": "reg016_希兹维恩量子玄武科技",
+      "category": "company_research",
+      "query": "希兹维恩量子玄武科技投资分析",
+      "report_type": "company_research",
+      "task_constraints": {
+        "note": "虚构公司主题也能凑出 5 个『相关』来源——相关性层被金融词汇骗过。回归断言：必须由实体校验拦截并拒绝出报告，不得出现任何财务数值。",
+        "degraded_acceptable": false,
+        "original_defect": "虚构公司主题也能凑出 5 个\"相关\"来源（groundedness 缺口）"
+      },
+      "required_facts": [],
+      "expected_outcome": "insufficient_evidence",
+      "optional_expected_tools": [],
+      "forbidden_tools": [
+        "export_report_file"
+      ],
+      "required_tools": [
+        "web_search"
+      ],
+      "acceptable_tool_paths": [],
+      "max_expected_tool_calls": null,
+      "expects_no_tools": false,
+      "forbidden_claims": [
+        "营业收入",
+        "净利润",
+        "目标价"
+      ],
+      "budget_limit": {},
+      "tags": [
+        "regression",
+        "bad_case",
+        "bad_case_16",
+        "rebuilt"
+      ],
+      "data_source": "eval/bad_cases.md (rebuilt into an executable request)",
+      "source_reference": "Bad Case 16",
+      "gold_status": "needs_human_review",
+      "annotator": "",
+      "reviewed_at": "",
+      "group_key": "bad_case_16",
+      "split": "regression",
+      "fixture_scenario": "fictional_entity"
+    },
+    {
+      "schema_version": "1.0",
+      "task_id": "reg018_中芯国际",
+      "category": "company_research",
+      "query": "中芯国际投资风险分析",
+      "report_type": "company_research",
+      "task_constraints": {
+        "note": "AkShare 东方财富系接口全部 ProxyError。回归断言：结构化数据源不可用时应降级为纯网页分析并如实标注缺失字段，而不是整体失败。",
+        "degraded_acceptable": true,
+        "original_defect": "AkShare 东方财富系接口在本环境全部 ProxyError"
+      },
+      "required_facts": [],
+      "expected_outcome": "report_with_caveats",
+      "optional_expected_tools": [],
+      "forbidden_tools": [],
+      "required_tools": [
+        "web_search",
+        "read_webpage"
+      ],
+      "acceptable_tool_paths": [],
+      "max_expected_tool_calls": 24,
+      "expects_no_tools": false,
+      "forbidden_claims": [],
+      "budget_limit": {},
+      "tags": [
+        "regression",
+        "bad_case",
+        "bad_case_18",
+        "rebuilt"
+      ],
+      "data_source": "eval/bad_cases.md (rebuilt into an executable request)",
+      "source_reference": "Bad Case 18",
+      "gold_status": "needs_human_review",
+      "annotator": "",
+      "reviewed_at": "",
+      "group_key": "bad_case_18",
+      "split": "regression",
+      "fixture_scenario": "akshare_down"
+    },
+    {
+      "schema_version": "1.0",
+      "task_id": "reg022_美的集团",
+      "category": "company_research",
+      "query": "美的集团投资分析",
+      "report_type": "company_research",
+      "task_constraints": {
+        "note": "PDF 导出依赖 HTML 报告，markdown-only run 无 PDF 可导。回归断言：markdown 输出的 run 必须正常产出报告文件，不因导出格式缺失而失败。",
+        "degraded_acceptable": false,
+        "original_defect": "PDF 导出依赖 HTML 报告，markdown-only run 无 PDF 可导"
+      },
+      "required_facts": [],
+      "expected_outcome": "report_generated",
+      "optional_expected_tools": [],
+      "forbidden_tools": [],
+      "required_tools": [
+        "web_search",
+        "read_webpage"
+      ],
+      "acceptable_tool_paths": [],
+      "max_expected_tool_calls": null,
+      "expects_no_tools": false,
+      "forbidden_claims": [],
+      "budget_limit": {},
+      "tags": [
+        "regression",
+        "bad_case",
+        "bad_case_22",
+        "rebuilt"
+      ],
+      "data_source": "eval/bad_cases.md (rebuilt into an executable request)",
+      "source_reference": "Bad Case 22",
+      "gold_status": "needs_human_review",
+      "annotator": "",
+      "reviewed_at": "",
+      "group_key": "bad_case_22",
+      "split": "regression",
+      "fixture_scenario": "default"
+    },
+    {
+      "schema_version": "1.0",
+      "task_id": "reg023_星河量子能源股份有限公司",
+      "category": "company_research",
+      "query": "星河量子能源股份有限公司投资价值分析",
+      "report_type": "company_research",
+      "task_constraints": {
+        "note": "虚构公司 E2E 纵深防御实录：相关性层被骗、实体层拦截。回归断言与 Bad Case 16 同类，但用另一个虚构主体，确保拦截不是靠硬编码名单。",
+        "degraded_acceptable": false,
+        "original_defect": "虚构公司 E2E——纵深防御实录（相关性层被骗，实体层拦截）"
+      },
+      "required_facts": [],
+      "expected_outcome": "insufficient_evidence",
+      "optional_expected_tools": [],
+      "forbidden_tools": [
+        "export_report_file"
+      ],
+      "required_tools": [
+        "web_search"
+      ],
+      "acceptable_tool_paths": [],
+      "max_expected_tool_calls": null,
+      "expects_no_tools": false,
+      "forbidden_claims": [
+        "营业收入",
+        "净利润",
+        "目标价",
+        "建议买入"
+      ],
+      "budget_limit": {},
+      "tags": [
+        "regression",
+        "bad_case",
+        "bad_case_23",
+        "rebuilt"
+      ],
+      "data_source": "eval/bad_cases.md (rebuilt into an executable request)",
+      "source_reference": "Bad Case 23",
+      "gold_status": "needs_human_review",
+      "annotator": "",
+      "reviewed_at": "",
+      "group_key": "bad_case_23",
+      "split": "regression",
+      "fixture_scenario": "fictional_entity"
+    },
+    {
+      "schema_version": "1.0",
+      "task_id": "reg031_CPI与PPI",
+      "category": "macro_research",
+      "query": "CPI与PPI走势分析",
+      "report_type": "macro_research",
+      "task_constraints": {
+        "note": "entity_validator 曾把宏观/未收录同义词的行业主题误判为 insufficient_entity_evidence，一次全量跑 11/30 失败。回归断言：宏观主题不得被实体校验拦截，必须正常产出报告。",
+        "degraded_acceptable": true,
+        "original_defect": "entity_validator 对宏观主题和非内置行业主题的误杀（30-case 真实评测中 11/30 案例失败）"
+      },
+      "required_facts": [],
+      "expected_outcome": "report_with_caveats",
+      "optional_expected_tools": [],
+      "forbidden_tools": [
+        "fetch_financial_snapshot"
+      ],
+      "required_tools": [
+        "web_search",
+        "read_webpage"
+      ],
+      "acceptable_tool_paths": [],
+      "max_expected_tool_calls": 20,
+      "expects_no_tools": false,
+      "forbidden_claims": [],
+      "budget_limit": {},
+      "tags": [
+        "regression",
+        "bad_case",
+        "bad_case_31",
+        "rebuilt"
+      ],
+      "data_source": "eval/bad_cases.md (rebuilt into an executable request)",
+      "source_reference": "Bad Case 31",
+      "gold_status": "needs_human_review",
+      "annotator": "",
+      "reviewed_at": "",
+      "group_key": "bad_case_31",
+      "split": "regression",
+      "fixture_scenario": "default"
+    }
+  ]
+}

@@ -15,7 +15,7 @@ from fastapi.testclient import TestClient
 def _fast_orchestrator_run(monkeypatch, result: dict, delay: float = 0.05):
     """WorkflowOrchestrator().run(...) -> 立即返回给定 result（模拟一次真实 run 的产物）。"""
     class _FakeOrchestrator:
-        def run(self, request, on_progress=None):
+        def run(self, request, on_progress=None, harness=None):
             if on_progress:
                 on_progress(1, 5, "Searching sources...")
                 time.sleep(delay)
@@ -144,10 +144,46 @@ def test_concurrent_task_limit_is_respected(monkeypatch):
     client = TestClient(app)
     t1 = client.post("/reports", json={"topic": "主题一"}).json()["task_id"]
     t2 = client.post("/reports", json={"topic": "主题二"}).json()["task_id"]
-    time.sleep(0.05)  # 让 t1 先进入 running
-    s1 = client.get(f"/tasks/{t1}").json()["status"]
+
+    # 轮询等待 t1 进入 running，而不是固定 sleep(0.05)。
+    # 原实现假设 worker 线程一定能在 50ms 内启动；机器有负载时（例如同时在跑
+    # 评测）线程还没起来，t1 仍是 queued，测试就假失败。断言的性质没变——
+    # 并发上限=1 时第二个任务必须还在排队——只是等待方式改成确定性的。
+    deadline = time.time() + 5.0
+    s1 = ""
+    while time.time() < deadline:
+        s1 = client.get(f"/tasks/{t1}").json()["status"]
+        if s1 != "queued":
+            break
+        time.sleep(0.01)
     s2 = client.get(f"/tasks/{t2}").json()["status"]
-    assert s1 == "running"
+    assert s1 == "running", f"t1 未在 5s 内进入 running（实际 {s1}）"
     assert s2 == "queued", "第二个任务在并发上限=1时应仍排队，不应同时 running"
     _wait_terminal(client, t1)
     _wait_terminal(client, t2)
+
+
+def test_concurrent_harness_runs_keep_separate_run_contexts(monkeypatch):
+    _fast_orchestrator_run(monkeypatch, {
+        "run_id": "legacy-id", "report_path": "p", "sources_path": "",
+        "evaluation": {"overall_score": 0.8}, "num_sources": 5,
+    }, delay=0.2)
+    fresh = TaskManager(max_concurrent=2, task_timeout_seconds=10)
+    monkeypatch.setattr(tm_module, "task_manager", fresh)
+    import api.routes.reports as reports_module
+    import api.routes.tasks as tasks_module
+
+    monkeypatch.setattr(reports_module, "task_manager", fresh)
+    monkeypatch.setattr(tasks_module, "task_manager", fresh)
+    from api.main import app
+
+    client = TestClient(app)
+    t1 = client.post("/reports", json={"topic": "concurrent one"}).json()["task_id"]
+    t2 = client.post("/reports", json={"topic": "concurrent two"}).json()["task_id"]
+    assert _wait_terminal(client, t1)["status"] == "succeeded"
+    assert _wait_terminal(client, t2)["status"] == "succeeded"
+
+    r1 = fresh.get(t1).result
+    r2 = fresh.get(t2).result
+    assert r1["harness_run_id"] != r2["harness_run_id"]
+    assert r1["harness_trace_path"] != r2["harness_trace_path"]

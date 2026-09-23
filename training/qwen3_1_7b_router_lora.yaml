@@ -1,0 +1,147 @@
+# Qwen3-1.7B LoRA SFT config for the tool-router head.
+#
+# NOT RUN. This file is a prepared configuration, not evidence of a trained
+# model. Training is gated on three things, in order:
+#
+#   1. `exports/agent_sft/DATA_CARD.md` shows a non-trivial human-verified
+#      count. Training on 100% grader-derived labels teaches the small model to
+#      imitate the current system, including its mistakes - which is a
+#      reasonable baseline but must be described as exactly that.
+#   2. `training/router_comparison.py` shows the prompt-only and few-shot
+#      routers leaving enough headroom to be worth closing. If a few-shot
+#      prompt already reaches the ceiling, a LoRA is cost without benefit.
+#   3. A GPU is available. Nothing in this repository trains on CPU.
+#
+# Run (once the gates above are cleared):
+#   python training/train_router_lora.py --config training/qwen3_1_7b_router_lora.yaml
+
+model:
+  name: Qwen/Qwen3-1.7B
+  trust_remote_code: true
+  torch_dtype: bfloat16
+  attn_implementation: sdpa
+  # Router decisions are short; a long window would only waste memory.
+  max_seq_length: 2048
+
+lora:
+  r: 16
+  alpha: 32
+  dropout: 0.05
+  bias: none
+  task_type: CAUSAL_LM
+  # Attention + MLP projections. Tuning attention alone underfits the
+  # argument-generation task, which needs to copy schema field names.
+  target_modules:
+    - q_proj
+    - k_proj
+    - v_proj
+    - o_proj
+    - gate_proj
+    - up_proj
+    - down_proj
+
+data:
+  # Produced by scripts/export_agent_trajectories.py
+  root: exports/agent_sft
+  # Multi-task: one head, several decision types, distinguished by an
+  # instruction prefix. Keeps a single adapter rather than four.
+  datasets:
+    - name: tool_selection
+      file: tool_selection.jsonl
+      weight: 3.0
+      instruction: "根据当前任务与可用工具目录，选择下一步应调用的工具。只输出工具名。"
+    - name: tool_arguments
+      file: tool_arguments.jsonl
+      weight: 3.0
+      instruction: "根据工具的输入 schema 生成调用参数。只输出 JSON 对象。"
+    - name: continue_search
+      file: continue_search.jsonl
+      weight: 1.0
+      instruction: "根据当前证据状态判断是否需要继续检索。只输出 continue 或 stop。"
+    - name: clarification
+      file: clarification.jsonl
+      weight: 1.0
+      instruction: "判断该请求是否需要先向用户澄清。只输出 ask_user 或 proceed。"
+    - name: task_complexity
+      file: task_complexity.jsonl
+      weight: 0.5
+      instruction: "判断该研究任务的复杂度。只输出 simple、moderate 或 complex。"
+    - name: stop_decision
+      file: stop_decision.jsonl
+      weight: 1.0
+      instruction: "根据终止时的状态判断停止原因。只输出停止原因标签。"
+    - name: failure_reason
+      file: failure_reason.jsonl
+      weight: 1.0
+      instruction: "根据失败运行的状态判断主要失败原因。只输出失败模式标签。"
+  train_split: train
+  eval_split: eval
+  # The export already deduplicates and splits by group; this is a second
+  # assertion, not a second implementation.
+  assert_no_group_leakage: true
+  # Refuse to start if any record carries a reasoning-shaped field.
+  assert_no_reasoning_fields: true
+
+training:
+  output_dir: outputs/training/qwen3_1_7b_router_lora
+  num_train_epochs: 3
+  per_device_train_batch_size: 8
+  gradient_accumulation_steps: 4
+  learning_rate: 1.0e-4
+  lr_scheduler_type: cosine
+  warmup_ratio: 0.03
+  weight_decay: 0.01
+  max_grad_norm: 1.0
+  logging_steps: 10
+  eval_strategy: steps
+  eval_steps: 100
+  save_strategy: steps
+  save_steps: 200
+  save_total_limit: 3
+  load_best_model_at_end: true
+  metric_for_best_model: eval_loss
+  bf16: true
+  gradient_checkpointing: true
+  seed: 42
+  report_to: none
+
+evaluation:
+  # Loss is not the acceptance criterion. The router is accepted or rejected on
+  # the task metrics below, measured by training/router_comparison.py against
+  # the same held-out groups the eval harness uses.
+  acceptance_metrics:
+    - tool_selection_f1
+    - argument_exact_match
+    - invalid_tool_call_rate
+    - clarification_accuracy
+    - stop_decision_accuracy
+    - downstream_task_success
+    - avg_latency_ms
+    - avg_cost_usd
+    - escalation_rate
+  # A LoRA router only ships if it beats the cheaper alternatives on the
+  # metrics that matter, not just on loss.
+  must_beat:
+    - prompt_only
+    - few_shot
+  # Below this, the cascade (small model first, escalate on low confidence)
+  # is preferred to the LoRA alone.
+  min_tool_selection_f1: 0.90
+  max_invalid_tool_call_rate: 0.02
+
+cascade:
+  # Small-model-first routing with escalation to the large model.
+  enabled: true
+  confidence_threshold: 0.75
+  escalate_to: large_model
+  # Escalating everything defeats the purpose; escalating nothing means the
+  # confidence signal is not being used.
+  target_escalation_rate: [0.05, 0.30]
+
+notes:
+  dpo_grpo: >
+    不预先安排 DPO/GRPO。只有当 (a) SFT 路由器已经跑通并给出可复现指标，
+    (b) 有真实的偏好对数据（同一状态下两个动作的可验证优劣），
+    (c) reward 能由确定性 grader 给出而不是模型自评，
+    三者同时满足时，才评估是否值得继续做偏好优化。
+    在此之前引入 DPO/GRPO 只是增加复杂度，不产生可验证收益。

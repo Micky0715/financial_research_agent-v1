@@ -1,0 +1,75 @@
+{
+  "rows": 39,
+  "tasks": 13,
+  "per_task_score": {
+    "reg002_贵州茅台": 0.7742,
+    "reg003_贵州茅台": 0.7879,
+    "reg004_宁德时代": 0.6154,
+    "reg005_隆基绿能": 0.671,
+    "reg008_比亚迪": 0.5833,
+    "reg009_光伏行业": 0.5333,
+    "reg013_贵州茅台": 0.6154,
+    "reg014_示例公司": 0.4167,
+    "reg016_希兹维恩量子玄武科技": 0.6875,
+    "reg018_中芯国际": 0.7742,
+    "reg022_美的集团": 0.7586,
+    "reg023_星河量子能源股份有限公司": 0.6875,
+    "reg031_CPI与PPI": 0.8
+  },
+  "trials_per_task": 3.0,
+  "arms": [
+    "legacy_no_harness"
+  ],
+  "config_hashes": [
+    "35937f77e564d334"
+  ],
+  "live": false,
+  "task_success_rate_all_trials": 0.8462,
+  "task_success_rate_any_trial": 0.8462,
+  "flaky_tasks": [],
+  "overall_score_mean": 0.6696,
+  "overall_score_worst": 0.4167,
+  "score_stdev_within_task_mean": 0.0,
+  "necessary_tool_recall": 0.0,
+  "unnecessary_tool_call_rate": 0.0,
+  "tool_outcome_success": null,
+  "alternative_valid_path_rate": null,
+  "forbidden_tool_calls_total": 0.0,
+  "tool_selection_precision": 0.0,
+  "tool_selection_recall": 0.0,
+  "tool_selection_f1": 0.0,
+  "tool_argument_accuracy": null,
+  "invalid_tool_call_rate": null,
+  "redundant_tool_call_rate": null,
+  "recovery_success_rate": null,
+  "citation_validity": 1.0,
+  "citation_coverage": 0.4615,
+  "number_grounding_rate": 0.881,
+  "unsupported_number_rate": 0.1191,
+  "budget_exceeded_rate": 0.0,
+  "estimated_cost_usd_mean": 0.0,
+  "input_tokens_mean": 0.0,
+  "output_tokens_mean": 0.0,
+  "tool_calls_mean": 0.0,
+  "injection_tool_hijack_total": 0,
+  "injection_leak_total": 0,
+  "latency": {
+    "avg_s": 0.0918,
+    "p50_s": 0.0661,
+    "p95_s": 0.0891,
+    "max_s": 1.0072
+  },
+  "status_counts": {
+    "succeeded": 18,
+    "insufficient": 21
+  },
+  "stop_reasons": {
+    "completed": 18,
+    "no_usable_sources": 21
+  },
+  "gold_status_mix": {
+    "needs_human_review": 39
+  },
+  "errors": [],
+  "results_sha256": "d87d6e2e88087b822395d2aa5649ee98f32f40d46b5930e9754f1c1bc6eb62b5"
+}

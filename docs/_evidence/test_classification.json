@@ -1,0 +1,3003 @@
+{
+  "network_blocked_run": {
+    "command": "python -m pytest tests -q -p audit_netblock_plugin",
+    "result": "322 passed",
+    "conclusion": "整个测试套件在硬断网条件下全部通过，因此 live_network / live_model 两档的真实数量为 0：没有任何测试验证真实 provider 或真实网络行为。"
+  },
+  "total_collected": 322,
+  "classified": 322,
+  "by_tier": {
+    "schema_data": 10,
+    "unit": 251,
+    "mock_integration": 37,
+    "fixture_e2e": 24,
+    "live_network": 0,
+    "live_model": 0
+  },
+  "by_file": {
+    "tests/harness/test_checkpoint_and_context.py": {
+      "unit": 15,
+      "schema_data": 3
+    },
+    "tests/harness/test_evals.py": {
+      "unit": 33,
+      "mock_integration": 7,
+      "schema_data": 1
+    },
+    "tests/harness/test_executor_and_trace.py": {
+      "schema_data": 3,
+      "unit": 21,
+      "mock_integration": 9
+    },
+    "tests/harness/test_integration_pipeline.py": {
+      "fixture_e2e": 21,
+      "unit": 4
+    },
+    "tests/harness/test_memory.py": {
+      "unit": 35
+    },
+    "tests/harness/test_optimization.py": {
+      "unit": 27,
+      "schema_data": 1
+    },
+    "tests/harness/test_runtime_core.py": {
+      "unit": 40,
+      "schema_data": 2
+    },
+    "tests/test_api.py": {
+      "fixture_e2e": 3,
+      "mock_integration": 5
+    },
+    "tests/test_company_deep.py": {
+      "mock_integration": 5,
+      "unit": 3
+    },
+    "tests/test_data_lineage.py": {
+      "unit": 6
+    },
+    "tests/test_evaluators_and_entity.py": {
+      "unit": 8,
+      "mock_integration": 4
+    },
+    "tests/test_grounding_and_tiers.py": {
+      "unit": 5
+    },
+    "tests/test_industry_deep.py": {
+      "unit": 11,
+      "mock_integration": 1
+    },
+    "tests/test_io_and_infra.py": {
+      "unit": 8,
+      "mock_integration": 3
+    },
+    "tests/test_listed_company_registry.py": {
+      "unit": 1,
+      "mock_integration": 2
+    },
+    "tests/test_macro_pipeline.py": {
+      "unit": 11
+    },
+    "tests/test_revision.py": {
+      "unit": 4,
+      "mock_integration": 1
+    },
+    "tests/test_tracking_and_compliance.py": {
+      "unit": 12
+    },
+    "tests/test_valuation.py": {
+      "unit": 7
+    }
+  },
+  "flagged_count": 1,
+  "flagged": [
+    {
+      "test_id": "tests/harness/test_memory.py::test_extraction_records_a_verified_entity_symbol",
+      "flags": [
+        "single_call_assert"
+      ],
+      "asserts": 1
+    }
+  ],
+  "rows": [
+    {
+      "test_id": "tests/harness/test_checkpoint_and_context.py::test_checkpoints_are_versioned_and_latest_wins",
+      "file": "tests/harness/test_checkpoint_and_context.py",
+      "function": "test_checkpoints_are_versioned_and_latest_wins",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 15,
+      "assert_count": 6
+    },
+    {
+      "test_id": "tests/harness/test_checkpoint_and_context.py::test_load_latest_skips_an_incompatible_tail_checkpoint",
+      "file": "tests/harness/test_checkpoint_and_context.py",
+      "function": "test_load_latest_skips_an_incompatible_tail_checkpoint",
+      "tier": "schema_data",
+      "weak_flags": [],
+      "lines": 18,
+      "assert_count": 2
+    },
+    {
+      "test_id": "tests/harness/test_checkpoint_and_context.py::test_load_latest_raises_when_no_checkpoint_is_compatible",
+      "file": "tests/harness/test_checkpoint_and_context.py",
+      "function": "test_load_latest_raises_when_no_checkpoint_is_compatible",
+      "tier": "schema_data",
+      "weak_flags": [],
+      "lines": 12,
+      "assert_count": 0
+    },
+    {
+      "test_id": "tests/harness/test_checkpoint_and_context.py::test_missing_run_returns_none",
+      "file": "tests/harness/test_checkpoint_and_context.py",
+      "function": "test_missing_run_returns_none",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 3,
+      "assert_count": 1
+    },
+    {
+      "test_id": "tests/harness/test_checkpoint_and_context.py::test_run_store_indexes_outcome",
+      "file": "tests/harness/test_checkpoint_and_context.py",
+      "function": "test_run_store_indexes_outcome",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 12,
+      "assert_count": 4
+    },
+    {
+      "test_id": "tests/harness/test_checkpoint_and_context.py::test_resumable_lists_only_unfinished_runs",
+      "file": "tests/harness/test_checkpoint_and_context.py",
+      "function": "test_resumable_lists_only_unfinished_runs",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 10,
+      "assert_count": 1
+    },
+    {
+      "test_id": "tests/harness/test_checkpoint_and_context.py::test_prune_keeps_the_newest_checkpoints",
+      "file": "tests/harness/test_checkpoint_and_context.py",
+      "function": "test_prune_keeps_the_newest_checkpoints",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 7,
+      "assert_count": 2
+    },
+    {
+      "test_id": "tests/harness/test_checkpoint_and_context.py::test_resume_skips_completed_idempotent_steps_and_reruns_safe_ones",
+      "file": "tests/harness/test_checkpoint_and_context.py",
+      "function": "test_resume_skips_completed_idempotent_steps_and_reruns_safe_ones",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 10,
+      "assert_count": 3
+    },
+    {
+      "test_id": "tests/harness/test_checkpoint_and_context.py::test_in_flight_side_effecting_step_escalates_instead_of_guessing",
+      "file": "tests/harness/test_checkpoint_and_context.py",
+      "function": "test_in_flight_side_effecting_step_escalates_instead_of_guessing",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 9,
+      "assert_count": 3
+    },
+    {
+      "test_id": "tests/harness/test_checkpoint_and_context.py::test_should_skip_returns_the_reusable_step",
+      "file": "tests/harness/test_checkpoint_and_context.py",
+      "function": "test_should_skip_returns_the_reusable_step",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 11,
+      "assert_count": 3
+    },
+    {
+      "test_id": "tests/harness/test_checkpoint_and_context.py::test_resume_preserves_budget_already_spent",
+      "file": "tests/harness/test_checkpoint_and_context.py",
+      "function": "test_resume_preserves_budget_already_spent",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 11,
+      "assert_count": 2
+    },
+    {
+      "test_id": "tests/harness/test_checkpoint_and_context.py::test_resume_plan_description_is_serializable",
+      "file": "tests/harness/test_checkpoint_and_context.py",
+      "function": "test_resume_plan_description_is_serializable",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 4,
+      "assert_count": 1
+    },
+    {
+      "test_id": "tests/harness/test_checkpoint_and_context.py::test_high_priority_layers_survive_a_tight_budget",
+      "file": "tests/harness/test_checkpoint_and_context.py",
+      "function": "test_high_priority_layers_survive_a_tight_budget",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 15,
+      "assert_count": 5
+    },
+    {
+      "test_id": "tests/harness/test_checkpoint_and_context.py::test_evidence_number_source_mapping_is_preserved",
+      "file": "tests/harness/test_checkpoint_and_context.py",
+      "function": "test_evidence_number_source_mapping_is_preserved",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 13,
+      "assert_count": 3
+    },
+    {
+      "test_id": "tests/harness/test_checkpoint_and_context.py::test_source_digest_groups_by_source_not_by_claim",
+      "file": "tests/harness/test_checkpoint_and_context.py",
+      "function": "test_source_digest_groups_by_source_not_by_claim",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 6,
+      "assert_count": 2
+    },
+    {
+      "test_id": "tests/harness/test_checkpoint_and_context.py::test_memory_has_its_own_hard_cap",
+      "file": "tests/harness/test_checkpoint_and_context.py",
+      "function": "test_memory_has_its_own_hard_cap",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 6,
+      "assert_count": 2
+    },
+    {
+      "test_id": "tests/harness/test_checkpoint_and_context.py::test_consistency_check_flags_orphaned_citations",
+      "file": "tests/harness/test_checkpoint_and_context.py",
+      "function": "test_consistency_check_flags_orphaned_citations",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 9,
+      "assert_count": 2
+    },
+    {
+      "test_id": "tests/harness/test_checkpoint_and_context.py::test_compression_report_records_what_was_dropped",
+      "file": "tests/harness/test_checkpoint_and_context.py",
+      "function": "test_compression_report_records_what_was_dropped",
+      "tier": "schema_data",
+      "weak_flags": [],
+      "lines": 10,
+      "assert_count": 4
+    },
+    {
+      "test_id": "tests/harness/test_evals.py::test_human_verified_requires_annotator_and_date",
+      "file": "tests/harness/test_evals.py",
+      "function": "test_human_verified_requires_annotator_and_date",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 7,
+      "assert_count": 1
+    },
+    {
+      "test_id": "tests/harness/test_evals.py::test_default_gold_status_is_synthetic_draft",
+      "file": "tests/harness/test_evals.py",
+      "function": "test_default_gold_status_is_synthetic_draft",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 3,
+      "assert_count": 2
+    },
+    {
+      "test_id": "tests/harness/test_evals.py::test_splits_are_assigned_by_group_not_by_task",
+      "file": "tests/harness/test_evals.py",
+      "function": "test_splits_are_assigned_by_group_not_by_task",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 13,
+      "assert_count": 3
+    },
+    {
+      "test_id": "tests/harness/test_evals.py::test_split_assignment_is_deterministic_across_processes",
+      "file": "tests/harness/test_evals.py",
+      "function": "test_split_assignment_is_deterministic_across_processes",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 5,
+      "assert_count": 1
+    },
+    {
+      "test_id": "tests/harness/test_evals.py::test_regression_tag_forces_the_regression_split",
+      "file": "tests/harness/test_evals.py",
+      "function": "test_regression_tag_forces_the_regression_split",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 3,
+      "assert_count": 1
+    },
+    {
+      "test_id": "tests/harness/test_evals.py::test_dedup_drops_identical_queries",
+      "file": "tests/harness/test_evals.py",
+      "function": "test_dedup_drops_identical_queries",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 6,
+      "assert_count": 1
+    },
+    {
+      "test_id": "tests/harness/test_evals.py::test_dataset_stats_expose_the_gold_status_mix",
+      "file": "tests/harness/test_evals.py",
+      "function": "test_dataset_stats_expose_the_gold_status_mix",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 6,
+      "assert_count": 3
+    },
+    {
+      "test_id": "tests/harness/test_evals.py::test_built_datasets_have_no_leakage_and_no_fake_gold",
+      "file": "tests/harness/test_evals.py",
+      "function": "test_built_datasets_have_no_leakage_and_no_fake_gold",
+      "tier": "mock_integration",
+      "weak_flags": [],
+      "lines": 9,
+      "assert_count": 4
+    },
+    {
+      "test_id": "tests/harness/test_evals.py::test_regression_tasks_reference_real_bad_cases",
+      "file": "tests/harness/test_evals.py",
+      "function": "test_regression_tasks_reference_real_bad_cases",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 7,
+      "assert_count": 3
+    },
+    {
+      "test_id": "tests/harness/test_evals.py::test_outcome_grader_treats_refusal_as_success_when_expected",
+      "file": "tests/harness/test_evals.py",
+      "function": "test_outcome_grader_treats_refusal_as_success_when_expected",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 7,
+      "assert_count": 2
+    },
+    {
+      "test_id": "tests/harness/test_evals.py::test_required_facts_grader_scores_partial_coverage",
+      "file": "tests/harness/test_evals.py",
+      "function": "test_required_facts_grader_scores_partial_coverage",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 8,
+      "assert_count": 2
+    },
+    {
+      "test_id": "tests/harness/test_evals.py::test_missing_report_scores_zero_not_not_applicable",
+      "file": "tests/harness/test_evals.py",
+      "function": "test_missing_report_scores_zero_not_not_applicable",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 6,
+      "assert_count": 1
+    },
+    {
+      "test_id": "tests/harness/test_evals.py::test_forbidden_claims_are_an_outright_failure",
+      "file": "tests/harness/test_evals.py",
+      "function": "test_forbidden_claims_are_an_outright_failure",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 5,
+      "assert_count": 1
+    },
+    {
+      "test_id": "tests/harness/test_evals.py::test_citation_grader_counts_unresolvable_markers",
+      "file": "tests/harness/test_evals.py",
+      "function": "test_citation_grader_counts_unresolvable_markers",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 9,
+      "assert_count": 4
+    },
+    {
+      "test_id": "tests/harness/test_evals.py::test_number_grounding_grader_uses_the_existing_analyzer",
+      "file": "tests/harness/test_evals.py",
+      "function": "test_number_grounding_grader_uses_the_existing_analyzer",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 8,
+      "assert_count": 3
+    },
+    {
+      "test_id": "tests/harness/test_evals.py::test_tool_selection_grader_only_applies_when_expectations_exist",
+      "file": "tests/harness/test_evals.py",
+      "function": "test_tool_selection_grader_only_applies_when_expectations_exist",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 13,
+      "assert_count": 4
+    },
+    {
+      "test_id": "tests/harness/test_evals.py::test_tool_argument_grader_counts_only_argument_errors",
+      "file": "tests/harness/test_evals.py",
+      "function": "test_tool_argument_grader_counts_only_argument_errors",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 10,
+      "assert_count": 2
+    },
+    {
+      "test_id": "tests/harness/test_evals.py::test_recovery_grader_is_not_applicable_when_nothing_failed",
+      "file": "tests/harness/test_evals.py",
+      "function": "test_recovery_grader_is_not_applicable_when_nothing_failed",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 9,
+      "assert_count": 2
+    },
+    {
+      "test_id": "tests/harness/test_evals.py::test_safety_grader_fails_on_tool_hijack",
+      "file": "tests/harness/test_evals.py",
+      "function": "test_safety_grader_fails_on_tool_hijack",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 15,
+      "assert_count": 4
+    },
+    {
+      "test_id": "tests/harness/test_evals.py::test_safety_grader_fails_when_injection_text_reaches_the_report",
+      "file": "tests/harness/test_evals.py",
+      "function": "test_safety_grader_fails_when_injection_text_reaches_the_report",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 5,
+      "assert_count": 1
+    },
+    {
+      "test_id": "tests/harness/test_evals.py::test_schema_grader_rejects_a_success_with_no_sources",
+      "file": "tests/harness/test_evals.py",
+      "function": "test_schema_grader_rejects_a_success_with_no_sources",
+      "tier": "schema_data",
+      "weak_flags": [],
+      "lines": 5,
+      "assert_count": 2
+    },
+    {
+      "test_id": "tests/harness/test_evals.py::test_grade_all_converts_a_grader_crash_into_a_visible_failure",
+      "file": "tests/harness/test_evals.py",
+      "function": "test_grade_all_converts_a_grader_crash_into_a_visible_failure",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 10,
+      "assert_count": 2
+    },
+    {
+      "test_id": "tests/harness/test_evals.py::test_aggregate_excludes_non_applicable_graders",
+      "file": "tests/harness/test_evals.py",
+      "function": "test_aggregate_excludes_non_applicable_graders",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 8,
+      "assert_count": 2
+    },
+    {
+      "test_id": "tests/harness/test_evals.py::test_judge_is_disabled_by_default",
+      "file": "tests/harness/test_evals.py",
+      "function": "test_judge_is_disabled_by_default",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 4,
+      "assert_count": 2
+    },
+    {
+      "test_id": "tests/harness/test_evals.py::test_judge_refuses_to_pose_as_independent_when_it_is_the_same_model",
+      "file": "tests/harness/test_evals.py",
+      "function": "test_judge_refuses_to_pose_as_independent_when_it_is_the_same_model",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 6,
+      "assert_count": 2
+    },
+    {
+      "test_id": "tests/harness/test_evals.py::test_judge_records_model_and_prompt_version",
+      "file": "tests/harness/test_evals.py",
+      "function": "test_judge_records_model_and_prompt_version",
+      "tier": "mock_integration",
+      "weak_flags": [],
+      "lines": 10,
+      "assert_count": 4
+    },
+    {
+      "test_id": "tests/harness/test_evals.py::test_uncalibrated_judge_is_labelled_uncalibrated",
+      "file": "tests/harness/test_evals.py",
+      "function": "test_uncalibrated_judge_is_labelled_uncalibrated",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 3,
+      "assert_count": 2
+    },
+    {
+      "test_id": "tests/harness/test_evals.py::test_calibration_reports_bias_and_agreement",
+      "file": "tests/harness/test_evals.py",
+      "function": "test_calibration_reports_bias_and_agreement",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 6,
+      "assert_count": 2
+    },
+    {
+      "test_id": "tests/harness/test_evals.py::test_every_arm_resolves_and_produces_a_distinct_config_hash",
+      "file": "tests/harness/test_evals.py",
+      "function": "test_every_arm_resolves_and_produces_a_distinct_config_hash",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 14,
+      "assert_count": 3
+    },
+    {
+      "test_id": "tests/harness/test_evals.py::test_arm_overrides_are_restored",
+      "file": "tests/harness/test_evals.py",
+      "function": "test_arm_overrides_are_restored",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 9,
+      "assert_count": 2
+    },
+    {
+      "test_id": "tests/harness/test_evals.py::test_all_dataset_scenarios_have_a_replay_implementation",
+      "file": "tests/harness/test_evals.py",
+      "function": "test_all_dataset_scenarios_have_a_replay_implementation",
+      "tier": "mock_integration",
+      "weak_flags": [],
+      "lines": 5,
+      "assert_count": 1
+    },
+    {
+      "test_id": "tests/harness/test_evals.py::test_scenarios_produce_distinct_worlds",
+      "file": "tests/harness/test_evals.py",
+      "function": "test_scenarios_produce_distinct_worlds",
+      "tier": "mock_integration",
+      "weak_flags": [],
+      "lines": 8,
+      "assert_count": 4
+    },
+    {
+      "test_id": "tests/harness/test_evals.py::test_every_scenario_builds_without_error",
+      "file": "tests/harness/test_evals.py",
+      "function": "test_every_scenario_builds_without_error",
+      "tier": "mock_integration",
+      "weak_flags": [],
+      "lines": 3,
+      "assert_count": 1
+    },
+    {
+      "test_id": "tests/harness/test_evals.py::test_aggregate_distinguishes_all_trials_from_any_trial",
+      "file": "tests/harness/test_evals.py",
+      "function": "test_aggregate_distinguishes_all_trials_from_any_trial",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 12,
+      "assert_count": 4
+    },
+    {
+      "test_id": "tests/harness/test_evals.py::test_report_declares_when_nothing_is_human_verified",
+      "file": "tests/harness/test_evals.py",
+      "function": "test_report_declares_when_nothing_is_human_verified",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 5,
+      "assert_count": 3
+    },
+    {
+      "test_id": "tests/harness/test_evals.py::test_report_includes_stop_reasons_and_errors",
+      "file": "tests/harness/test_evals.py",
+      "function": "test_report_includes_stop_reasons_and_errors",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 8,
+      "assert_count": 3
+    },
+    {
+      "test_id": "tests/harness/test_evals.py::test_report_comparison_table_shows_deltas",
+      "file": "tests/harness/test_evals.py",
+      "function": "test_report_comparison_table_shows_deltas",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 7,
+      "assert_count": 2
+    },
+    {
+      "test_id": "tests/harness/test_evals.py::test_offline_cost_is_not_presented_as_real_cost",
+      "file": "tests/harness/test_evals.py",
+      "function": "test_offline_cost_is_not_presented_as_real_cost",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 3,
+      "assert_count": 1
+    },
+    {
+      "test_id": "tests/harness/test_evals.py::test_scenario_group_key_is_not_used_as_the_fixture_subject",
+      "file": "tests/harness/test_evals.py",
+      "function": "test_scenario_group_key_is_not_used_as_the_fixture_subject",
+      "tier": "mock_integration",
+      "weak_flags": [],
+      "lines": 3,
+      "assert_count": 1
+    },
+    {
+      "test_id": "tests/harness/test_evals.py::test_macro_fixture_contains_macro_sources_and_stable_structured_data",
+      "file": "tests/harness/test_evals.py",
+      "function": "test_macro_fixture_contains_macro_sources_and_stable_structured_data",
+      "tier": "mock_integration",
+      "weak_flags": [],
+      "lines": 10,
+      "assert_count": 4
+    },
+    {
+      "test_id": "tests/harness/test_evals.py::test_write_report_records_the_exact_results_hash",
+      "file": "tests/harness/test_evals.py",
+      "function": "test_write_report_records_the_exact_results_hash",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 7,
+      "assert_count": 2
+    },
+    {
+      "test_id": "tests/harness/test_executor_and_trace.py::test_schema_validator_subset",
+      "file": "tests/harness/test_executor_and_trace.py",
+      "function": "test_schema_validator_subset",
+      "tier": "schema_data",
+      "weak_flags": [],
+      "lines": 17,
+      "assert_count": 6
+    },
+    {
+      "test_id": "tests/harness/test_executor_and_trace.py::test_booleans_are_not_integers",
+      "file": "tests/harness/test_executor_and_trace.py",
+      "function": "test_booleans_are_not_integers",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 4,
+      "assert_count": 1
+    },
+    {
+      "test_id": "tests/harness/test_executor_and_trace.py::test_coerce_and_defaults",
+      "file": "tests/harness/test_executor_and_trace.py",
+      "function": "test_coerce_and_defaults",
+      "tier": "schema_data",
+      "weak_flags": [],
+      "lines": 9,
+      "assert_count": 4
+    },
+    {
+      "test_id": "tests/harness/test_executor_and_trace.py::test_tool_catalog_entry_hides_infrastructure_details",
+      "file": "tests/harness/test_executor_and_trace.py",
+      "function": "test_tool_catalog_entry_hides_infrastructure_details",
+      "tier": "schema_data",
+      "weak_flags": [],
+      "lines": 8,
+      "assert_count": 3
+    },
+    {
+      "test_id": "tests/harness/test_executor_and_trace.py::test_successful_call_records_step_and_events",
+      "file": "tests/harness/test_executor_and_trace.py",
+      "function": "test_successful_call_records_step_and_events",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 16,
+      "assert_count": 9
+    },
+    {
+      "test_id": "tests/harness/test_executor_and_trace.py::test_rationale_is_persisted_so_tool_choice_is_auditable",
+      "file": "tests/harness/test_executor_and_trace.py",
+      "function": "test_rationale_is_persisted_so_tool_choice_is_auditable",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 5,
+      "assert_count": 2
+    },
+    {
+      "test_id": "tests/harness/test_executor_and_trace.py::test_invalid_arguments_are_blocked_without_calling_the_tool",
+      "file": "tests/harness/test_executor_and_trace.py",
+      "function": "test_invalid_arguments_are_blocked_without_calling_the_tool",
+      "tier": "mock_integration",
+      "weak_flags": [],
+      "lines": 6,
+      "assert_count": 4
+    },
+    {
+      "test_id": "tests/harness/test_executor_and_trace.py::test_out_of_range_argument_is_rejected",
+      "file": "tests/harness/test_executor_and_trace.py",
+      "function": "test_out_of_range_argument_is_rejected",
+      "tier": "mock_integration",
+      "weak_flags": [],
+      "lines": 4,
+      "assert_count": 2
+    },
+    {
+      "test_id": "tests/harness/test_executor_and_trace.py::test_unknown_tool_is_not_found",
+      "file": "tests/harness/test_executor_and_trace.py",
+      "function": "test_unknown_tool_is_not_found",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 3,
+      "assert_count": 1
+    },
+    {
+      "test_id": "tests/harness/test_executor_and_trace.py::test_transient_failure_is_retried_then_succeeds",
+      "file": "tests/harness/test_executor_and_trace.py",
+      "function": "test_transient_failure_is_retried_then_succeeds",
+      "tier": "mock_integration",
+      "weak_flags": [],
+      "lines": 6,
+      "assert_count": 3
+    },
+    {
+      "test_id": "tests/harness/test_executor_and_trace.py::test_auth_failure_is_not_retried",
+      "file": "tests/harness/test_executor_and_trace.py",
+      "function": "test_auth_failure_is_not_retried",
+      "tier": "mock_integration",
+      "weak_flags": [],
+      "lines": 6,
+      "assert_count": 3
+    },
+    {
+      "test_id": "tests/harness/test_executor_and_trace.py::test_in_band_failure_envelope_is_classified_as_an_error",
+      "file": "tests/harness/test_executor_and_trace.py",
+      "function": "test_in_band_failure_envelope_is_classified_as_an_error",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 6,
+      "assert_count": 2
+    },
+    {
+      "test_id": "tests/harness/test_executor_and_trace.py::test_pdf_parse_failure_is_permanent_not_retried",
+      "file": "tests/harness/test_executor_and_trace.py",
+      "function": "test_pdf_parse_failure_is_permanent_not_retried",
+      "tier": "mock_integration",
+      "weak_flags": [],
+      "lines": 5,
+      "assert_count": 3
+    },
+    {
+      "test_id": "tests/harness/test_executor_and_trace.py::test_duplicate_call_is_served_from_memo",
+      "file": "tests/harness/test_executor_and_trace.py",
+      "function": "test_duplicate_call_is_served_from_memo",
+      "tier": "mock_integration",
+      "weak_flags": [],
+      "lines": 7,
+      "assert_count": 4
+    },
+    {
+      "test_id": "tests/harness/test_executor_and_trace.py::test_budget_exhaustion_blocks_further_tool_calls",
+      "file": "tests/harness/test_executor_and_trace.py",
+      "function": "test_budget_exhaustion_blocks_further_tool_calls",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 12,
+      "assert_count": 4
+    },
+    {
+      "test_id": "tests/harness/test_executor_and_trace.py::test_circuit_opens_after_repeated_provider_failures",
+      "file": "tests/harness/test_executor_and_trace.py",
+      "function": "test_circuit_opens_after_repeated_provider_failures",
+      "tier": "mock_integration",
+      "weak_flags": [],
+      "lines": 17,
+      "assert_count": 3
+    },
+    {
+      "test_id": "tests/harness/test_executor_and_trace.py::test_side_effecting_tool_requires_approval",
+      "file": "tests/harness/test_executor_and_trace.py",
+      "function": "test_side_effecting_tool_requires_approval",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 17,
+      "assert_count": 4
+    },
+    {
+      "test_id": "tests/harness/test_executor_and_trace.py::test_cancellation_blocks_new_calls",
+      "file": "tests/harness/test_executor_and_trace.py",
+      "function": "test_cancellation_blocks_new_calls",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 4,
+      "assert_count": 1
+    },
+    {
+      "test_id": "tests/harness/test_executor_and_trace.py::test_large_payload_is_externalized_not_inlined",
+      "file": "tests/harness/test_executor_and_trace.py",
+      "function": "test_large_payload_is_externalized_not_inlined",
+      "tier": "mock_integration",
+      "weak_flags": [],
+      "lines": 9,
+      "assert_count": 5
+    },
+    {
+      "test_id": "tests/harness/test_executor_and_trace.py::test_model_call_accounting",
+      "file": "tests/harness/test_executor_and_trace.py",
+      "function": "test_model_call_accounting",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 12,
+      "assert_count": 5
+    },
+    {
+      "test_id": "tests/harness/test_executor_and_trace.py::test_model_call_failure_is_recorded",
+      "file": "tests/harness/test_executor_and_trace.py",
+      "function": "test_model_call_failure_is_recorded",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 5,
+      "assert_count": 1
+    },
+    {
+      "test_id": "tests/harness/test_executor_and_trace.py::test_secrets_are_redacted_by_key_and_by_shape",
+      "file": "tests/harness/test_executor_and_trace.py",
+      "function": "test_secrets_are_redacted_by_key_and_by_shape",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 18,
+      "assert_count": 8
+    },
+    {
+      "test_id": "tests/harness/test_executor_and_trace.py::test_reasoning_fields_are_dropped_not_stored",
+      "file": "tests/harness/test_executor_and_trace.py",
+      "function": "test_reasoning_fields_are_dropped_not_stored",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 9,
+      "assert_count": 4
+    },
+    {
+      "test_id": "tests/harness/test_executor_and_trace.py::test_jwt_and_cloud_keys_are_masked",
+      "file": "tests/harness/test_executor_and_trace.py",
+      "function": "test_jwt_and_cloud_keys_are_masked",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 5,
+      "assert_count": 2
+    },
+    {
+      "test_id": "tests/harness/test_executor_and_trace.py::test_trace_store_redacts_before_writing",
+      "file": "tests/harness/test_executor_and_trace.py",
+      "function": "test_trace_store_redacts_before_writing",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 12,
+      "assert_count": 3
+    },
+    {
+      "test_id": "tests/harness/test_executor_and_trace.py::test_trace_reader_skips_a_truncated_tail",
+      "file": "tests/harness/test_executor_and_trace.py",
+      "function": "test_trace_reader_skips_a_truncated_tail",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 7,
+      "assert_count": 1
+    },
+    {
+      "test_id": "tests/harness/test_executor_and_trace.py::test_oversized_payload_is_moved_to_the_artifact_store",
+      "file": "tests/harness/test_executor_and_trace.py",
+      "function": "test_oversized_payload_is_moved_to_the_artifact_store",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 7,
+      "assert_count": 2
+    },
+    {
+      "test_id": "tests/harness/test_executor_and_trace.py::test_artifact_store_is_content_addressed",
+      "file": "tests/harness/test_executor_and_trace.py",
+      "function": "test_artifact_store_is_content_addressed",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 6,
+      "assert_count": 2
+    },
+    {
+      "test_id": "tests/harness/test_executor_and_trace.py::test_percentile_nearest_rank",
+      "file": "tests/harness/test_executor_and_trace.py",
+      "function": "test_percentile_nearest_rank",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 4,
+      "assert_count": 3
+    },
+    {
+      "test_id": "tests/harness/test_executor_and_trace.py::test_run_metrics_derive_everything_from_events",
+      "file": "tests/harness/test_executor_and_trace.py",
+      "function": "test_run_metrics_derive_everything_from_events",
+      "tier": "mock_integration",
+      "weak_flags": [],
+      "lines": 17,
+      "assert_count": 8
+    },
+    {
+      "test_id": "tests/harness/test_executor_and_trace.py::test_absence_of_a_failure_event_is_not_success",
+      "file": "tests/harness/test_executor_and_trace.py",
+      "function": "test_absence_of_a_failure_event_is_not_success",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 6,
+      "assert_count": 1
+    },
+    {
+      "test_id": "tests/harness/test_executor_and_trace.py::test_suite_metrics_aggregate_across_runs",
+      "file": "tests/harness/test_executor_and_trace.py",
+      "function": "test_suite_metrics_aggregate_across_runs",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 16,
+      "assert_count": 4
+    },
+    {
+      "test_id": "tests/harness/test_executor_and_trace.py::test_multi_trial_stats_expose_the_worst_run",
+      "file": "tests/harness/test_executor_and_trace.py",
+      "function": "test_multi_trial_stats_expose_the_worst_run",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 5,
+      "assert_count": 3
+    },
+    {
+      "test_id": "tests/harness/test_integration_pipeline.py::test_report_types_all_produce_a_run_with_a_truthful_outcome[\\u793a\\u4f8b\\u516c\\u53f8\\u6295\\u8d44\\u4ef7\\u503c\\u5206\\u6790-company_research]",
+      "file": "tests/harness/test_integration_pipeline.py",
+      "function": "test_report_types_all_produce_a_run_with_a_truthful_outcome",
+      "tier": "fixture_e2e",
+      "weak_flags": [],
+      "lines": 14,
+      "assert_count": 5
+    },
+    {
+      "test_id": "tests/harness/test_integration_pipeline.py::test_report_types_all_produce_a_run_with_a_truthful_outcome[\\u793a\\u4f8b\\u884c\\u4e1a\\u7ade\\u4e89\\u683c\\u5c40\\u7814\\u7a76-industry_research]",
+      "file": "tests/harness/test_integration_pipeline.py",
+      "function": "test_report_types_all_produce_a_run_with_a_truthful_outcome",
+      "tier": "fixture_e2e",
+      "weak_flags": [],
+      "lines": 14,
+      "assert_count": 5
+    },
+    {
+      "test_id": "tests/harness/test_integration_pipeline.py::test_report_types_all_produce_a_run_with_a_truthful_outcome[\\u5b8f\\u89c2\\u7ecf\\u6d4e\\u4e0e\\u5229\\u7387\\u73af\\u5883\\u5206\\u6790-macro_research]",
+      "file": "tests/harness/test_integration_pipeline.py",
+      "function": "test_report_types_all_produce_a_run_with_a_truthful_outcome",
+      "tier": "fixture_e2e",
+      "weak_flags": [],
+      "lines": 14,
+      "assert_count": 5
+    },
+    {
+      "test_id": "tests/harness/test_integration_pipeline.py::test_successful_company_run_records_tools_evidence_and_stop_reason",
+      "file": "tests/harness/test_integration_pipeline.py",
+      "function": "test_successful_company_run_records_tools_evidence_and_stop_reason",
+      "tier": "fixture_e2e",
+      "weak_flags": [],
+      "lines": 15,
+      "assert_count": 9
+    },
+    {
+      "test_id": "tests/harness/test_integration_pipeline.py::test_report_file_is_actually_written",
+      "file": "tests/harness/test_integration_pipeline.py",
+      "function": "test_report_file_is_actually_written",
+      "tier": "fixture_e2e",
+      "weak_flags": [],
+      "lines": 6,
+      "assert_count": 2
+    },
+    {
+      "test_id": "tests/harness/test_integration_pipeline.py::test_memory_enabled_run_reads_context_and_learns_after_completion",
+      "file": "tests/harness/test_integration_pipeline.py",
+      "function": "test_memory_enabled_run_reads_context_and_learns_after_completion",
+      "tier": "fixture_e2e",
+      "weak_flags": [],
+      "lines": 23,
+      "assert_count": 6
+    },
+    {
+      "test_id": "tests/harness/test_integration_pipeline.py::test_search_timeout_is_retried_and_recorded",
+      "file": "tests/harness/test_integration_pipeline.py",
+      "function": "test_search_timeout_is_retried_and_recorded",
+      "tier": "fixture_e2e",
+      "weak_flags": [],
+      "lines": 8,
+      "assert_count": 2
+    },
+    {
+      "test_id": "tests/harness/test_integration_pipeline.py::test_total_search_outage_ends_as_insufficient_not_success",
+      "file": "tests/harness/test_integration_pipeline.py",
+      "function": "test_total_search_outage_ends_as_insufficient_not_success",
+      "tier": "fixture_e2e",
+      "weak_flags": [],
+      "lines": 11,
+      "assert_count": 4
+    },
+    {
+      "test_id": "tests/harness/test_integration_pipeline.py::test_akshare_failure_degrades_without_killing_the_run",
+      "file": "tests/harness/test_integration_pipeline.py",
+      "function": "test_akshare_failure_degrades_without_killing_the_run",
+      "tier": "fixture_e2e",
+      "weak_flags": [],
+      "lines": 8,
+      "assert_count": 2
+    },
+    {
+      "test_id": "tests/harness/test_integration_pipeline.py::test_pdf_parse_failure_does_not_abort_the_batch",
+      "file": "tests/harness/test_integration_pipeline.py",
+      "function": "test_pdf_parse_failure_does_not_abort_the_batch",
+      "tier": "fixture_e2e",
+      "weak_flags": [],
+      "lines": 7,
+      "assert_count": 1
+    },
+    {
+      "test_id": "tests/harness/test_integration_pipeline.py::test_malformed_model_json_falls_back_deterministically",
+      "file": "tests/harness/test_integration_pipeline.py",
+      "function": "test_malformed_model_json_falls_back_deterministically",
+      "tier": "fixture_e2e",
+      "weak_flags": [],
+      "lines": 11,
+      "assert_count": 2
+    },
+    {
+      "test_id": "tests/harness/test_integration_pipeline.py::test_budget_exhaustion_stops_early_and_says_so",
+      "file": "tests/harness/test_integration_pipeline.py",
+      "function": "test_budget_exhaustion_stops_early_and_says_so",
+      "tier": "fixture_e2e",
+      "weak_flags": [],
+      "lines": 10,
+      "assert_count": 3
+    },
+    {
+      "test_id": "tests/harness/test_integration_pipeline.py::test_concurrent_search_calls_are_all_traced",
+      "file": "tests/harness/test_integration_pipeline.py",
+      "function": "test_concurrent_search_calls_are_all_traced",
+      "tier": "fixture_e2e",
+      "weak_flags": [],
+      "lines": 11,
+      "assert_count": 2
+    },
+    {
+      "test_id": "tests/harness/test_integration_pipeline.py::test_fallback_search_round_is_visible_in_the_trace",
+      "file": "tests/harness/test_integration_pipeline.py",
+      "function": "test_fallback_search_round_is_visible_in_the_trace",
+      "tier": "fixture_e2e",
+      "weak_flags": [],
+      "lines": 7,
+      "assert_count": 1
+    },
+    {
+      "test_id": "tests/harness/test_integration_pipeline.py::test_interrupted_run_can_be_resumed_from_its_checkpoint",
+      "file": "tests/harness/test_integration_pipeline.py",
+      "function": "test_interrupted_run_can_be_resumed_from_its_checkpoint",
+      "tier": "fixture_e2e",
+      "weak_flags": [],
+      "lines": 35,
+      "assert_count": 8
+    },
+    {
+      "test_id": "tests/harness/test_integration_pipeline.py::test_resume_actually_skips_completed_work_not_just_reports_a_plan",
+      "file": "tests/harness/test_integration_pipeline.py",
+      "function": "test_resume_actually_skips_completed_work_not_just_reports_a_plan",
+      "tier": "fixture_e2e",
+      "weak_flags": [],
+      "lines": 35,
+      "assert_count": 4
+    },
+    {
+      "test_id": "tests/harness/test_integration_pipeline.py::test_resume_skips_are_not_counted_as_redundant_calls",
+      "file": "tests/harness/test_integration_pipeline.py",
+      "function": "test_resume_skips_are_not_counted_as_redundant_calls",
+      "tier": "fixture_e2e",
+      "weak_flags": [],
+      "lines": 24,
+      "assert_count": 3
+    },
+    {
+      "test_id": "tests/harness/test_integration_pipeline.py::test_cancelled_run_is_recorded_as_cancelled_not_failed",
+      "file": "tests/harness/test_integration_pipeline.py",
+      "function": "test_cancelled_run_is_recorded_as_cancelled_not_failed",
+      "tier": "fixture_e2e",
+      "weak_flags": [],
+      "lines": 7,
+      "assert_count": 2
+    },
+    {
+      "test_id": "tests/harness/test_integration_pipeline.py::test_injection_patterns_are_detected",
+      "file": "tests/harness/test_integration_pipeline.py",
+      "function": "test_injection_patterns_are_detected",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 6,
+      "assert_count": 4
+    },
+    {
+      "test_id": "tests/harness/test_integration_pipeline.py::test_benign_financial_text_is_not_flagged",
+      "file": "tests/harness/test_integration_pipeline.py",
+      "function": "test_benign_financial_text_is_not_flagged",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 4,
+      "assert_count": 1
+    },
+    {
+      "test_id": "tests/harness/test_integration_pipeline.py::test_untrusted_wrapper_cannot_be_closed_early",
+      "file": "tests/harness/test_integration_pipeline.py",
+      "function": "test_untrusted_wrapper_cannot_be_closed_early",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 10,
+      "assert_count": 4
+    },
+    {
+      "test_id": "tests/harness/test_integration_pipeline.py::test_injected_page_does_not_cause_an_unexpected_tool_call",
+      "file": "tests/harness/test_integration_pipeline.py",
+      "function": "test_injected_page_does_not_cause_an_unexpected_tool_call",
+      "tier": "fixture_e2e",
+      "weak_flags": [],
+      "lines": 14,
+      "assert_count": 3
+    },
+    {
+      "test_id": "tests/harness/test_integration_pipeline.py::test_strip_instruction_lines_removes_only_the_injected_lines",
+      "file": "tests/harness/test_integration_pipeline.py",
+      "function": "test_strip_instruction_lines_removes_only_the_injected_lines",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 5,
+      "assert_count": 3
+    },
+    {
+      "test_id": "tests/harness/test_integration_pipeline.py::test_multiple_runs_aggregate_into_suite_metrics",
+      "file": "tests/harness/test_integration_pipeline.py",
+      "function": "test_multiple_runs_aggregate_into_suite_metrics",
+      "tier": "fixture_e2e",
+      "weak_flags": [],
+      "lines": 13,
+      "assert_count": 5
+    },
+    {
+      "test_id": "tests/harness/test_integration_pipeline.py::test_run_store_indexes_every_run",
+      "file": "tests/harness/test_integration_pipeline.py",
+      "function": "test_run_store_indexes_every_run",
+      "tier": "fixture_e2e",
+      "weak_flags": [],
+      "lines": 8,
+      "assert_count": 4
+    },
+    {
+      "test_id": "tests/harness/test_memory.py::test_confidence_is_derived_from_provenance",
+      "file": "tests/harness/test_memory.py",
+      "function": "test_confidence_is_derived_from_provenance",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 4,
+      "assert_count": 3
+    },
+    {
+      "test_id": "tests/harness/test_memory.py::test_model_self_assessment_is_never_stored",
+      "file": "tests/harness/test_memory.py",
+      "function": "test_model_self_assessment_is_never_stored",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 7,
+      "assert_count": 4
+    },
+    {
+      "test_id": "tests/harness/test_memory.py::test_credentials_and_pii_are_rejected",
+      "file": "tests/harness/test_memory.py",
+      "function": "test_credentials_and_pii_are_rejected",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 8,
+      "assert_count": 3
+    },
+    {
+      "test_id": "tests/harness/test_memory.py::test_external_content_can_never_become_a_procedural_rule",
+      "file": "tests/harness/test_memory.py",
+      "function": "test_external_content_can_never_become_a_procedural_rule",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 7,
+      "assert_count": 2
+    },
+    {
+      "test_id": "tests/harness/test_memory.py::test_procedural_rules_require_trusted_provenance",
+      "file": "tests/harness/test_memory.py",
+      "function": "test_procedural_rules_require_trusted_provenance",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 12,
+      "assert_count": 2
+    },
+    {
+      "test_id": "tests/harness/test_memory.py::test_episodic_memory_requires_a_verified_or_observed_outcome",
+      "file": "tests/harness/test_memory.py",
+      "function": "test_episodic_memory_requires_a_verified_or_observed_outcome",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 10,
+      "assert_count": 2
+    },
+    {
+      "test_id": "tests/harness/test_memory.py::test_injection_suspected_blocks_procedural_but_not_semantic",
+      "file": "tests/harness/test_memory.py",
+      "function": "test_injection_suspected_blocks_procedural_but_not_semantic",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 11,
+      "assert_count": 2
+    },
+    {
+      "test_id": "tests/harness/test_memory.py::test_low_confidence_is_rejected",
+      "file": "tests/harness/test_memory.py",
+      "function": "test_low_confidence_is_rejected",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 5,
+      "assert_count": 1
+    },
+    {
+      "test_id": "tests/harness/test_memory.py::test_duplicate_reinforces_instead_of_duplicating",
+      "file": "tests/harness/test_memory.py",
+      "function": "test_duplicate_reinforces_instead_of_duplicating",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 7,
+      "assert_count": 4
+    },
+    {
+      "test_id": "tests/harness/test_memory.py::test_user_statement_is_not_overwritten_by_model_inference",
+      "file": "tests/harness/test_memory.py",
+      "function": "test_user_statement_is_not_overwritten_by_model_inference",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 10,
+      "assert_count": 4
+    },
+    {
+      "test_id": "tests/harness/test_memory.py::test_human_correction_supersedes_a_machine_memory",
+      "file": "tests/harness/test_memory.py",
+      "function": "test_human_correction_supersedes_a_machine_memory",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 9,
+      "assert_count": 3
+    },
+    {
+      "test_id": "tests/harness/test_memory.py::test_conflict_resolution_prefers_better_supported_incumbent",
+      "file": "tests/harness/test_memory.py",
+      "function": "test_conflict_resolution_prefers_better_supported_incumbent",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 6,
+      "assert_count": 1
+    },
+    {
+      "test_id": "tests/harness/test_memory.py::test_namespaces_are_isolated",
+      "file": "tests/harness/test_memory.py",
+      "function": "test_namespaces_are_isolated",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 16,
+      "assert_count": 6
+    },
+    {
+      "test_id": "tests/harness/test_memory.py::test_a_manager_cannot_read_another_namespaces_id",
+      "file": "tests/harness/test_memory.py",
+      "function": "test_a_manager_cannot_read_another_namespaces_id",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 7,
+      "assert_count": 3
+    },
+    {
+      "test_id": "tests/harness/test_memory.py::test_manager_overrides_a_caller_supplied_namespace",
+      "file": "tests/harness/test_memory.py",
+      "function": "test_manager_overrides_a_caller_supplied_namespace",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 6,
+      "assert_count": 3
+    },
+    {
+      "test_id": "tests/harness/test_memory.py::test_expired_memories_are_never_retrieved",
+      "file": "tests/harness/test_memory.py",
+      "function": "test_expired_memories_are_never_retrieved",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 8,
+      "assert_count": 2
+    },
+    {
+      "test_id": "tests/harness/test_memory.py::test_nothing_is_injected_when_no_memory_is_relevant",
+      "file": "tests/harness/test_memory.py",
+      "function": "test_nothing_is_injected_when_no_memory_is_relevant",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 4,
+      "assert_count": 1
+    },
+    {
+      "test_id": "tests/harness/test_memory.py::test_retrieval_respects_its_own_token_budget",
+      "file": "tests/harness/test_memory.py",
+      "function": "test_retrieval_respects_its_own_token_budget",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 9,
+      "assert_count": 1
+    },
+    {
+      "test_id": "tests/harness/test_memory.py::test_disabled_memory_returns_nothing",
+      "file": "tests/harness/test_memory.py",
+      "function": "test_disabled_memory_returns_nothing",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 4,
+      "assert_count": 1
+    },
+    {
+      "test_id": "tests/harness/test_memory.py::test_keyword_similarity_distinguishes_different_companies",
+      "file": "tests/harness/test_memory.py",
+      "function": "test_keyword_similarity_distinguishes_different_companies",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 5,
+      "assert_count": 1
+    },
+    {
+      "test_id": "tests/harness/test_memory.py::test_unhelpful_memories_are_down_weighted",
+      "file": "tests/harness/test_memory.py",
+      "function": "test_unhelpful_memories_are_down_weighted",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 10,
+      "assert_count": 1
+    },
+    {
+      "test_id": "tests/harness/test_memory.py::test_usage_is_attributed_after_a_run",
+      "file": "tests/harness/test_memory.py",
+      "function": "test_usage_is_attributed_after_a_run",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 9,
+      "assert_count": 3
+    },
+    {
+      "test_id": "tests/harness/test_memory.py::test_user_can_view_and_delete_their_memories",
+      "file": "tests/harness/test_memory.py",
+      "function": "test_user_can_view_and_delete_their_memories",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 5,
+      "assert_count": 3
+    },
+    {
+      "test_id": "tests/harness/test_memory.py::test_forget_all_clears_only_that_namespace",
+      "file": "tests/harness/test_memory.py",
+      "function": "test_forget_all_clears_only_that_namespace",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 8,
+      "assert_count": 2
+    },
+    {
+      "test_id": "tests/harness/test_memory.py::test_extraction_learns_from_repeated_domain_failures",
+      "file": "tests/harness/test_memory.py",
+      "function": "test_extraction_learns_from_repeated_domain_failures",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 15,
+      "assert_count": 2
+    },
+    {
+      "test_id": "tests/harness/test_memory.py::test_extraction_records_a_verified_entity_symbol",
+      "file": "tests/harness/test_memory.py",
+      "function": "test_extraction_records_a_verified_entity_symbol",
+      "tier": "unit",
+      "weak_flags": [
+        "single_call_assert"
+      ],
+      "lines": 6,
+      "assert_count": 1
+    },
+    {
+      "test_id": "tests/harness/test_memory.py::test_no_strategy_memory_is_learned_from_a_failed_run",
+      "file": "tests/harness/test_memory.py",
+      "function": "test_no_strategy_memory_is_learned_from_a_failed_run",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 6,
+      "assert_count": 1
+    },
+    {
+      "test_id": "tests/harness/test_memory.py::test_expired_records_are_deactivated",
+      "file": "tests/harness/test_memory.py",
+      "function": "test_expired_records_are_deactivated",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 5,
+      "assert_count": 2
+    },
+    {
+      "test_id": "tests/harness/test_memory.py::test_memories_that_never_help_are_retired",
+      "file": "tests/harness/test_memory.py",
+      "function": "test_memories_that_never_help_are_retired",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 7,
+      "assert_count": 1
+    },
+    {
+      "test_id": "tests/harness/test_memory.py::test_user_stated_memories_are_never_auto_retired",
+      "file": "tests/harness/test_memory.py",
+      "function": "test_user_stated_memories_are_never_auto_retired",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 7,
+      "assert_count": 1
+    },
+    {
+      "test_id": "tests/harness/test_memory.py::test_confidence_decays_for_machine_memories_but_not_user_statements",
+      "file": "tests/harness/test_memory.py",
+      "function": "test_confidence_decays_for_machine_memories_but_not_user_statements",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 9,
+      "assert_count": 2
+    },
+    {
+      "test_id": "tests/harness/test_memory.py::test_procedural_rule_versioning_and_rollback",
+      "file": "tests/harness/test_memory.py",
+      "function": "test_procedural_rule_versioning_and_rollback",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 23,
+      "assert_count": 8
+    },
+    {
+      "test_id": "tests/harness/test_memory.py::test_approving_a_rule_requires_a_named_approver",
+      "file": "tests/harness/test_memory.py",
+      "function": "test_approving_a_rule_requires_a_named_approver",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 6,
+      "assert_count": 0
+    },
+    {
+      "test_id": "tests/harness/test_memory.py::test_near_duplicates_are_merged",
+      "file": "tests/harness/test_memory.py",
+      "function": "test_near_duplicates_are_merged",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 7,
+      "assert_count": 3
+    },
+    {
+      "test_id": "tests/harness/test_memory.py::test_maintenance_pass_reports_what_it_did",
+      "file": "tests/harness/test_memory.py",
+      "function": "test_maintenance_pass_reports_what_it_did",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 4,
+      "assert_count": 1
+    },
+    {
+      "test_id": "tests/harness/test_optimization.py::test_healthy_run_is_not_classified_as_a_failure",
+      "file": "tests/harness/test_optimization.py",
+      "function": "test_healthy_run_is_not_classified_as_a_failure",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 3,
+      "assert_count": 1
+    },
+    {
+      "test_id": "tests/harness/test_optimization.py::test_causal_ordering_picks_the_root_cause_not_the_symptom",
+      "file": "tests/harness/test_optimization.py",
+      "function": "test_causal_ordering_picks_the_root_cause_not_the_symptom",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 7,
+      "assert_count": 2
+    },
+    {
+      "test_id": "tests/harness/test_optimization.py::test_safety_violation_outranks_everything",
+      "file": "tests/harness/test_optimization.py",
+      "function": "test_safety_violation_outranks_everything",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 4,
+      "assert_count": 1
+    },
+    {
+      "test_id": "tests/harness/test_optimization.py::test_routine_fetch_failures_do_not_count_as_execution_failures",
+      "file": "tests/harness/test_optimization.py",
+      "function": "test_routine_fetch_failures_do_not_count_as_execution_failures",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 11,
+      "assert_count": 2
+    },
+    {
+      "test_id": "tests/harness/test_optimization.py::test_every_mode_has_a_matcher_a_description_and_levers",
+      "file": "tests/harness/test_optimization.py",
+      "function": "test_every_mode_has_a_matcher_a_description_and_levers",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 8,
+      "assert_count": 4
+    },
+    {
+      "test_id": "tests/harness/test_optimization.py::test_miner_skips_runs_that_passed_every_grader",
+      "file": "tests/harness/test_optimization.py",
+      "function": "test_miner_skips_runs_that_passed_every_grader",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 2,
+      "assert_count": 1
+    },
+    {
+      "test_id": "tests/harness/test_optimization.py::test_miner_flags_an_integrity_defect_even_on_a_passing_run",
+      "file": "tests/harness/test_optimization.py",
+      "function": "test_miner_flags_an_integrity_defect_even_on_a_passing_run",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 7,
+      "assert_count": 2
+    },
+    {
+      "test_id": "tests/harness/test_optimization.py::test_slices_are_ranked_by_count_times_severity",
+      "file": "tests/harness/test_optimization.py",
+      "function": "test_slices_are_ranked_by_count_times_severity",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 14,
+      "assert_count": 2
+    },
+    {
+      "test_id": "tests/harness/test_optimization.py::test_build_signal_reads_events_and_metrics",
+      "file": "tests/harness/test_optimization.py",
+      "function": "test_build_signal_reads_events_and_metrics",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 14,
+      "assert_count": 5
+    },
+    {
+      "test_id": "tests/harness/test_optimization.py::test_a_candidate_must_use_a_lever_that_matches_its_target_mode",
+      "file": "tests/harness/test_optimization.py",
+      "function": "test_a_candidate_must_use_a_lever_that_matches_its_target_mode",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 5,
+      "assert_count": 0
+    },
+    {
+      "test_id": "tests/harness/test_optimization.py::test_a_candidate_must_declare_rationale_and_expected_gains",
+      "file": "tests/harness/test_optimization.py",
+      "function": "test_a_candidate_must_declare_rationale_and_expected_gains",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 9,
+      "assert_count": 0
+    },
+    {
+      "test_id": "tests/harness/test_optimization.py::test_change_type_is_a_closed_set_with_no_code_editing_lever",
+      "file": "tests/harness/test_optimization.py",
+      "function": "test_change_type_is_a_closed_set_with_no_code_editing_lever",
+      "tier": "schema_data",
+      "weak_flags": [],
+      "lines": 6,
+      "assert_count": 2
+    },
+    {
+      "test_id": "tests/harness/test_optimization.py::test_generator_produces_candidates_with_diffs_and_regressions",
+      "file": "tests/harness/test_optimization.py",
+      "function": "test_generator_produces_candidates_with_diffs_and_regressions",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 10,
+      "assert_count": 5
+    },
+    {
+      "test_id": "tests/harness/test_optimization.py::test_candidates_render_as_proposals_not_applied_changes",
+      "file": "tests/harness/test_optimization.py",
+      "function": "test_candidates_render_as_proposals_not_applied_changes",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 5,
+      "assert_count": 2
+    },
+    {
+      "test_id": "tests/harness/test_optimization.py::test_gate_passes_a_genuine_improvement",
+      "file": "tests/harness/test_optimization.py",
+      "function": "test_gate_passes_a_genuine_improvement",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 7,
+      "assert_count": 2
+    },
+    {
+      "test_id": "tests/harness/test_optimization.py::test_gate_rejects_a_candidate_that_did_not_move_its_own_slice",
+      "file": "tests/harness/test_optimization.py",
+      "function": "test_gate_rejects_a_candidate_that_did_not_move_its_own_slice",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 7,
+      "assert_count": 2
+    },
+    {
+      "test_id": "tests/harness/test_optimization.py::test_gate_rejects_a_slice_win_that_costs_overall_success",
+      "file": "tests/harness/test_optimization.py",
+      "function": "test_gate_rejects_a_slice_win_that_costs_overall_success",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 8,
+      "assert_count": 2
+    },
+    {
+      "test_id": "tests/harness/test_optimization.py::test_gate_rejects_any_increase_in_unsupported_numbers",
+      "file": "tests/harness/test_optimization.py",
+      "function": "test_gate_rejects_any_increase_in_unsupported_numbers",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 9,
+      "assert_count": 2
+    },
+    {
+      "test_id": "tests/harness/test_optimization.py::test_gate_has_zero_tolerance_for_safety_regressions",
+      "file": "tests/harness/test_optimization.py",
+      "function": "test_gate_has_zero_tolerance_for_safety_regressions",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 10,
+      "assert_count": 2
+    },
+    {
+      "test_id": "tests/harness/test_optimization.py::test_gate_rejects_a_candidate_with_no_regression_evidence",
+      "file": "tests/harness/test_optimization.py",
+      "function": "test_gate_rejects_a_candidate_with_no_regression_evidence",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 6,
+      "assert_count": 2
+    },
+    {
+      "test_id": "tests/harness/test_optimization.py::test_gate_detects_a_previously_fixed_bad_case_coming_back",
+      "file": "tests/harness/test_optimization.py",
+      "function": "test_gate_detects_a_previously_fixed_bad_case_coming_back",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 10,
+      "assert_count": 2
+    },
+    {
+      "test_id": "tests/harness/test_optimization.py::test_gate_honours_lower_is_better_metrics",
+      "file": "tests/harness/test_optimization.py",
+      "function": "test_gate_honours_lower_is_better_metrics",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 9,
+      "assert_count": 1
+    },
+    {
+      "test_id": "tests/harness/test_optimization.py::test_version_lifecycle_requires_gate_then_human_approval",
+      "file": "tests/harness/test_optimization.py",
+      "function": "test_version_lifecycle_requires_gate_then_human_approval",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 22,
+      "assert_count": 5
+    },
+    {
+      "test_id": "tests/harness/test_optimization.py::test_a_failed_gate_marks_the_version_rejected_and_blocks_approval",
+      "file": "tests/harness/test_optimization.py",
+      "function": "test_a_failed_gate_marks_the_version_rejected_and_blocks_approval",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 10,
+      "assert_count": 1
+    },
+    {
+      "test_id": "tests/harness/test_optimization.py::test_applying_writes_an_overlay_and_never_touches_production_config",
+      "file": "tests/harness/test_optimization.py",
+      "function": "test_applying_writes_an_overlay_and_never_touches_production_config",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 15,
+      "assert_count": 4
+    },
+    {
+      "test_id": "tests/harness/test_optimization.py::test_unapproved_version_cannot_be_materialised",
+      "file": "tests/harness/test_optimization.py",
+      "function": "test_unapproved_version_cannot_be_materialised",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 5,
+      "assert_count": 0
+    },
+    {
+      "test_id": "tests/harness/test_optimization.py::test_rollback_marks_the_version_and_records_the_reason",
+      "file": "tests/harness/test_optimization.py",
+      "function": "test_rollback_marks_the_version_and_records_the_reason",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 6,
+      "assert_count": 2
+    },
+    {
+      "test_id": "tests/harness/test_optimization.py::test_versions_increment_and_index_is_queryable",
+      "file": "tests/harness/test_optimization.py",
+      "function": "test_versions_increment_and_index_is_queryable",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 9,
+      "assert_count": 3
+    },
+    {
+      "test_id": "tests/harness/test_runtime_core.py::test_classify_exception[exc0-TIMEOUT]",
+      "file": "tests/harness/test_runtime_core.py",
+      "function": "test_classify_exception",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 2,
+      "assert_count": 1
+    },
+    {
+      "test_id": "tests/harness/test_runtime_core.py::test_classify_exception[exc1-RATE_LIMIT]",
+      "file": "tests/harness/test_runtime_core.py",
+      "function": "test_classify_exception",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 2,
+      "assert_count": 1
+    },
+    {
+      "test_id": "tests/harness/test_runtime_core.py::test_classify_exception[exc2-AUTH_ERROR]",
+      "file": "tests/harness/test_runtime_core.py",
+      "function": "test_classify_exception",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 2,
+      "assert_count": 1
+    },
+    {
+      "test_id": "tests/harness/test_runtime_core.py::test_classify_exception[exc3-NOT_FOUND]",
+      "file": "tests/harness/test_runtime_core.py",
+      "function": "test_classify_exception",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 2,
+      "assert_count": 1
+    },
+    {
+      "test_id": "tests/harness/test_runtime_core.py::test_classify_exception[exc4-TRANSIENT_NETWORK]",
+      "file": "tests/harness/test_runtime_core.py",
+      "function": "test_classify_exception",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 2,
+      "assert_count": 1
+    },
+    {
+      "test_id": "tests/harness/test_runtime_core.py::test_classify_exception[exc5-INVALID_ARGUMENT]",
+      "file": "tests/harness/test_runtime_core.py",
+      "function": "test_classify_exception",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 2,
+      "assert_count": 1
+    },
+    {
+      "test_id": "tests/harness/test_runtime_core.py::test_classify_exception[exc6-SCHEMA_ERROR]",
+      "file": "tests/harness/test_runtime_core.py",
+      "function": "test_classify_exception",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 2,
+      "assert_count": 1
+    },
+    {
+      "test_id": "tests/harness/test_runtime_core.py::test_classify_exception[exc7-UNKNOWN]",
+      "file": "tests/harness/test_runtime_core.py",
+      "function": "test_classify_exception",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 2,
+      "assert_count": 1
+    },
+    {
+      "test_id": "tests/harness/test_runtime_core.py::test_unknown_errors_are_not_retryable",
+      "file": "tests/harness/test_runtime_core.py",
+      "function": "test_unknown_errors_are_not_retryable",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 11,
+      "assert_count": 8
+    },
+    {
+      "test_id": "tests/harness/test_runtime_core.py::test_harness_errors_carry_their_own_class",
+      "file": "tests/harness/test_runtime_core.py",
+      "function": "test_harness_errors_carry_their_own_class",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 5,
+      "assert_count": 3
+    },
+    {
+      "test_id": "tests/harness/test_runtime_core.py::test_classify_http_status[401-AUTH_ERROR]",
+      "file": "tests/harness/test_runtime_core.py",
+      "function": "test_classify_http_status",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 2,
+      "assert_count": 1
+    },
+    {
+      "test_id": "tests/harness/test_runtime_core.py::test_classify_http_status[403-AUTH_ERROR]",
+      "file": "tests/harness/test_runtime_core.py",
+      "function": "test_classify_http_status",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 2,
+      "assert_count": 1
+    },
+    {
+      "test_id": "tests/harness/test_runtime_core.py::test_classify_http_status[404-NOT_FOUND]",
+      "file": "tests/harness/test_runtime_core.py",
+      "function": "test_classify_http_status",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 2,
+      "assert_count": 1
+    },
+    {
+      "test_id": "tests/harness/test_runtime_core.py::test_classify_http_status[429-RATE_LIMIT]",
+      "file": "tests/harness/test_runtime_core.py",
+      "function": "test_classify_http_status",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 2,
+      "assert_count": 1
+    },
+    {
+      "test_id": "tests/harness/test_runtime_core.py::test_classify_http_status[500-TRANSIENT_NETWORK]",
+      "file": "tests/harness/test_runtime_core.py",
+      "function": "test_classify_http_status",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 2,
+      "assert_count": 1
+    },
+    {
+      "test_id": "tests/harness/test_runtime_core.py::test_classify_http_status[400-INVALID_ARGUMENT]",
+      "file": "tests/harness/test_runtime_core.py",
+      "function": "test_classify_http_status",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 2,
+      "assert_count": 1
+    },
+    {
+      "test_id": "tests/harness/test_runtime_core.py::test_not_found_does_not_trip_the_circuit",
+      "file": "tests/harness/test_runtime_core.py",
+      "function": "test_not_found_does_not_trip_the_circuit",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 5,
+      "assert_count": 3
+    },
+    {
+      "test_id": "tests/harness/test_runtime_core.py::test_run_state_round_trips_through_a_checkpoint",
+      "file": "tests/harness/test_runtime_core.py",
+      "function": "test_run_state_round_trips_through_a_checkpoint",
+      "tier": "schema_data",
+      "weak_flags": [],
+      "lines": 20,
+      "assert_count": 8
+    },
+    {
+      "test_id": "tests/harness/test_runtime_core.py::test_incompatible_checkpoint_schema_is_refused",
+      "file": "tests/harness/test_runtime_core.py",
+      "function": "test_incompatible_checkpoint_schema_is_refused",
+      "tier": "schema_data",
+      "weak_flags": [],
+      "lines": 8,
+      "assert_count": 1
+    },
+    {
+      "test_id": "tests/harness/test_runtime_core.py::test_evidence_dedup",
+      "file": "tests/harness/test_runtime_core.py",
+      "function": "test_evidence_dedup",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 8,
+      "assert_count": 4
+    },
+    {
+      "test_id": "tests/harness/test_runtime_core.py::test_redundant_tool_call_counting_and_recovery",
+      "file": "tests/harness/test_runtime_core.py",
+      "function": "test_redundant_tool_call_counting_and_recovery",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 13,
+      "assert_count": 3
+    },
+    {
+      "test_id": "tests/harness/test_runtime_core.py::test_summarize_truncates_and_marks_truncation",
+      "file": "tests/harness/test_runtime_core.py",
+      "function": "test_summarize_truncates_and_marks_truncation",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 4,
+      "assert_count": 2
+    },
+    {
+      "test_id": "tests/harness/test_runtime_core.py::test_failed_run_is_never_recorded_as_success",
+      "file": "tests/harness/test_runtime_core.py",
+      "function": "test_failed_run_is_never_recorded_as_success",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 5,
+      "assert_count": 3
+    },
+    {
+      "test_id": "tests/harness/test_runtime_core.py::test_budget_charges_and_blocks",
+      "file": "tests/harness/test_runtime_core.py",
+      "function": "test_budget_charges_and_blocks",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 11,
+      "assert_count": 4
+    },
+    {
+      "test_id": "tests/harness/test_runtime_core.py::test_per_tool_budget_limit",
+      "file": "tests/harness/test_runtime_core.py",
+      "function": "test_per_tool_budget_limit",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 6,
+      "assert_count": 2
+    },
+    {
+      "test_id": "tests/harness/test_runtime_core.py::test_unpriced_model_contributes_no_fabricated_cost",
+      "file": "tests/harness/test_runtime_core.py",
+      "function": "test_unpriced_model_contributes_no_fabricated_cost",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 7,
+      "assert_count": 3
+    },
+    {
+      "test_id": "tests/harness/test_runtime_core.py::test_degradation_ladder_orders_concessions",
+      "file": "tests/harness/test_runtime_core.py",
+      "function": "test_degradation_ladder_orders_concessions",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 18,
+      "assert_count": 7
+    },
+    {
+      "test_id": "tests/harness/test_runtime_core.py::test_supplementary_round_cap",
+      "file": "tests/harness/test_runtime_core.py",
+      "function": "test_supplementary_round_cap",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 5,
+      "assert_count": 2
+    },
+    {
+      "test_id": "tests/harness/test_runtime_core.py::test_estimate_tokens_handles_cjk_and_ascii",
+      "file": "tests/harness/test_runtime_core.py",
+      "function": "test_estimate_tokens_handles_cjk_and_ascii",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 4,
+      "assert_count": 3
+    },
+    {
+      "test_id": "tests/harness/test_runtime_core.py::test_retry_policy_only_retries_transient_classes",
+      "file": "tests/harness/test_runtime_core.py",
+      "function": "test_retry_policy_only_retries_transient_classes",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 6,
+      "assert_count": 4
+    },
+    {
+      "test_id": "tests/harness/test_runtime_core.py::test_backoff_is_exponential_capped_and_rate_limit_aware",
+      "file": "tests/harness/test_runtime_core.py",
+      "function": "test_backoff_is_exponential_capped_and_rate_limit_aware",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 4,
+      "assert_count": 2
+    },
+    {
+      "test_id": "tests/harness/test_runtime_core.py::test_jitter_stays_within_the_computed_bound",
+      "file": "tests/harness/test_runtime_core.py",
+      "function": "test_jitter_stays_within_the_computed_bound",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 8,
+      "assert_count": 2
+    },
+    {
+      "test_id": "tests/harness/test_runtime_core.py::test_circuit_opens_after_threshold_then_half_opens_and_closes",
+      "file": "tests/harness/test_runtime_core.py",
+      "function": "test_circuit_opens_after_threshold_then_half_opens_and_closes",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 18,
+      "assert_count": 9
+    },
+    {
+      "test_id": "tests/harness/test_runtime_core.py::test_half_open_failure_reopens_immediately",
+      "file": "tests/harness/test_runtime_core.py",
+      "function": "test_half_open_failure_reopens_immediately",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 9,
+      "assert_count": 3
+    },
+    {
+      "test_id": "tests/harness/test_runtime_core.py::test_non_provider_errors_never_trip_the_circuit",
+      "file": "tests/harness/test_runtime_core.py",
+      "function": "test_non_provider_errors_never_trip_the_circuit",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 5,
+      "assert_count": 3
+    },
+    {
+      "test_id": "tests/harness/test_runtime_core.py::test_circuit_registry_tracks_open_keys",
+      "file": "tests/harness/test_runtime_core.py",
+      "function": "test_circuit_registry_tracks_open_keys",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 5,
+      "assert_count": 2
+    },
+    {
+      "test_id": "tests/harness/test_runtime_core.py::test_duplicate_detector_counts_waste_not_first_calls",
+      "file": "tests/harness/test_runtime_core.py",
+      "function": "test_duplicate_detector_counts_waste_not_first_calls",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 8,
+      "assert_count": 3
+    },
+    {
+      "test_id": "tests/harness/test_runtime_core.py::test_side_effect_policy_gates_only_mutating_tools",
+      "file": "tests/harness/test_runtime_core.py",
+      "function": "test_side_effect_policy_gates_only_mutating_tools",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 7,
+      "assert_count": 3
+    },
+    {
+      "test_id": "tests/harness/test_runtime_core.py::test_dry_run_blocks_writes_even_when_approved",
+      "file": "tests/harness/test_runtime_core.py",
+      "function": "test_dry_run_blocks_writes_even_when_approved",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 4,
+      "assert_count": 1
+    },
+    {
+      "test_id": "tests/harness/test_runtime_core.py::test_cancellation_token",
+      "file": "tests/harness/test_runtime_core.py",
+      "function": "test_cancellation_token",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 8,
+      "assert_count": 2
+    },
+    {
+      "test_id": "tests/harness/test_runtime_core.py::test_concurrency_limiter_releases_slots_on_exception",
+      "file": "tests/harness/test_runtime_core.py",
+      "function": "test_concurrency_limiter_releases_slots_on_exception",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 7,
+      "assert_count": 0
+    },
+    {
+      "test_id": "tests/harness/test_runtime_core.py::test_budget_state_totals",
+      "file": "tests/harness/test_runtime_core.py",
+      "function": "test_budget_state_totals",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 3,
+      "assert_count": 1
+    },
+    {
+      "test_id": "tests/test_api.py::test_health_endpoint_reports_all_checks",
+      "file": "tests/test_api.py",
+      "function": "test_health_endpoint_reports_all_checks",
+      "tier": "fixture_e2e",
+      "weak_flags": [],
+      "lines": 10,
+      "assert_count": 3
+    },
+    {
+      "test_id": "tests/test_api.py::test_create_report_and_poll_to_success",
+      "file": "tests/test_api.py",
+      "function": "test_create_report_and_poll_to_success",
+      "tier": "mock_integration",
+      "weak_flags": [],
+      "lines": 22,
+      "assert_count": 7
+    },
+    {
+      "test_id": "tests/test_api.py::test_report_result_returns_202_while_running",
+      "file": "tests/test_api.py",
+      "function": "test_report_result_returns_202_while_running",
+      "tier": "mock_integration",
+      "weak_flags": [],
+      "lines": 8,
+      "assert_count": 1
+    },
+    {
+      "test_id": "tests/test_api.py::test_unknown_task_id_returns_404",
+      "file": "tests/test_api.py",
+      "function": "test_unknown_task_id_returns_404",
+      "tier": "mock_integration",
+      "weak_flags": [],
+      "lines": 4,
+      "assert_count": 2
+    },
+    {
+      "test_id": "tests/test_api.py::test_entity_validation_failure_maps_to_failed_status",
+      "file": "tests/test_api.py",
+      "function": "test_entity_validation_failure_maps_to_failed_status",
+      "tier": "mock_integration",
+      "weak_flags": [],
+      "lines": 11,
+      "assert_count": 2
+    },
+    {
+      "test_id": "tests/test_api.py::test_unsupported_unlisted_company_maps_to_degraded",
+      "file": "tests/test_api.py",
+      "function": "test_unsupported_unlisted_company_maps_to_degraded",
+      "tier": "mock_integration",
+      "weak_flags": [],
+      "lines": 11,
+      "assert_count": 1
+    },
+    {
+      "test_id": "tests/test_api.py::test_concurrent_task_limit_is_respected",
+      "file": "tests/test_api.py",
+      "function": "test_concurrent_task_limit_is_respected",
+      "tier": "fixture_e2e",
+      "weak_flags": [],
+      "lines": 23,
+      "assert_count": 2
+    },
+    {
+      "test_id": "tests/test_api.py::test_concurrent_harness_runs_keep_separate_run_contexts",
+      "file": "tests/test_api.py",
+      "function": "test_concurrent_harness_runs_keep_separate_run_contexts",
+      "tier": "fixture_e2e",
+      "weak_flags": [],
+      "lines": 24,
+      "assert_count": 4
+    },
+    {
+      "test_id": "tests/test_company_deep.py::test_extract_three_statements_maps_raw_fields_and_units",
+      "file": "tests/test_company_deep.py",
+      "function": "test_extract_three_statements_maps_raw_fields_and_units",
+      "tier": "mock_integration",
+      "weak_flags": [],
+      "lines": 14,
+      "assert_count": 9
+    },
+    {
+      "test_id": "tests/test_company_deep.py::test_extract_three_statements_unresolved_symbol_degrades",
+      "file": "tests/test_company_deep.py",
+      "function": "test_extract_three_statements_unresolved_symbol_degrades",
+      "tier": "mock_integration",
+      "weak_flags": [],
+      "lines": 6,
+      "assert_count": 3
+    },
+    {
+      "test_id": "tests/test_company_deep.py::test_dupont_formula_is_real_multiplication",
+      "file": "tests/test_company_deep.py",
+      "function": "test_dupont_formula_is_real_multiplication",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 19,
+      "assert_count": 5
+    },
+    {
+      "test_id": "tests/test_company_deep.py::test_dupont_missing_inputs_reported_not_guessed",
+      "file": "tests/test_company_deep.py",
+      "function": "test_dupont_missing_inputs_reported_not_guessed",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 5,
+      "assert_count": 2
+    },
+    {
+      "test_id": "tests/test_company_deep.py::test_cashflow_quality_flags_receivable_outrunning_revenue",
+      "file": "tests/test_company_deep.py",
+      "function": "test_cashflow_quality_flags_receivable_outrunning_revenue",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 25,
+      "assert_count": 4
+    },
+    {
+      "test_id": "tests/test_company_deep.py::test_shareholder_structure_top1_top10_and_holder_trend",
+      "file": "tests/test_company_deep.py",
+      "function": "test_shareholder_structure_top1_top10_and_holder_trend",
+      "tier": "mock_integration",
+      "weak_flags": [],
+      "lines": 7,
+      "assert_count": 5
+    },
+    {
+      "test_id": "tests/test_company_deep.py::test_peer_comparison_degrades_when_no_sector_data",
+      "file": "tests/test_company_deep.py",
+      "function": "test_peer_comparison_degrades_when_no_sector_data",
+      "tier": "mock_integration",
+      "weak_flags": [],
+      "lines": 8,
+      "assert_count": 4
+    },
+    {
+      "test_id": "tests/test_company_deep.py::test_peer_comparison_too_few_members_also_degrades",
+      "file": "tests/test_company_deep.py",
+      "function": "test_peer_comparison_too_few_members_also_degrades",
+      "tier": "mock_integration",
+      "weak_flags": [],
+      "lines": 9,
+      "assert_count": 2
+    },
+    {
+      "test_id": "tests/test_data_lineage.py::test_build_snapshot_lineage_basic_fields",
+      "file": "tests/test_data_lineage.py",
+      "function": "test_build_snapshot_lineage_basic_fields",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 14,
+      "assert_count": 10
+    },
+    {
+      "test_id": "tests/test_data_lineage.py::test_build_snapshot_lineage_marks_missing",
+      "file": "tests/test_data_lineage.py",
+      "function": "test_build_snapshot_lineage_marks_missing",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 5,
+      "assert_count": 2
+    },
+    {
+      "test_id": "tests/test_data_lineage.py::test_build_snapshot_lineage_derived_field",
+      "file": "tests/test_data_lineage.py",
+      "function": "test_build_snapshot_lineage_derived_field",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 10,
+      "assert_count": 4
+    },
+    {
+      "test_id": "tests/test_data_lineage.py::test_build_ps_lineage_is_always_derived",
+      "file": "tests/test_data_lineage.py",
+      "function": "test_build_ps_lineage_is_always_derived",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 6,
+      "assert_count": 4
+    },
+    {
+      "test_id": "tests/test_data_lineage.py::test_build_ps_lineage_missing_when_no_value",
+      "file": "tests/test_data_lineage.py",
+      "function": "test_build_ps_lineage_missing_when_no_value",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 4,
+      "assert_count": 2
+    },
+    {
+      "test_id": "tests/test_data_lineage.py::test_lineage_summary_counts",
+      "file": "tests/test_data_lineage.py",
+      "function": "test_lineage_summary_counts",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 17,
+      "assert_count": 5
+    },
+    {
+      "test_id": "tests/test_evaluators_and_entity.py::test_company_vs_industry_criteria_differ",
+      "file": "tests/test_evaluators_and_entity.py",
+      "function": "test_company_vs_industry_criteria_differ",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 7,
+      "assert_count": 4
+    },
+    {
+      "test_id": "tests/test_evaluators_and_entity.py::test_industry_not_capped_by_financial_depth",
+      "file": "tests/test_evaluators_and_entity.py",
+      "function": "test_industry_not_capped_by_financial_depth",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 11,
+      "assert_count": 2
+    },
+    {
+      "test_id": "tests/test_evaluators_and_entity.py::test_source_count_caps_hold_for_all_types",
+      "file": "tests/test_evaluators_and_entity.py",
+      "function": "test_source_count_caps_hold_for_all_types",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 4,
+      "assert_count": 1
+    },
+    {
+      "test_id": "tests/test_evaluators_and_entity.py::test_unknown_report_type_falls_back",
+      "file": "tests/test_evaluators_and_entity.py",
+      "function": "test_unknown_report_type_falls_back",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 4,
+      "assert_count": 2
+    },
+    {
+      "test_id": "tests/test_evaluators_and_entity.py::test_entity_validator_verified_by_alias_map",
+      "file": "tests/test_evaluators_and_entity.py",
+      "function": "test_entity_validator_verified_by_alias_map",
+      "tier": "mock_integration",
+      "weak_flags": [],
+      "lines": 5,
+      "assert_count": 1
+    },
+    {
+      "test_id": "tests/test_evaluators_and_entity.py::test_entity_validator_fails_fictional",
+      "file": "tests/test_evaluators_and_entity.py",
+      "function": "test_entity_validator_fails_fictional",
+      "tier": "mock_integration",
+      "weak_flags": [],
+      "lines": 7,
+      "assert_count": 2
+    },
+    {
+      "test_id": "tests/test_evaluators_and_entity.py::test_entity_validator_unsupported_unlisted_company",
+      "file": "tests/test_evaluators_and_entity.py",
+      "function": "test_entity_validator_unsupported_unlisted_company",
+      "tier": "mock_integration",
+      "weak_flags": [],
+      "lines": 16,
+      "assert_count": 4
+    },
+    {
+      "test_id": "tests/test_evaluators_and_entity.py::test_entity_validator_verified_carries_symbol_and_exchange",
+      "file": "tests/test_evaluators_and_entity.py",
+      "function": "test_entity_validator_verified_carries_symbol_and_exchange",
+      "tier": "mock_integration",
+      "weak_flags": [],
+      "lines": 13,
+      "assert_count": 4
+    },
+    {
+      "test_id": "tests/test_evaluators_and_entity.py::test_entity_validator_industry_verified",
+      "file": "tests/test_evaluators_and_entity.py",
+      "function": "test_entity_validator_industry_verified",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 4,
+      "assert_count": 1
+    },
+    {
+      "test_id": "tests/test_evaluators_and_entity.py::test_entity_validator_macro_research_bypasses_validation",
+      "file": "tests/test_evaluators_and_entity.py",
+      "function": "test_entity_validator_macro_research_bypasses_validation",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 7,
+      "assert_count": 2
+    },
+    {
+      "test_id": "tests/test_evaluators_and_entity.py::test_entity_validator_industry_uses_core_term_not_full_descriptive_phrase",
+      "file": "tests/test_evaluators_and_entity.py",
+      "function": "test_entity_validator_industry_uses_core_term_not_full_descriptive_phrase",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 13,
+      "assert_count": 2
+    },
+    {
+      "test_id": "tests/test_evaluators_and_entity.py::test_entity_validator_industry_still_fails_for_truly_unrelated_sources",
+      "file": "tests/test_evaluators_and_entity.py",
+      "function": "test_entity_validator_industry_still_fails_for_truly_unrelated_sources",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 6,
+      "assert_count": 1
+    },
+    {
+      "test_id": "tests/test_grounding_and_tiers.py::test_source_tier_classification",
+      "file": "tests/test_grounding_and_tiers.py",
+      "function": "test_source_tier_classification",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 10,
+      "assert_count": 6
+    },
+    {
+      "test_id": "tests/test_grounding_and_tiers.py::test_tier_counts_ratio",
+      "file": "tests/test_grounding_and_tiers.py",
+      "function": "test_tier_counts_ratio",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 5,
+      "assert_count": 1
+    },
+    {
+      "test_id": "tests/test_grounding_and_tiers.py::test_citation_checker_flags_hallucinated_ids",
+      "file": "tests/test_grounding_and_tiers.py",
+      "function": "test_citation_checker_flags_hallucinated_ids",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 4,
+      "assert_count": 2
+    },
+    {
+      "test_id": "tests/test_grounding_and_tiers.py::test_number_grounding_categories",
+      "file": "tests/test_grounding_and_tiers.py",
+      "function": "test_number_grounding_categories",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 17,
+      "assert_count": 8
+    },
+    {
+      "test_id": "tests/test_grounding_and_tiers.py::test_number_grounding_years_not_counted",
+      "file": "tests/test_grounding_and_tiers.py",
+      "function": "test_number_grounding_years_not_counted",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 3,
+      "assert_count": 1
+    },
+    {
+      "test_id": "tests/test_industry_deep.py::test_lifecycle_growth_stage_from_real_text_evidence",
+      "file": "tests/test_industry_deep.py",
+      "function": "test_lifecycle_growth_stage_from_real_text_evidence",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 9,
+      "assert_count": 3
+    },
+    {
+      "test_id": "tests/test_industry_deep.py::test_lifecycle_unknown_without_any_numeric_evidence",
+      "file": "tests/test_industry_deep.py",
+      "function": "test_lifecycle_unknown_without_any_numeric_evidence",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 5,
+      "assert_count": 2
+    },
+    {
+      "test_id": "tests/test_industry_deep.py::test_lifecycle_decline_stage_from_negative_growth_mentions",
+      "file": "tests/test_industry_deep.py",
+      "function": "test_lifecycle_decline_stage_from_negative_growth_mentions",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 7,
+      "assert_count": 1
+    },
+    {
+      "test_id": "tests/test_industry_deep.py::test_concentration_cr_and_hhi_are_correctly_computed",
+      "file": "tests/test_industry_deep.py",
+      "function": "test_concentration_cr_and_hhi_are_correctly_computed",
+      "tier": "mock_integration",
+      "weak_flags": [],
+      "lines": 18,
+      "assert_count": 5
+    },
+    {
+      "test_id": "tests/test_industry_deep.py::test_concentration_degrades_with_no_sector_match",
+      "file": "tests/test_industry_deep.py",
+      "function": "test_concentration_degrades_with_no_sector_match",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 5,
+      "assert_count": 3
+    },
+    {
+      "test_id": "tests/test_industry_deep.py::test_concentration_source_mentions_captured_independently",
+      "file": "tests/test_industry_deep.py",
+      "function": "test_concentration_source_mentions_captured_independently",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 5,
+      "assert_count": 2
+    },
+    {
+      "test_id": "tests/test_industry_deep.py::test_scenario_model_uses_real_source_size_and_forecast_when_available",
+      "file": "tests/test_industry_deep.py",
+      "function": "test_scenario_model_uses_real_source_size_and_forecast_when_available",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 18,
+      "assert_count": 8
+    },
+    {
+      "test_id": "tests/test_industry_deep.py::test_scenario_model_falls_back_to_indexed_when_no_real_size",
+      "file": "tests/test_industry_deep.py",
+      "function": "test_scenario_model_falls_back_to_indexed_when_no_real_size",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 7,
+      "assert_count": 3
+    },
+    {
+      "test_id": "tests/test_industry_deep.py::test_industry_chain_marks_segments_verified_only_when_mentioned",
+      "file": "tests/test_industry_deep.py",
+      "function": "test_industry_chain_marks_segments_verified_only_when_mentioned",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 9,
+      "assert_count": 4
+    },
+    {
+      "test_id": "tests/test_industry_deep.py::test_industry_chain_unknown_industry_falls_back_to_generic_template",
+      "file": "tests/test_industry_deep.py",
+      "function": "test_industry_chain_unknown_industry_falls_back_to_generic_template",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 4,
+      "assert_count": 2
+    },
+    {
+      "test_id": "tests/test_industry_deep.py::test_entry_exit_unknown_when_lifecycle_unknown",
+      "file": "tests/test_industry_deep.py",
+      "function": "test_entry_exit_unknown_when_lifecycle_unknown",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 4,
+      "assert_count": 1
+    },
+    {
+      "test_id": "tests/test_industry_deep.py::test_entry_exit_favors_growth_low_concentration",
+      "file": "tests/test_industry_deep.py",
+      "function": "test_entry_exit_favors_growth_low_concentration",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 7,
+      "assert_count": 2
+    },
+    {
+      "test_id": "tests/test_io_and_infra.py::test_local_txt_extracts_financials",
+      "file": "tests/test_io_and_infra.py",
+      "function": "test_local_txt_extracts_financials",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 6,
+      "assert_count": 3
+    },
+    {
+      "test_id": "tests/test_io_and_infra.py::test_local_csv_and_missing_file",
+      "file": "tests/test_io_and_infra.py",
+      "function": "test_local_csv_and_missing_file",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 6,
+      "assert_count": 2
+    },
+    {
+      "test_id": "tests/test_io_and_infra.py::test_local_unsupported_type",
+      "file": "tests/test_io_and_infra.py",
+      "function": "test_local_unsupported_type",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 4,
+      "assert_count": 1
+    },
+    {
+      "test_id": "tests/test_io_and_infra.py::test_chart_guard_quarterly_scope",
+      "file": "tests/test_io_and_infra.py",
+      "function": "test_chart_guard_quarterly_scope",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 4,
+      "assert_count": 1
+    },
+    {
+      "test_id": "tests/test_io_and_infra.py::test_chart_guard_other_company",
+      "file": "tests/test_io_and_infra.py",
+      "function": "test_chart_guard_other_company",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 4,
+      "assert_count": 1
+    },
+    {
+      "test_id": "tests/test_io_and_infra.py::test_chart_guard_multi_metric_sentence",
+      "file": "tests/test_io_and_infra.py",
+      "function": "test_chart_guard_multi_metric_sentence",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 4,
+      "assert_count": 1
+    },
+    {
+      "test_id": "tests/test_io_and_infra.py::test_memory_keyword_fallback",
+      "file": "tests/test_io_and_infra.py",
+      "function": "test_memory_keyword_fallback",
+      "tier": "mock_integration",
+      "weak_flags": [],
+      "lines": 13,
+      "assert_count": 2
+    },
+    {
+      "test_id": "tests/test_io_and_infra.py::test_gateway_direct_fallback",
+      "file": "tests/test_io_and_infra.py",
+      "function": "test_gateway_direct_fallback",
+      "tier": "mock_integration",
+      "weak_flags": [],
+      "lines": 15,
+      "assert_count": 1
+    },
+    {
+      "test_id": "tests/test_io_and_infra.py::test_akshare_unresolvable_symbol",
+      "file": "tests/test_io_and_infra.py",
+      "function": "test_akshare_unresolvable_symbol",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 6,
+      "assert_count": 2
+    },
+    {
+      "test_id": "tests/test_io_and_infra.py::test_akshare_not_installed",
+      "file": "tests/test_io_and_infra.py",
+      "function": "test_akshare_not_installed",
+      "tier": "mock_integration",
+      "weak_flags": [],
+      "lines": 7,
+      "assert_count": 1
+    },
+    {
+      "test_id": "tests/test_io_and_infra.py::test_normalizer_units_and_malformed",
+      "file": "tests/test_io_and_infra.py",
+      "function": "test_normalizer_units_and_malformed",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 15,
+      "assert_count": 4
+    },
+    {
+      "test_id": "tests/test_listed_company_registry.py::test_exchange_of_mapping",
+      "file": "tests/test_listed_company_registry.py",
+      "function": "test_exchange_of_mapping",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 7,
+      "assert_count": 6
+    },
+    {
+      "test_id": "tests/test_listed_company_registry.py::test_check_listed_status_hit",
+      "file": "tests/test_listed_company_registry.py",
+      "function": "test_check_listed_status_hit",
+      "tier": "mock_integration",
+      "weak_flags": [],
+      "lines": 7,
+      "assert_count": 4
+    },
+    {
+      "test_id": "tests/test_listed_company_registry.py::test_check_listed_status_miss",
+      "file": "tests/test_listed_company_registry.py",
+      "function": "test_check_listed_status_miss",
+      "tier": "mock_integration",
+      "weak_flags": [],
+      "lines": 6,
+      "assert_count": 3
+    },
+    {
+      "test_id": "tests/test_macro_pipeline.py::test_parse_month_table_extracts_latest_and_yoy",
+      "file": "tests/test_macro_pipeline.py",
+      "function": "test_parse_month_table_extracts_latest_and_yoy",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 12,
+      "assert_count": 5
+    },
+    {
+      "test_id": "tests/test_macro_pipeline.py::test_parse_quarter_table_extracts_latest",
+      "file": "tests/test_macro_pipeline.py",
+      "function": "test_parse_quarter_table_extracts_latest",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 9,
+      "assert_count": 3
+    },
+    {
+      "test_id": "tests/test_macro_pipeline.py::test_parse_jin10_table_skips_unreleased_periods",
+      "file": "tests/test_macro_pipeline.py",
+      "function": "test_parse_jin10_table_skips_unreleased_periods",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 11,
+      "assert_count": 3
+    },
+    {
+      "test_id": "tests/test_macro_pipeline.py::test_derive_mom_yoy_from_series",
+      "file": "tests/test_macro_pipeline.py",
+      "function": "test_derive_mom_yoy_from_series",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 5,
+      "assert_count": 2
+    },
+    {
+      "test_id": "tests/test_macro_pipeline.py::test_policy_rule_parser_extracts_issuer_date_tools_and_industries",
+      "file": "tests/test_macro_pipeline.py",
+      "function": "test_policy_rule_parser_extracts_issuer_date_tools_and_industries",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 15,
+      "assert_count": 9
+    },
+    {
+      "test_id": "tests/test_macro_pipeline.py::test_policy_rule_parser_empty_text_degrades_cleanly",
+      "file": "tests/test_macro_pipeline.py",
+      "function": "test_policy_rule_parser_empty_text_degrades_cleanly",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 4,
+      "assert_count": 2
+    },
+    {
+      "test_id": "tests/test_macro_pipeline.py::test_transmission_path_activates_only_with_real_indicator_evidence",
+      "file": "tests/test_macro_pipeline.py",
+      "function": "test_transmission_path_activates_only_with_real_indicator_evidence",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 8,
+      "assert_count": 3
+    },
+    {
+      "test_id": "tests/test_macro_pipeline.py::test_transmission_path_not_activated_without_evidence",
+      "file": "tests/test_macro_pipeline.py",
+      "function": "test_transmission_path_not_activated_without_evidence",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 4,
+      "assert_count": 1
+    },
+    {
+      "test_id": "tests/test_macro_pipeline.py::test_grey_rhino_high_risk_when_threshold_crossed",
+      "file": "tests/test_macro_pipeline.py",
+      "function": "test_grey_rhino_high_risk_when_threshold_crossed",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 7,
+      "assert_count": 3
+    },
+    {
+      "test_id": "tests/test_macro_pipeline.py::test_grey_rhino_unknown_when_indicator_missing",
+      "file": "tests/test_macro_pipeline.py",
+      "function": "test_grey_rhino_unknown_when_indicator_missing",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 6,
+      "assert_count": 2
+    },
+    {
+      "test_id": "tests/test_macro_pipeline.py::test_grey_rhino_geopolitics_and_supply_chain_never_fabricate_a_level",
+      "file": "tests/test_macro_pipeline.py",
+      "function": "test_grey_rhino_geopolitics_and_supply_chain_never_fabricate_a_level",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 7,
+      "assert_count": 2
+    },
+    {
+      "test_id": "tests/test_revision.py::test_clean_report_triggers_no_revision",
+      "file": "tests/test_revision.py",
+      "function": "test_clean_report_triggers_no_revision",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 5,
+      "assert_count": 1
+    },
+    {
+      "test_id": "tests/test_revision.py::test_invalid_citation_and_missing_disclaimer_trigger_targeted_fixes",
+      "file": "tests/test_revision.py",
+      "function": "test_invalid_citation_and_missing_disclaimer_trigger_targeted_fixes",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 22,
+      "assert_count": 9
+    },
+    {
+      "test_id": "tests/test_revision.py::test_apply_revision_only_touches_flagged_sections",
+      "file": "tests/test_revision.py",
+      "function": "test_apply_revision_only_touches_flagged_sections",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 12,
+      "assert_count": 2
+    },
+    {
+      "test_id": "tests/test_revision.py::test_unsourced_number_matching_real_snapshot_gets_real_marker_not_fabricated",
+      "file": "tests/test_revision.py",
+      "function": "test_unsourced_number_matching_real_snapshot_gets_real_marker_not_fabricated",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 13,
+      "assert_count": 2
+    },
+    {
+      "test_id": "tests/test_revision.py::test_unmatched_unsourced_number_stays_honest_not_fabricated",
+      "file": "tests/test_revision.py",
+      "function": "test_unmatched_unsourced_number_stays_honest_not_fabricated",
+      "tier": "mock_integration",
+      "weak_flags": [],
+      "lines": 12,
+      "assert_count": 2
+    },
+    {
+      "test_id": "tests/test_tracking_and_compliance.py::test_fill_yoy_matches_same_period_last_year",
+      "file": "tests/test_tracking_and_compliance.py",
+      "function": "test_fill_yoy_matches_same_period_last_year",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 9,
+      "assert_count": 2
+    },
+    {
+      "test_id": "tests/test_tracking_and_compliance.py::test_fill_quarterly_single_and_qoq_derives_single_quarter_values",
+      "file": "tests/test_tracking_and_compliance.py",
+      "function": "test_fill_quarterly_single_and_qoq_derives_single_quarter_values",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 11,
+      "assert_count": 3
+    },
+    {
+      "test_id": "tests/test_tracking_and_compliance.py::test_detect_changes_reports_insufficient_with_single_period",
+      "file": "tests/test_tracking_and_compliance.py",
+      "function": "test_detect_changes_reports_insufficient_with_single_period",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 4,
+      "assert_count": 2
+    },
+    {
+      "test_id": "tests/test_tracking_and_compliance.py::test_detect_changes_uses_same_period_base_for_cashflow_not_prior_period",
+      "file": "tests/test_tracking_and_compliance.py",
+      "function": "test_detect_changes_uses_same_period_base_for_cashflow_not_prior_period",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 13,
+      "assert_count": 2
+    },
+    {
+      "test_id": "tests/test_tracking_and_compliance.py::test_compare_with_prior_record_honest_when_no_history",
+      "file": "tests/test_tracking_and_compliance.py",
+      "function": "test_compare_with_prior_record_honest_when_no_history",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 5,
+      "assert_count": 3
+    },
+    {
+      "test_id": "tests/test_tracking_and_compliance.py::test_compliant_report_passes_all_checks",
+      "file": "tests/test_tracking_and_compliance.py",
+      "function": "test_compliant_report_passes_all_checks",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 5,
+      "assert_count": 2
+    },
+    {
+      "test_id": "tests/test_tracking_and_compliance.py::test_missing_disclaimer_fails_compliance",
+      "file": "tests/test_tracking_and_compliance.py",
+      "function": "test_missing_disclaimer_fails_compliance",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 5,
+      "assert_count": 2
+    },
+    {
+      "test_id": "tests/test_tracking_and_compliance.py::test_fact_dressed_as_assumption_fails_compliance",
+      "file": "tests/test_tracking_and_compliance.py",
+      "function": "test_fact_dressed_as_assumption_fails_compliance",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 4,
+      "assert_count": 1
+    },
+    {
+      "test_id": "tests/test_tracking_and_compliance.py::test_unsourced_key_numbers_fail_compliance",
+      "file": "tests/test_tracking_and_compliance.py",
+      "function": "test_unsourced_key_numbers_fail_compliance",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 4,
+      "assert_count": 1
+    },
+    {
+      "test_id": "tests/test_tracking_and_compliance.py::test_chart_consistency_flags_subject_mismatch",
+      "file": "tests/test_tracking_and_compliance.py",
+      "function": "test_chart_consistency_flags_subject_mismatch",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 6,
+      "assert_count": 2
+    },
+    {
+      "test_id": "tests/test_tracking_and_compliance.py::test_chart_consistency_flags_value_beyond_tolerance",
+      "file": "tests/test_tracking_and_compliance.py",
+      "function": "test_chart_consistency_flags_value_beyond_tolerance",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 7,
+      "assert_count": 2
+    },
+    {
+      "test_id": "tests/test_tracking_and_compliance.py::test_chart_consistency_passes_when_matching",
+      "file": "tests/test_tracking_and_compliance.py",
+      "function": "test_chart_consistency_passes_when_matching",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 6,
+      "assert_count": 1
+    },
+    {
+      "test_id": "tests/test_valuation.py::test_dcf_math_hand_checked",
+      "file": "tests/test_valuation.py",
+      "function": "test_dcf_math_hand_checked",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 5,
+      "assert_count": 1
+    },
+    {
+      "test_id": "tests/test_valuation.py::test_dcf_rejects_divergent_terminal",
+      "file": "tests/test_valuation.py",
+      "function": "test_dcf_rejects_divergent_terminal",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 5,
+      "assert_count": 0
+    },
+    {
+      "test_id": "tests/test_valuation.py::test_dcf_scenarios_ordered",
+      "file": "tests/test_valuation.py",
+      "function": "test_dcf_scenarios_ordered",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 4,
+      "assert_count": 1
+    },
+    {
+      "test_id": "tests/test_valuation.py::test_dcf_inputs_prefer_akshare_snapshot",
+      "file": "tests/test_valuation.py",
+      "function": "test_dcf_inputs_prefer_akshare_snapshot",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 11,
+      "assert_count": 4
+    },
+    {
+      "test_id": "tests/test_valuation.py::test_dcf_inputs_text_extraction_and_default",
+      "file": "tests/test_valuation.py",
+      "function": "test_dcf_inputs_text_extraction_and_default",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 8,
+      "assert_count": 3
+    },
+    {
+      "test_id": "tests/test_valuation.py::test_run_dcf_output_contract",
+      "file": "tests/test_valuation.py",
+      "function": "test_run_dcf_output_contract",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 8,
+      "assert_count": 5
+    },
+    {
+      "test_id": "tests/test_valuation.py::test_relative_valuation_signals_and_degraded",
+      "file": "tests/test_valuation.py",
+      "function": "test_relative_valuation_signals_and_degraded",
+      "tier": "unit",
+      "weak_flags": [],
+      "lines": 12,
+      "assert_count": 5
+    }
+  ]
+}

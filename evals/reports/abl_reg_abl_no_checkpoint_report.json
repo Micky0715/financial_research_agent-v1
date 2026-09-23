@@ -1,0 +1,78 @@
+{
+  "rows": 13,
+  "tasks": 13,
+  "per_task_score": {
+    "reg002_贵州茅台": 0.9244,
+    "reg003_贵州茅台": 0.9709,
+    "reg004_宁德时代": 0.8302,
+    "reg005_隆基绿能": 0.8266,
+    "reg008_比亚迪": 0.8236,
+    "reg009_光伏行业": 0.7857,
+    "reg013_贵州茅台": 0.8282,
+    "reg014_示例公司": 0.7529,
+    "reg016_希兹维恩量子玄武科技": 0.9737,
+    "reg018_中芯国际": 0.8867,
+    "reg022_美的集团": 0.9237,
+    "reg023_星河量子能源股份有限公司": 0.9737,
+    "reg031_CPI与PPI": 0.9965
+  },
+  "trials_per_task": 1.0,
+  "arms": [
+    "abl_no_checkpoint"
+  ],
+  "config_hashes": [
+    "cea75aa015159893"
+  ],
+  "live": false,
+  "task_success_rate_all_trials": 0.8462,
+  "task_success_rate_any_trial": 0.8462,
+  "flaky_tasks": [],
+  "overall_score_mean": 0.8844,
+  "overall_score_worst": 0.7529,
+  "score_stdev_within_task_mean": 0.0,
+  "necessary_tool_recall": 1.0,
+  "unnecessary_tool_call_rate": 0.0,
+  "tool_outcome_success": 0.7555,
+  "alternative_valid_path_rate": null,
+  "forbidden_tool_calls_total": 0.0,
+  "tool_selection_precision": 0.6795,
+  "tool_selection_recall": 1.0,
+  "tool_selection_f1": 0.7949,
+  "tool_argument_accuracy": 1.0,
+  "invalid_tool_call_rate": 0.0,
+  "redundant_tool_call_rate": 0.0739,
+  "recovery_success_rate": 0.0,
+  "citation_validity": 1.0,
+  "citation_coverage": 0.4615,
+  "number_grounding_rate": 0.881,
+  "unsupported_number_rate": 0.1191,
+  "budget_exceeded_rate": 0.0,
+  "estimated_cost_usd_mean": 0.0,
+  "input_tokens_mean": 0.0,
+  "output_tokens_mean": 0.0,
+  "tool_calls_mean": 15.3077,
+  "injection_tool_hijack_total": 0,
+  "injection_leak_total": 0,
+  "latency": {
+    "avg_s": 0.5803,
+    "p50_s": 0.4795,
+    "p95_s": 1.4874,
+    "max_s": 1.4874
+  },
+  "status_counts": {
+    "succeeded": 5,
+    "insufficient": 7,
+    "degraded": 1
+  },
+  "stop_reasons": {
+    "completed": 5,
+    "no_usable_sources": 3,
+    "entity_unverified": 4,
+    "enough_evidence": 1
+  },
+  "gold_status_mix": {
+    "needs_human_review": 13
+  },
+  "errors": [],
+  "results_sha256": "3ea63d7c366df26460240680b89a090affc19d738337de6684c2b373a0ea424c"
+}

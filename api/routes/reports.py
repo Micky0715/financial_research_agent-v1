@@ -45,4 +45,8 @@ def get_report(task_id: str) -> ReportResultResponse:
         output_format=Path(result.get("report_path", "")).suffix.lstrip(".") or "markdown",
         export_paths=record.export_paths, evaluation=evaluation,
         sources_summary=sources_summary, warnings=record.warnings, error=record.error,
+        harness_run_id=result.get("harness_run_id", ""),
+        harness_status=result.get("harness_status", ""),
+        harness_stop_reason=result.get("harness_stop_reason", ""),
+        harness_trace_path=result.get("harness_trace_path", ""),
     )

@@ -19,6 +19,7 @@ from typing import Any, Optional
 from config import config
 from orchestrator.workflow import WorkflowOrchestrator
 from schemas.request import ResearchRequest
+from src.runtime.runner import HarnessConfig, HarnessRunner
 from utils.logger import logger
 
 _TERMINAL_STATUSES = {"succeeded", "failed", "degraded"}
@@ -112,12 +113,32 @@ class TaskManager:
             enable_revision=api_request.enable_revision,
         )
         orchestrator = WorkflowOrchestrator()
-        result = orchestrator.run(request, on_progress=on_progress)
+        if config.USE_AGENT_HARNESS:
+            runner = HarnessRunner(HarnessConfig(
+                max_concurrency=config.HARNESS_MAX_CONCURRENCY,
+                context_budget_tokens=config.HARNESS_CONTEXT_BUDGET_TOKENS,
+                memory_enabled=api_request.enable_memory,
+                namespace="api_local",
+                user_id="api_local",
+                arm="production_api",
+            ))
+            result = runner.run(request, orchestrator=orchestrator, on_progress=on_progress)
+        else:
+            result = orchestrator.run(request, on_progress=on_progress)
 
         evaluation = result.get("evaluation", {}) or {}
         num_sources = result.get("num_sources", 0)
         warnings: list[str] = []
-        if evaluation.get("entity_validation_failed"):
+        harness_status = result.get("harness_status")
+        if harness_status in ("failed", "cancelled", "insufficient"):
+            status = "failed"
+            error = result.get("harness_stop_reason") or "harness_failed"
+            if evaluation.get("entity_validation_failed"):
+                error = "insufficient_entity_evidence"
+        elif harness_status == "degraded":
+            status, error = "degraded", None
+            warnings.extend(result.get("harness_degradations") or [])
+        elif evaluation.get("entity_validation_failed"):
             status, error = "failed", "insufficient_entity_evidence"
         elif num_sources == 0:
             status, error = "failed", "no usable sources found"
@@ -146,7 +167,8 @@ class TaskManager:
                 warnings.append(f"export failed (degraded): {exc!r}")
                 logger.warning(f"task {task_id} export failed: {exc!r}")
 
-        if status in ("succeeded", "degraded") and api_request.enable_memory:
+        if (not config.USE_AGENT_HARNESS and status in ("succeeded", "degraded")
+                and api_request.enable_memory):
             try:
                 from memory.report_memory import build_index
 

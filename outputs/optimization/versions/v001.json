@@ -1,0 +1,33 @@
+{
+  "version": "v001",
+  "candidate": {
+    "candidate_id": "cand_d96ba2a0006e38df",
+    "version": "v001",
+    "created_at": "2026-09-09T04:46:35+00:00",
+    "target_failure_mode": "budget_exhausted",
+    "target_slice_size": 33,
+    "change_type": "budget_policy",
+    "target": "BudgetTracker.recommend thresholds",
+    "rationale": "33 次运行触达预算上限；把 SKIP_OPTIONAL 的触发点从 75% 提前到 65%，让可选增强更早被放弃，把预算留给核心链路。",
+    "before": "ratio >= 0.75 -> SKIP_OPTIONAL",
+    "after": "ratio >= 0.65 -> SKIP_OPTIONAL",
+    "expected_metric_gains": {
+      "budget_exceeded_rate": -0.05
+    },
+    "possible_regressions": [
+      "图表/改稿等可选增强被跳过的比例上升，综合评分可能小幅下降"
+    ],
+    "config_overrides": {
+      "skip_optional_threshold": 0.65
+    }
+  },
+  "gate_result": null,
+  "state": "proposed",
+  "created_at": "2026-09-09T04:46:35+00:00",
+  "updated_at": "2026-09-09T04:46:35+00:00",
+  "approved_by": "",
+  "approved_at": "",
+  "applied_at": "",
+  "notes": "auto-generated from evals\\results\\dev_harness.jsonl",
+  "previous_values": {}
+}

@@ -9,6 +9,7 @@ be turned 1:1 into extra search queries, which ballooned the query count to
 are what the report needs to *cover*, not what search needs to *ask* -
 5 well-chosen core queries already cover those information dimensions.
 """
+import contextvars
 import time
 from concurrent.futures import ThreadPoolExecutor
 from concurrent.futures import TimeoutError as FutureTimeoutError
@@ -176,7 +177,18 @@ class ResearchAgent(BaseAgent):
 
         executor = ThreadPoolExecutor(max_workers=min(config.SEARCH_MAX_WORKERS, len(queries)))
         try:
-            future_to_query = {executor.submit(_search_one_query, q, max_results): q for q in queries}
+            # ContextVars are not inherited by ThreadPoolExecutor workers.
+            # Copy once per query so concurrent Harness runs keep tool calls,
+            # budgets and traces attributed to their own executor.
+            future_to_query = {
+                executor.submit(
+                    contextvars.copy_context().run,
+                    _search_one_query,
+                    q,
+                    max_results,
+                ): q
+                for q in queries
+            }
             for future, query in future_to_query.items():
                 try:
                     result = future.result(timeout=config.SEARCH_QUERY_TIMEOUT)
@@ -223,19 +235,34 @@ class ResearchAgent(BaseAgent):
         request: ResearchRequest = context["request"]
         max_results = task.parameters.get("max_results", config.SEARCH_MAX_RESULTS)
         subject = normalize_topic(request.topic)
+        force_fallback = bool(task.parameters.get("force_fallback", False))
 
         research_start = time.perf_counter()
 
-        first_round_queries = self._build_core_queries(subject, request.report_type)
-        logger.info(f"Research queries: {len(first_round_queries)}")
-        logger.info(f"Search workers: {config.SEARCH_MAX_WORKERS}")
+        # A forced fallback is the orchestrator's second retrieval round.  The
+        # first implementation re-ran all core queries and relied on the
+        # executor to deduplicate them.  That avoided network calls but still
+        # produced redundant-call events and discarded the first round's
+        # candidates.  Resume from the existing search result instead.
+        if force_fallback:
+            previous = context.get("search_results", {}) or {}
+            previous_metrics = previous.get("research_metrics", {}) or {}
+            first_round_queries = list(previous_metrics.get("first_round_queries", []))
+            query_results = list(previous_metrics.get("query_results", []))
+            candidates = list(previous.get("candidates", []))
+            early_stopped = bool(previous_metrics.get("early_stopped", False))
+            logger.info("Forced fallback: reusing first-round candidates without replaying core queries")
+        else:
+            first_round_queries = self._build_core_queries(subject, request.report_type)
+            logger.info(f"Research queries: {len(first_round_queries)}")
+            logger.info(f"Search workers: {config.SEARCH_MAX_WORKERS}")
 
-        first_batch = self._run_search_batch(
-            first_round_queries, max_results, target_unique=config.SEARCH_TARGET_UNIQUE_RESULTS
-        )
-        query_results = list(first_batch["query_results"])
-        candidates = list(first_batch["candidates"])
-        early_stopped = first_batch["early_stopped"]
+            first_batch = self._run_search_batch(
+                first_round_queries, max_results, target_unique=config.SEARCH_TARGET_UNIQUE_RESULTS
+            )
+            query_results = list(first_batch["query_results"])
+            candidates = list(first_batch["candidates"])
+            early_stopped = first_batch["early_stopped"]
 
         fallback_queries: list[str] = []
         fallback_result_count = 0
@@ -244,14 +271,17 @@ class ResearchAgent(BaseAgent):
         # docs/dynamic_planning.md) - browse found the first-round candidates
         # unusable, so run the authoritative site: fallback queries even
         # though the first round returned plenty of raw results.
-        force_fallback = bool(task.parameters.get("force_fallback", False))
         fallback_triggered = force_fallback or len(candidates) < config.SEARCH_MIN_UNIQUE_RESULTS
 
         if fallback_triggered:
             fallback_reason = (
                 "forced_by_replan" if force_fallback else "unique_result_count_below_threshold"
             )
-            fallback_queries = self._build_fallback_queries(subject, request.report_type)
+            core_query_set = set(first_round_queries)
+            fallback_queries = [
+                query for query in self._build_fallback_queries(subject, request.report_type)
+                if query not in core_query_set
+            ]
             logger.info(
                 f"Fallback triggered: true ({fallback_reason}, candidates={len(candidates)})"
             )

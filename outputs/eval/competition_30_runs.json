@@ -26,7 +26,7 @@
       "period_type": "annual",
       "insufficient_history": false,
       "changes": null,
-      "report_path": "C:\\Users\\jdh07\\Desktop\\financial_research_agent\\outputs\\tracking\\tracking_600519_annual_20260720_220915.md",
+      "report_path": "outputs/tracking/tracking_600519_annual_20260720_220915.md",
       "note": "reconstructed from real tracking report file on disk"
     }
   },
@@ -95,7 +95,7 @@
       "period_type": "quarterly",
       "insufficient_history": false,
       "changes": null,
-      "report_path": "C:\\Users\\jdh07\\Desktop\\financial_research_agent\\outputs\\tracking\\tracking_600309_quarterly_20260720_222810.md",
+      "report_path": "outputs/tracking/tracking_600309_quarterly_20260720_222810.md",
       "note": "reconstructed from real tracking report file on disk"
     }
   },

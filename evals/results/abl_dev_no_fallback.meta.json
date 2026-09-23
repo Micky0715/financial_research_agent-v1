@@ -1,0 +1,21 @@
+{
+  "arm": "no_fallback",
+  "tasks": 88,
+  "trials_per_task": 1,
+  "planned": 88,
+  "executed": 88,
+  "skipped_resumed": 0,
+  "wall_time_s": 66.74,
+  "results_path": "evals\\results\\abl_dev_no_fallback.jsonl",
+  "live": false,
+  "candidate_overrides": {},
+  "environment": {
+    "python": "3.12.10",
+    "platform": "Windows-11-10.0.26200-SP0",
+    "model": "offline-stub",
+    "semantic_ranking": true,
+    "search_cache": true,
+    "use_mcp": true
+  },
+  "recorded_at": "2026-09-12T18:10:00+00:00"
+}

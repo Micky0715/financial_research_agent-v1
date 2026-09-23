@@ -1,0 +1,22 @@
+{
+  "executed": 16,
+  "planned": 16,
+  "estimated_cost_usd_total": 0.252046,
+  "wall_time_s": 2879.6,
+  "aborted_reason": "",
+  "results_path": "evals/results/live_canary.jsonl",
+  "preflight": {
+    "model": "openai/deepseek-v4-pro",
+    "api_base": "https://llm-qt8zz519psw79sha.cn-beijing.maas.aliyuncs.com/compatible-mode/v1",
+    "any_key_configured": true,
+    "keys_present": [
+      "OPENAI_API_KEY"
+    ],
+    "use_mcp": true,
+    "search_cache": true,
+    "semantic_ranking": true,
+    "python": "3.12.10",
+    "platform": "Windows-11-10.0.26200-SP0"
+  },
+  "recorded_at": "2026-09-12T19:01:48+00:00"
+}

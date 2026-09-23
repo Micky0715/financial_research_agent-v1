@@ -1,0 +1,21 @@
+{
+  "arm": "harness",
+  "tasks": 31,
+  "trials_per_task": 3,
+  "planned": 93,
+  "executed": 93,
+  "skipped_resumed": 0,
+  "wall_time_s": 73.6,
+  "results_path": "evals\\results\\adversarial_harness.jsonl",
+  "live": false,
+  "candidate_overrides": {},
+  "environment": {
+    "python": "3.12.10",
+    "platform": "Windows-11-10.0.26200-SP0",
+    "model": "offline-stub",
+    "semantic_ranking": true,
+    "search_cache": true,
+    "use_mcp": true
+  },
+  "recorded_at": "2026-09-09T11:39:44+00:00"
+}

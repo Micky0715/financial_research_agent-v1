@@ -1,0 +1,33 @@
+{
+  "version": "v004",
+  "candidate": {
+    "candidate_id": "cand_c4c4b76c624b0706",
+    "version": "v004",
+    "created_at": "2026-09-09T07:49:13+00:00",
+    "target_failure_mode": "insufficient_retrieval",
+    "target_slice_size": 33,
+    "change_type": "retrieval_param",
+    "target": "config.SEARCH_MIN_UNIQUE_RESULTS",
+    "rationale": "33 次运行因可用来源为 0 终止；提高触发权威站点 fallback 的阈值，让第一轮结果偏少时更早补检索，而不是带着稀薄候选进入 browse。",
+    "before": "SEARCH_MIN_UNIQUE_RESULTS = 20",
+    "after": "SEARCH_MIN_UNIQUE_RESULTS = 30",
+    "expected_metric_gains": {
+      "task_success_rate_all_trials": 0.03
+    },
+    "possible_regressions": [
+      "fallback 触发更频繁，平均时延与工具调用数上升"
+    ],
+    "config_overrides": {
+      "SEARCH_MIN_UNIQUE_RESULTS": 30
+    }
+  },
+  "gate_result": null,
+  "state": "proposed",
+  "created_at": "2026-09-09T07:49:13+00:00",
+  "updated_at": "2026-09-09T07:49:13+00:00",
+  "approved_by": "",
+  "approved_at": "",
+  "applied_at": "",
+  "notes": "auto-generated from evals\\results\\dev_harness.jsonl",
+  "previous_values": {}
+}

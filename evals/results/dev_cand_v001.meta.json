@@ -1,0 +1,23 @@
+{
+  "arm": "harness",
+  "tasks": 88,
+  "trials_per_task": 1,
+  "planned": 88,
+  "executed": 88,
+  "skipped_resumed": 0,
+  "wall_time_s": 129.75,
+  "results_path": "evals\\results\\dev_cand_v001.jsonl",
+  "live": false,
+  "candidate_overrides": {
+    "skip_optional_threshold": 0.65
+  },
+  "environment": {
+    "python": "3.12.10",
+    "platform": "Windows-11-10.0.26200-SP0",
+    "model": "offline-stub",
+    "semantic_ranking": true,
+    "search_cache": true,
+    "use_mcp": true
+  },
+  "recorded_at": "2026-09-09T04:51:44+00:00"
+}

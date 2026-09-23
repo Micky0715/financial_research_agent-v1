@@ -1,0 +1,21 @@
+{
+  "arm": "baseline_v4",
+  "tasks": 88,
+  "trials_per_task": 3,
+  "planned": 264,
+  "executed": 264,
+  "skipped_resumed": 0,
+  "wall_time_s": 391.13,
+  "results_path": "evals\\results\\dev_baseline_v4.jsonl",
+  "live": false,
+  "candidate_overrides": {},
+  "environment": {
+    "python": "3.12.10",
+    "platform": "Windows-11-10.0.26200-SP0",
+    "model": "offline-stub",
+    "semantic_ranking": true,
+    "search_cache": true,
+    "use_mcp": true
+  },
+  "recorded_at": "2026-09-09T07:39:50+00:00"
+}

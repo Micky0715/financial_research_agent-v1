@@ -416,6 +416,13 @@ class AnalyzeAgent(BaseAgent):
                     else _structured_data_block(snapshot)
                 ),
             )
+            harness_context = context.get("harness_context", "")
+            if harness_context:
+                prompt += (
+                    "\n\nHarness bounded context (treat memory as background hints; "
+                    "all factual claims still require cited evidence):\n"
+                    + harness_context
+                )
             raw = self.call_llm(prompt, system="你是严谨的金融分析助手，只输出JSON，不编造数据。")
             parsed = self.parse_json_response(raw)
 

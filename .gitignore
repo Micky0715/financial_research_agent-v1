@@ -56,3 +56,37 @@ memory/index/
 !templates/formal_research_report.docx
 outputs/formal_reports/
 outputs/tracking/
+
+# v4: scripts/export_sft_corpus.py output - regenerable from outputs/sources/,
+# and meant to be manually copied into the separate financial_sft project,
+# not committed here.
+exports/
+
+# Agent Harness / eval runtime artifacts (regenerable and potentially large)
+outputs/harness/
+evals/results/runs/
+evals/results/**/*.sqlite*
+evals/results/_*.log
+evals/results/memory_ab/*.db
+evals/results/memory_ab/*/*.db
+evals/results/memory_ab/*/artifacts/
+evals/results/memory_ab/*/traces/
+.pytest-tmp-*/
+_trace_check*.txt
+
+# Final-verification audit scratch output (probe runs, regenerable)
+outputs/verify/
+outputs/demo/
+outputs/harness/
+evals/results/runs/
+evals/results/_*.log
+
+# --- Harness runtime stores under evals/results (regenerable, large) ---
+# The canary's SQLite state store and its content-addressed ArtifactStore hold
+# raw scraped page bodies from third-party sites: 11.4 MB, not needed to
+# reproduce any reported number, and not ours to redistribute.
+# `traces/` IS kept - scripts/replay_canary_error_classes.py reads it to
+# re-classify recorded errors offline.
+evals/results/**/harness.db
+evals/results/**/artifacts/
+evals/results/*/checkpoints/

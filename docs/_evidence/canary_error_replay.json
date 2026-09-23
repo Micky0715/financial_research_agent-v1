@@ -1,0 +1,172 @@
+{
+  "total_failures": 32,
+  "replayable": 32,
+  "unclassifiable_no_message": 0,
+  "recorded_distribution": {
+    "TIMEOUT": 6,
+    "UNKNOWN": 8,
+    "NOT_FOUND": 8,
+    "TRANSIENT_NETWORK": 7,
+    "AUTH_ERROR": 3
+  },
+  "current_distribution": {
+    "TIMEOUT": 6,
+    "NOT_FOUND": 8,
+    "TRANSIENT_NETWORK": 7,
+    "AUTH_ERROR": 3,
+    "PERMANENT_FAILURE": 8
+  },
+  "reclassified": [
+    {
+      "task_id": "canary_co_byd",
+      "tool": "read_webpage",
+      "recorded_class": "UNKNOWN",
+      "message": "empty_content_after_cleaning",
+      "trace": "evals/results/live_canary_runs/traces/4abf6458a163.jsonl",
+      "current_class": "PERMANENT_FAILURE"
+    },
+    {
+      "task_id": "canary_co_byd",
+      "tool": "read_webpage",
+      "recorded_class": "UNKNOWN",
+      "message": "empty_content_after_cleaning",
+      "trace": "evals/results/live_canary_runs/traces/4abf6458a163.jsonl",
+      "current_class": "PERMANENT_FAILURE"
+    },
+    {
+      "task_id": "canary_co_smic",
+      "tool": "read_webpage",
+      "recorded_class": "UNKNOWN",
+      "message": "empty_content_after_cleaning",
+      "trace": "evals/results/live_canary_runs/traces/f9000a592d46.jsonl",
+      "current_class": "PERMANENT_FAILURE"
+    },
+    {
+      "task_id": "canary_ind_semi",
+      "tool": "read_webpage",
+      "recorded_class": "UNKNOWN",
+      "message": "empty_content_after_cleaning",
+      "trace": "evals/results/live_canary_runs/traces/398c88f22f3d.jsonl",
+      "current_class": "PERMANENT_FAILURE"
+    },
+    {
+      "task_id": "canary_ind_semi",
+      "tool": "read_webpage",
+      "recorded_class": "UNKNOWN",
+      "message": "empty_content_after_cleaning",
+      "trace": "evals/results/live_canary_runs/traces/398c88f22f3d.jsonl",
+      "current_class": "PERMANENT_FAILURE"
+    },
+    {
+      "task_id": "canary_mac_export",
+      "tool": "read_webpage",
+      "recorded_class": "UNKNOWN",
+      "message": "468 Client Error:  for url: https://info.21cp.com/open/article/detail/516910670613135360.html",
+      "trace": "evals/results/live_canary_runs/traces/10f603ba36d8.jsonl",
+      "current_class": "PERMANENT_FAILURE"
+    },
+    {
+      "task_id": "canary_sd_hengrui",
+      "tool": "read_webpage",
+      "recorded_class": "UNKNOWN",
+      "message": "empty_content_after_cleaning",
+      "trace": "evals/results/live_canary_runs/traces/02b6a9e6c079.jsonl",
+      "current_class": "PERMANENT_FAILURE"
+    },
+    {
+      "task_id": "canary_sd_cyd",
+      "tool": "read_webpage",
+      "recorded_class": "UNKNOWN",
+      "message": "empty_content_after_cleaning",
+      "trace": "evals/results/live_canary_runs/traces/3239bcd5676e.jsonl",
+      "current_class": "PERMANENT_FAILURE"
+    }
+  ],
+  "distinct_messages": [
+    {
+      "count": 7,
+      "message": "empty_content_after_cleaning"
+    },
+    {
+      "count": 5,
+      "message": "TimeoutError: web_search exceeded 20.0s; handler thread abandoned"
+    },
+    {
+      "count": 2,
+      "message": "403 Client Error: Forbidden for url: https://tripwinego.com/community/topicid/2168/"
+    },
+    {
+      "count": 1,
+      "message": "404 Client Error: Not Found for url: https://www.123.com.cn/404.html"
+    },
+    {
+      "count": 1,
+      "message": "HTTPSConnectionPool(host='www.zhiyanzhan.cn', port=443): Max retries exceeded with url: /report/65719.html (Caused by SSLError(SSLCertVerificationError(1, '[SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: unable to get local issuer certificate (_ssl.c:1010)')))"
+    },
+    {
+      "count": 1,
+      "message": "HTTPSConnectionPool(host='www.dx2035.cn', port=443): Max retries exceeded with url: /2025/05/23/%E5%85%89%E4%BC%8F%E4%BB%8D%E6%9C%AA%E8%A7%81%E5%BA%95%EF%BC%8C%E5%93%AA%E5%AE%B6%E9%BE%99%E5%A4%B4%E9%A3%8E%E9%99%A9%E6%9C%80%E5%A4%A7%EF%BC%9F/ (Caused by SSLError(SSLCertVerificationError(1, '[SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: certificate has expired (_ssl.c:1010)')))"
+    },
+    {
+      "count": 1,
+      "message": "404 Client Error: Not Found for url: https://hollybeary.com/news_wzzx/193.html"
+    },
+    {
+      "count": 1,
+      "message": "404 Client Error: Not Found for url: https://www.fxbaogao.com/detail/5288200"
+    },
+    {
+      "count": 1,
+      "message": "HTTPSConnectionPool(host='dichan.sina.com.cn', port=443): Max retries exceeded with url: /news/6f180001-9b2a-4881-ae0d-7d15145f63aa (Caused by SSLError(SSLCertVerificationError(1, '[SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: certificate has expired (_ssl.c:1010)')))"
+    },
+    {
+      "count": 1,
+      "message": "('Connection aborted.', ConnectionResetError(10054, '远程主机强迫关闭了一个现有的连接。', None, 10054, None))"
+    },
+    {
+      "count": 1,
+      "message": "HTTPSConnectionPool(host='tubex.chat', port=443): Read timed out. (read timeout=10)"
+    },
+    {
+      "count": 1,
+      "message": "404 Client Error: Not Found for url: https://www.fxbaogao.com/detail/5211073"
+    },
+    {
+      "count": 1,
+      "message": "HTTPSConnectionPool(host='www.ouyigreate.net', port=443): Max retries exceeded with url: /xin-xi-lan-li-lyu-lu-jing-mian-lin-tong-zhang-yu-x (Caused by SSLError(SSLEOFError(8, '[SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1010)')))"
+    },
+    {
+      "count": 1,
+      "message": "404 Client Error: Not Found for url: https://www.fxbaogao.com/detail/4300242"
+    },
+    {
+      "count": 1,
+      "message": "404 Client Error: Not Found for url: https://www.moomoo.com/404"
+    },
+    {
+      "count": 1,
+      "message": "468 Client Error:  for url: https://info.21cp.com/open/article/detail/516910670613135360.html"
+    },
+    {
+      "count": 1,
+      "message": "HTTPSConnectionPool(host='studygolang.com', port=443): Max retries exceeded with url: /articles/81386 (Caused by SSLError(SSLError(1, '[SSL: SSLV3_ALERT_HANDSHAKE_FAILURE] sslv3 alert handshake failure (_ssl.c:1010)')))"
+    },
+    {
+      "count": 1,
+      "message": "404 Client Error: Not Found for url: https://www.getdaco.com/a/202410/750.html"
+    },
+    {
+      "count": 1,
+      "message": "403 Client Error: Forbidden for url: https://www.vzkoo.com/document/20251028fd8edce873740103d73d414e.html"
+    },
+    {
+      "count": 1,
+      "message": "404 Client Error: Not Found for url: https://static.cninfo.com.cn/finalpage/2026-03-31/1225058110.PDF"
+    },
+    {
+      "count": 1,
+      "message": "HTTPSConnectionPool(host='zhangzhou.rggydq.com.cn', port=443): Max retries exceeded with url: /sp/b06/sp-news-low-altitude (Caused by SSLError(SSLCertVerificationError(1, \"[SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: Hostname mismatch, certificate is not valid for 'zhangzhou.rggydq.com.cn'. (_ssl.c:1010)\")))"
+    }
+  ],
+  "source_results": "evals/results/live_canary.jsonl"
+}

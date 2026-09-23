@@ -1,0 +1,21 @@
+{
+  "arm": "abl_no_checkpoint",
+  "tasks": 88,
+  "trials_per_task": 1,
+  "planned": 88,
+  "executed": 88,
+  "skipped_resumed": 0,
+  "wall_time_s": 49.0,
+  "results_path": "evals\\results\\abl_dev_abl_no_checkpoint.jsonl",
+  "live": false,
+  "candidate_overrides": {},
+  "environment": {
+    "python": "3.12.10",
+    "platform": "Windows-11-10.0.26200-SP0",
+    "model": "offline-stub",
+    "semantic_ranking": true,
+    "search_cache": true,
+    "use_mcp": true
+  },
+  "recorded_at": "2026-09-12T18:05:41+00:00"
+}

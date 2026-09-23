@@ -123,6 +123,12 @@ class Config:
     API_MAX_CONCURRENT_TASKS: int = _get_int("API_MAX_CONCURRENT_TASKS", 2)
     API_TASK_TIMEOUT_SECONDS: int = _get_int("API_TASK_TIMEOUT_SECONDS", 900)
 
+    # Unified Agent Harness is the production execution path. Set false only
+    # for an explicit legacy rollback while debugging a migration issue.
+    USE_AGENT_HARNESS: bool = _get_bool("USE_AGENT_HARNESS", True)
+    HARNESS_MAX_CONCURRENCY: int = _get_int("HARNESS_MAX_CONCURRENCY", 8)
+    HARNESS_CONTEXT_BUDGET_TOKENS: int = _get_int("HARNESS_CONTEXT_BUDGET_TOKENS", 12000)
+
     # Paths
     BASE_DIR: Path = BASE_DIR
     OUTPUT_DIR: Path = BASE_DIR / "outputs"

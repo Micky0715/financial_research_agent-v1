@@ -113,7 +113,14 @@ class BaseAgent:
     # ------------------------------------------------------------------ #
     @staticmethod
     def call_llm(prompt: str, system: str = "", temperature: float = 0.3) -> str:
-        """Call the configured LLM through LiteLLM and return the raw text response."""
+        """Call the configured LLM through LiteLLM and return the raw text response.
+
+        When a v5 harness run is bound (src/runtime/run_context.py), the call is
+        additionally recorded for token/cost accounting and a model_call event is
+        written to the trace. Provider-reported usage is preferred; when the
+        provider returns none, tokens are estimated and the event says so. With
+        no harness bound this is exactly the original call.
+        """
         import litellm
 
         messages = []
@@ -121,14 +128,41 @@ class BaseAgent:
             messages.append({"role": "system", "content": system})
         messages.append({"role": "user", "content": prompt})
 
-        response = litellm.completion(
-            model=config.MODEL_NAME,
-            messages=messages,
-            temperature=temperature,
-            timeout=60,
-            api_base=config.OPENAI_API_BASE or None,
-        )
-        return response["choices"][0]["message"]["content"] or ""
+        executor = None
+        try:
+            from src.runtime.run_context import current_executor
+
+            executor = current_executor()
+        except Exception:  # noqa: BLE001 - harness package absent: legacy behaviour
+            executor = None
+
+        started = time.perf_counter()
+        try:
+            response = litellm.completion(
+                model=config.MODEL_NAME,
+                messages=messages,
+                temperature=temperature,
+                timeout=60,
+                api_base=config.OPENAI_API_BASE or None,
+            )
+        except Exception as exc:
+            if executor is not None:
+                executor.record_model_call(
+                    model=config.MODEL_NAME, input_text=f"{system}\n{prompt}",
+                    duration_s=time.perf_counter() - started, error=exc)
+            raise
+
+        content = response["choices"][0]["message"]["content"] or ""
+        if executor is not None:
+            usage = getattr(response, "usage", None) or {}
+            get = usage.get if isinstance(usage, dict) else lambda k, d=None: getattr(usage, k, d)
+            executor.record_model_call(
+                model=config.MODEL_NAME,
+                input_text=f"{system}\n{prompt}", output_text=content,
+                input_tokens=get("prompt_tokens", None), output_tokens=get("completion_tokens", None),
+                duration_s=time.perf_counter() - started,
+            )
+        return content
 
     @staticmethod
     def parse_json_response(text: str) -> Optional[Any]:

@@ -1,0 +1,65 @@
+{
+  "rows": 5,
+  "tasks": 5,
+  "per_task_score": {
+    "topic_贵州茅台2025年年度跟踪报告": 1.0,
+    "topic_中芯国际财务与风险分析": 1.0,
+    "topic_恒瑞医药研究报告": 1.0,
+    "topic_万华化学2026年一季度跟踪报告": 0.9167,
+    "topic_长江电力高股息价值分析": 1.0
+  },
+  "trials_per_task": 1.0,
+  "arms": [
+    "harness"
+  ],
+  "config_hashes": [
+    "b6ec0c7b9be1664a"
+  ],
+  "live": false,
+  "task_success_rate_all_trials": 1.0,
+  "task_success_rate_any_trial": 1.0,
+  "flaky_tasks": [],
+  "overall_score_mean": 0.9833,
+  "overall_score_worst": 0.9167,
+  "score_stdev_within_task_mean": 0.0,
+  "necessary_tool_recall": null,
+  "unnecessary_tool_call_rate": null,
+  "tool_outcome_success": null,
+  "alternative_valid_path_rate": null,
+  "forbidden_tool_calls_total": 0,
+  "tool_selection_precision": null,
+  "tool_selection_recall": null,
+  "tool_selection_f1": null,
+  "tool_argument_accuracy": 1.0,
+  "invalid_tool_call_rate": 0.0,
+  "redundant_tool_call_rate": 0.0,
+  "recovery_success_rate": 0.0,
+  "citation_validity": 1.0,
+  "citation_coverage": 1.0,
+  "number_grounding_rate": 1.0,
+  "unsupported_number_rate": 0.0,
+  "budget_exceeded_rate": 0.0,
+  "estimated_cost_usd_mean": 0.0,
+  "input_tokens_mean": 0.0,
+  "output_tokens_mean": 0.0,
+  "tool_calls_mean": 15.2,
+  "injection_tool_hijack_total": 0,
+  "injection_leak_total": 0,
+  "latency": {
+    "avg_s": 0.9597,
+    "p50_s": 0.7982,
+    "p95_s": 1.732,
+    "max_s": 1.732
+  },
+  "status_counts": {
+    "succeeded": 5
+  },
+  "stop_reasons": {
+    "completed": 5
+  },
+  "gold_status_mix": {
+    "synthetic_draft": 5
+  },
+  "errors": [],
+  "results_sha256": "1162b1b453d4b7c642ee36a43bbfc0c3bb905b147eb11fac9c3ad1479071ea8f"
+}

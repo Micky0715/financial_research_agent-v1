@@ -1,0 +1,32 @@
+ M .env.example
+ M .gitignore
+ M README.md
+ M agents/analyze_agent.py
+ M agents/base_agent.py
+ M agents/research_agent.py
+ M api/routes/reports.py
+ M api/schemas.py
+ M api/task_manager.py
+ M config.py
+ M main.py
+ M orchestrator/workflow.py
+ M tests/test_api.py
+ M tools/tool_gateway.py
+?? Makefile
+?? docs/_evidence/
+?? docs/architecture.md
+?? docs/architecture_audit.md
+?? docs/decisions/
+?? docs/evaluation.md
+?? docs/failure_cases.md
+?? docs/memory.md
+?? docs/resume_evidence.md
+?? evals/
+?? outputs/optimization/
+?? scripts/demo_harness_run.py
+?? scripts/dev.py
+?? scripts/export_agent_trajectories.py
+?? scripts/export_sft_corpus.py
+?? src/
+?? tests/harness/
+?? training/

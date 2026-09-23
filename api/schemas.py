@@ -47,6 +47,10 @@ class ReportResultResponse(BaseModel):
     sources_summary: dict[str, Any] = Field(default_factory=dict)
     warnings: list[str] = Field(default_factory=list)
     error: Optional[str] = None
+    harness_run_id: str = ""
+    harness_status: str = ""
+    harness_stop_reason: str = ""
+    harness_trace_path: str = ""
 
 
 class HealthCheckItem(BaseModel):

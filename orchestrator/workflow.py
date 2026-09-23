@@ -94,18 +94,37 @@ class WorkflowOrchestrator:
         self,
         request: ResearchRequest,
         on_progress: Optional[Callable[[int, int, str], None]] = None,
+        harness: Optional[Any] = None,
     ) -> dict[str, Any]:
         """Execute the full pipeline for `request` and persist all four output artifacts.
 
         `on_progress(step_index, total_steps, label)` is called once per stage
         (planning, research, browse, analyze, report, evaluate) right before
         that stage runs, so a CLI can print live progress.
+
+        `harness` (v5, optional) is a `src.runtime.runner.WorkflowHooks`. When
+        supplied, each stage is gated on budget/cancellation and bracketed by
+        phase-start/phase-end callbacks that checkpoint the run. When it is
+        None - the default, and what `python main.py` and every legacy test
+        use - none of these calls happen and this method behaves exactly as it
+        did before the harness existed.
         """
         total_steps = 6
 
         def notify(step_index: int, label: str) -> None:
             if on_progress:
                 on_progress(step_index, total_steps, label)
+
+        def phase_start(stage: str) -> None:
+            if harness:
+                harness.phase_start(stage, context)
+
+        def phase_end(stage: str, success: bool, error: Optional[str] = None) -> None:
+            if harness:
+                harness.phase_end(stage, context, success, error)
+
+        def gate(stage: str) -> tuple[bool, str]:
+            return harness.gate(stage) if harness else (True, "")
 
         run_id = uuid.uuid4().hex[:10]
         started_at = datetime.now().isoformat(timespec="seconds")
@@ -124,6 +143,7 @@ class WorkflowOrchestrator:
 
         # 1. Planning
         notify(1, "Planning task...")
+        phase_start("planning")
         plan_start = time.perf_counter()
         raw_tasks = self.planning_agent.plan(request)
         # Defensive normalization at the execution boundary: even though
@@ -147,6 +167,9 @@ class WorkflowOrchestrator:
             }
         )
         logger.info(f"run={run_id} plan has {len(tasks)} tasks: {[t.task_type for t in tasks]}")
+        if harness:
+            harness.plan_created([t.task_type for t in tasks], planner_metrics)
+        phase_end("planning", True)
 
         # 2-6: research / browse / analyze / report / evaluate
         completed_ids: set[str] = set()
@@ -168,6 +191,17 @@ class WorkflowOrchestrator:
                 trace.errors.append({"task_id": planned_task.task_id, "error": error_msg})
                 continue
 
+            # Budget/cancellation gate: when the harness says stop, skip the
+            # remaining stages rather than spending what is left. The run then
+            # finalizes from whatever evidence is already in hand.
+            allowed, gate_reason = gate(planned_task.task_type)
+            if not allowed:
+                logger.warning(f"stage {planned_task.task_type} skipped by harness gate: {gate_reason}")
+                trace.errors.append({"task_id": planned_task.task_id,
+                                     "error": f"skipped_by_budget_gate: {gate_reason}"})
+                continue
+
+            phase_start(planned_task.task_type)
             task_result: TaskResult = agent.run(planned_task, context)
             trace.steps.append(
                 {
@@ -266,6 +300,8 @@ class WorkflowOrchestrator:
             else:
                 trace.errors.append({"task_id": planned_task.task_id, "error": task_result.error})
                 logger.warning(f"task {planned_task.task_id} ({planned_task.task_type}) failed: {task_result.error}")
+
+            phase_end(planned_task.task_type, task_result.success, task_result.error)
 
         # Persist sources
         source_dicts = context.get("sources", {}).get("sources", [])
@@ -504,6 +540,7 @@ class WorkflowOrchestrator:
             "sources_path": str(sources_path),
             "evaluation_path": str(evaluation_path),
             "evaluation": evaluation,
+            "entity_validation": context.get("entity_validation", {}),
             "num_sources": len(source_dicts),
             "duration": trace.total_duration,
         }
